@@ -524,7 +524,7 @@ def failures(log):
 
 
 def read(site_dir, site):
-    """({href: (html, fetched_at)} for the pages this page set fetched, the list fetched_at).
+    """({href: (html, fetched_at)} for the pages this page set fetched, the current list hrefs, the list fetched_at).
 
     Raises ValueError when the log is incomplete, so a run never reads half a set.
     """

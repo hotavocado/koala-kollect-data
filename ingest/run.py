@@ -21,6 +21,9 @@ Rules (CONTRACT.md):
 - A product's release_date comes from its site's product index (products.py),
   only where the page set carries one ({site}/products/_log.json). A date is
   sticky: a run sets or moves it and never clears it.
+- Each promo printing's distribution mints from its card-list source_text, with
+  an authoritative claim; the event and topic pages ({site}/events/_log.json)
+  add one claim per printing, distribution and page (CONTRACT.md, Promo origin).
 """
 import argparse
 import hashlib
