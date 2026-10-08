@@ -165,9 +165,8 @@ green at every step:
    `first_seen_at` preserved, and no `superseded_at` was written, so the errata
    history holds no erratum that did not happen. Old keys are gone from `data/`;
    the app cleared `card_observations` once on dev and re-synced (alyssa,
-   general 86832). This happens once: the ingest rekeys only a row that still
-   carries `block_icon` and differs by nothing else, and no row is written with
-   it.
+   general 86832). It happened once. The closing change below removed the
+   ingest's rekey path, because the schema now refuses the old shape it matched.
 3. **Closing change (this version):** no data row carries the old fields, so
    the schema refuses `card_observation.block_icon` and every `last_seen_at`,
    each with a red control in `examples/invalid.jsonl`, and requires
