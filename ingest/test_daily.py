@@ -35,7 +35,7 @@ class Harness:
         self.repo.mkdir()
         self.clock = itertools.count(1_791_331_200)
         self.page, self.t, self.status = FIX, T1, 200
-        self.options = [(SID, LABEL)]
+        self.sid, self.options = SID, [(SID, LABEL)]
         self.cn_rows, self.fetch_failures = None, []
 
     def tearDown(self):
@@ -46,14 +46,14 @@ class Harness:
         d = Path(pageset) / "en"
         d.mkdir(parents=True, exist_ok=True)
         (d / "_index.html").write_text(index(*self.options), "utf-8")
-        entry = {"site": "en", "series_id": SID, "label": LABEL, "status": self.status, "fetched_at": self.t}
+        entry = {"site": "en", "series_id": self.sid, "label": LABEL, "status": self.status, "fetched_at": self.t}
         if self.status == 200:
-            (d / f"{SID}.html").write_text(self.page, "utf-8")
+            (d / f"{self.sid}.html").write_text(self.page, "utf-8")
         else:
             entry["error"] = "HTTPError: 503"
-            (d / f"{SID}.html").unlink(missing_ok=True)
+            (d / f"{self.sid}.html").unlink(missing_ok=True)
         (d / "_fetch_log.json").write_text(json.dumps([entry]))
-        return list(self.fetch_failures) + ([f"en:{SID} fetch failed: HTTPError: 503"] if self.status != 200 else []), \
+        return list(self.fetch_failures) + ([f"en:{self.sid} fetch failed: HTTPError: 503"] if self.status != 200 else []), \
             self.cn_rows
 
     def runner(self, pageset, repo, sites, cn_rows):
@@ -165,6 +165,13 @@ class NewSeries(Harness, unittest.TestCase):
         self.assertEqual((code, s["dry_run"]), (0, True))
         self.assertEqual(s["notice_title"], "New series on the official card list: FAKE SET [XX-99]")
 
+    def test_a_title_over_githubs_limit_is_shortened(self):
+        found = {"en": [(str(569200 + i), f"BOOSTER PACK -A VERY LONG SET NAME NUMBER {i}- [OP-{i}]") for i in range(12)]}
+        title, body = daily.notice(found)
+        self.assertLessEqual(len(title), daily.TITLE_MAX)
+        self.assertTrue(title.startswith("New series on the official card list: 12 new, first "), title)
+        self.assertEqual(body.count("\n- en: "), 12)
+
     def test_parse_fake_refuses_a_bad_site(self):
         with self.assertRaises(ValueError):
             daily.parse_fake("xx:569999:FAKE")
@@ -198,6 +205,17 @@ class WorkflowOutputs(Harness, unittest.TestCase):
         code, out, printed = self.main()
         self.assertEqual((code, out.count("changed=false\n")), (0, 1), out)
         self.assertIn("ok=True changed=False dry_run=False", printed)
+
+    def test_an_unmapped_product_kind_still_opens_the_notice(self):
+        # Series digit 4 has no product kind: model.product_fields raises ValueError,
+        # not RunError. The run must fail AND still say new_series=true.
+        self.sid, self.options = "569417", [("569417", LABEL)]
+        code, out, printed = self.main()
+        self.assertEqual(code, 1)
+        self.assertIn("new_series=true\n", out)
+        self.assertIn("changed=false\n", out)
+        self.assertIn("FAILED: run crashed, nothing committed: ValueError: en:569417: no product kind", printed)
+        self.assertFalse((self.repo / "data").exists())
 
     def test_the_fake_control_prints_the_post_and_sets_new_series(self):
         self.main()

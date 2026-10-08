@@ -33,6 +33,7 @@ import run
 from bandai import series_options
 
 SITES = run.SITES
+TITLE_MAX = 256
 
 
 def committed_products(repo, site):
@@ -52,6 +53,8 @@ def notice(found):
         return None
     names = sorted({label for _, _, label in items})
     title = "New series on the official card list: " + "; ".join(names)
+    if len(title) > TITLE_MAX:  # GitHub refuses an issue title over 256 characters
+        title = f"New series on the official card list: {len(names)} new, first {names[0]}"[:TITLE_MAX]
     lines = ["The daily ingest found series in the card list dropdown that are not in the data yet:", ""]
     for site, sid, label in items:
         lines.append(f"- {site}: {label} (series {sid}) {fetch.cardlist_url(site, sid)}")
@@ -139,6 +142,10 @@ def daily(pageset, repo, out, sites=SITES, dry_run=False, fake=None, fetcher=Non
             result = (runner or run.run)(pageset, repo, sites, cn_rows)
         except run.RunError as e:
             stopped = f"run stopped, nothing written: {e}"
+        except Exception as e:  # e.g. model.product_fields on an unmapped product kind
+            # Kept on this path, not raised, so the notice and the outputs are still
+            # written: a new kind of product is exactly when the notice matters.
+            stopped = f"run crashed, nothing committed: {type(e).__name__}: {e}"
     failures, changed = decide(fetch_failures, result)
     if stopped:
         failures.append(stopped)
