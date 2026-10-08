@@ -47,7 +47,6 @@ PER_SITE = {"card_observation": "card_observations", "printing": "printings",
 SHARED = {"card": "cards", "distribution": "distributions",
           "printing_distribution": "printing_distributions", "printing_link": "printing_links"}
 TYPE_OF_DIR = {v: k for k, v in {**PER_SITE, **SHARED}.items()}
-# Fields of a card_observation row that are not facts it states.
 
 
 class RunError(Exception):
