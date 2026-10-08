@@ -336,7 +336,7 @@
           "pattern": "^https://"
         },
         "source_text": {
-          "description": "The verbatim Card Set(s) / 入手情報 / 獲取方法 string, unparsed, so a better parser can re-derive without a re-scrape.",
+          "description": "The verbatim Card Set(s) / 入手情報 / 獲取方法 string, unparsed, so a better parser can re-derive without a re-scrape. Empty string when the site shows none (EN ST14-010_r1 has no provenance block); every empty one is counted on the run.",
           "type": "string"
         },
         "first_seen_at": {
@@ -682,6 +682,7 @@
         "pages_fetched",
         "pages_unchanged",
         "blocks_parsed",
+        "blocks_without_source_text",
         "added",
         "changed",
         "removed",
@@ -710,6 +711,11 @@
           "minimum": 0
         },
         "blocks_parsed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "blocks_without_source_text": {
+          "description": "Parsed blocks with no provenance string. A jump between runs means the parser broke, not that Bandai removed the field.",
           "type": "integer",
           "minimum": 0
         },
