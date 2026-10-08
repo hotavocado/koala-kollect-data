@@ -1,7 +1,8 @@
 """Split a site-local image id into base number and suffix.
 
 Bandai sites use two suffix families, _pN and _rN (roberto 86390: 412 EN and
-461 JP ids carry _rN). cn ids are the API's numeric ids and have no suffix.
+461 JP ids carry _rN). cn ids are the API's numeric ids and have no suffix;
+tcgcsv ids (DON printings only) are TCGplayer productIds and have none either.
 """
 import re
 
@@ -11,9 +12,9 @@ _CN = re.compile(r"^[0-9]+$")
 
 def parse_image_id(site: str, image_id: str) -> dict:
     """Return {base, suffix_family, suffix_n}; raise ValueError on an unknown shape."""
-    if site == "cn":
+    if site in ("cn", "tcgcsv"):
         if not _CN.match(image_id):
-            raise ValueError(f"cn image id not numeric: {image_id!r}")
+            raise ValueError(f"{site} image id not numeric: {image_id!r}")
         return {"base": None, "suffix_family": None, "suffix_n": None}
     m = _BANDAI.match(image_id)
     if not m:

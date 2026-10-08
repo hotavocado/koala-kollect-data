@@ -52,7 +52,7 @@ promos.
 - `image_id` is site-local. Bandai sites use the base number plus an optional `_pN`
   or `_rN` suffix; cn uses the API's numeric id. Suffixes do not line up across
   sites, so the same art in two languages is a `printing_link`, never a shared
-  printing. Per site, image ids were measured stable (55 EN and 48 JP weekly
+  printing. tcgcsv (DON printings only) uses TCGplayer's numeric productId. Per site, image ids were measured stable (55 EN and 48 JP weekly
   snapshots, Wayback 2023-2026 on the EN promo page). **cn is an assumption, not
   yet measured:** nothing has covered the stability of the API's numeric id, and
   the cn list also carries its own suffixed `cardNumber` (`P-084_01`: two digits,
@@ -60,8 +60,22 @@ promos.
 - DON: each DON design is its own card (`category: don`, no `number`,
   `don_design` = `{first product code}:{art slug}`). The normal and gold DON of one
   design are two printings of that card (`variant: base` and `variant: gold`).
-  **Open:** which source DON designs are minted from. This depends on whether
-  the official card lists carry DON at all.
+  No official card list carries DON cards (0 on all five sites, measured
+  2026-10-08), so DON designs are minted from tcgcsv, and a DON card's
+  `facts_site` is `tcgcsv`. The schema refuses `tcgcsv` on any other category.
+  A DON printing's `site` is `tcgcsv` and its locator is `tcgcsv:{productId}`,
+  TCGplayer's own integer id (roberto 86534), which phase 3's price rows key on
+  too. `tcgcsv` is a printing and locator site only, never a product,
+  observation or run site, and a tcgcsv printing must be `rarity: DON`,
+  `variant: base` or `gold`.
+  The card is minted from the art, never from the product: a design reissued
+  in a later DON pack is a new productId and so a second printing of the same
+  card, found by its `don_design`.
+  **Assumption, not yet measured:** a normal and a gold DON are separate
+  TCGplayer products, so one product is one printing. If they turn out to be
+  one product with a variant field, the locator becomes
+  `tcgcsv:{productId}:{variant}` and the row is otherwise unchanged. The ingest
+  measures this at its tcgcsv step.
 
 ## Write rules
 
@@ -92,7 +106,10 @@ promos.
   everything without a re-scrape. When a site shows no provenance for a printing,
   `source_text` is the empty string and the run counts it in
   `blocks_without_source_text`. A jump in that count means a broken parser.
-- **Images are linked, never hosted.** `image_url` points at the official site.
+- **Images are linked, never hosted.** `image_url` is the absolute official URL
+  with no query string. Bandai's card images carry a site-wide deploy stamp
+  (`?260929`) that changes on every redeploy; keeping it would turn each
+  redeploy into a change to every printing.
 - `printing_links` and `distributions` are reviewed; the ingest may propose
   them only with `confidence: inferred`.
 
