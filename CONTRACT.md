@@ -153,6 +153,16 @@ that CI stays green at every step:
    last changed: a guard keyed on content change would pass a replay older
    than the last fetch but newer than the last change, which is the replay it
    exists to refuse.
+   **Dated exception, 2026-10-08: card_observation rows were rekeyed in place,
+   not superseded.** Dropping `block_icon` from the observation and reading `"?"`
+   as an attribute changed the hash, and so the key, of 11,206 rows that had not
+   changed on the page. Each was replaced under its new key with its
+   `first_seen_at` preserved, and no `superseded_at` was written, so the errata
+   history holds no erratum that did not happen. Old keys are gone from `data/`;
+   the app cleared `card_observations` once on dev and re-synced (alyssa,
+   general 86832). This happens once: the ingest rekeys only a row that still
+   carries `block_icon` and differs by nothing else, and no row is written with
+   it.
 3. **Closing change:** once `check_data` shows that no data row carries the old
    fields, the schema refuses them (each with a red control) and requires
    `printing.block_icon`.

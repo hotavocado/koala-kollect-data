@@ -197,6 +197,200 @@ class Run(Harness, unittest.TestCase):
         self.assertFalse((self.repo / "data").exists())
 
 
+class ReplayGuard(Harness, unittest.TestCase):
+    """The stale-page guard reads fetched_at in state/pages, not a data row."""
+
+    def state(self):
+        return json.loads((self.repo / "state/pages/en.json").read_text())
+
+    def test_clean_run_stamps_fetched_at(self):
+        self.fetch(FIX, T2)
+        self.go()
+        self.assertEqual(self.state()[SID]["fetched_at"], T2)
+
+    def test_control_without_fetched_at_the_older_page_gets_through(self):
+        # Proves test_older_page_after_newer_data_is_refused reads state/pages:
+        # take fetched_at out and the same replay is written.
+        self.fetch(FIX, T2)
+        self.go()
+        st = self.state()
+        del st[SID]["fetched_at"]
+        (self.repo / "state/pages/en.json").write_text(json.dumps(st))
+        self.fetch(without(FIX, "OP17-019"), T1)
+        self.go()
+        self.assertEqual(self.state()[SID]["fetched_at"], T1)
+
+    def test_legacy_product_last_seen_at_seeds_fetched_at(self):
+        # Data written before the move: the product row carries last_seen_at and
+        # state/pages has no fetched_at. The guard must still refuse a replay.
+        self.fetch(FIX, T2)
+        self.go()
+        st = self.state()
+        del st[SID]["fetched_at"]
+        (self.repo / "state/pages/en.json").write_text(json.dumps(st))
+        p = self.repo / "data/products/en.jsonl"
+        p.write_text(p.read_text().replace(f'"first_seen_at":"{T2}"', f'"first_seen_at":"{T2}","last_seen_at":"{T2}"'))
+        before = self.data()
+        self.fetch(without(FIX, "OP17-019"), T1)
+        with self.assertRaisesRegex(run.RunError, "older than the data"):
+            self.go()
+        self.assertEqual(self.data(), before)
+
+    def test_no_data_row_carries_last_seen_at(self):
+        self.baseline()
+        self.go()
+        for f in (self.repo / "data").rglob("*.jsonl"):
+            self.assertNotIn("last_seen_at", f.read_text(), f.name)
+
+    def test_legacy_last_seen_at_is_dropped_from_every_row(self):
+        # The re-ingest over data written before the move: every row of every
+        # type carries last_seen_at, including rows this run does not rewrite
+        # (an observation whose block is unchanged).
+        self.baseline()
+        for f in (self.repo / "data").rglob("*.jsonl"):
+            f.write_text("".join(json.dumps(dict(json.loads(x), last_seen_at=T1), ensure_ascii=False) + "\n"
+                                 for x in f.read_text().splitlines()))
+        self.fetch(FIX, T2)
+        self.go()
+        for f in (self.repo / "data").rglob("*.jsonl"):
+            self.assertNotIn("last_seen_at", f.read_text(), f.name)
+
+
+BI_EN = (Path(__file__).resolve().parent / "fixtures" / "block_icon_en.html").read_text("utf-8")
+BI_JP = (Path(__file__).resolve().parent / "fixtures" / "block_icon_jp.html").read_text("utf-8")
+
+
+class PrintingFacts(unittest.TestCase):
+    """block_icon per printing per site and the ? attribute, on verbatim blocks (CONTRACT.md)."""
+
+    PAGES = {"en": ("569117", BI_EN), "jp": ("550901", BI_JP)}
+
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp())
+        self.repo = self.tmp / "repo"
+        self.repo.mkdir()
+        self.clock = itertools.count(1_791_331_200)
+        for site, (sid, html) in self.PAGES.items():
+            d = self.tmp / "pages" / site
+            d.mkdir(parents=True)
+            (d / f"{sid}.html").write_text(html, "utf-8")
+            (d / "_fetch_log.json").write_text(json.dumps([{"site": site, "series_id": sid, "label": "fixture",
+                                                             "status": 200, "fetched_at": T1}]))
+        run.run(self.tmp / "pages", self.repo, ["en", "jp"], now=lambda: float(next(self.clock)))
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp)
+
+    def rows(self, d, site=None):
+        f = self.repo / "data" / (f"{d}/{site}.jsonl" if site else f"{d}.jsonl")
+        return [json.loads(x) for x in f.read_text().splitlines()]
+
+    def icon(self, site, image_id):
+        loc = {r["image_id"]: r["printing_key"] for r in self.rows("printing_locators", site)}
+        return {r["key"]: r for r in self.rows("printings", site)}[loc[image_id]]["block_icon"]
+
+    def test_sites_disagree_per_printing_and_both_survive(self):
+        self.assertEqual((self.icon("en", "EB04-061_p2"), self.icon("jp", "EB04-061_p2")), ("X", 4))
+        self.assertEqual((self.icon("en", "OP01-016_p8"), self.icon("jp", "OP01-016_p8")), (1, "X"))
+        self.assertEqual((self.icon("en", "EB04-061"), self.icon("jp", "EB04-061")), (4, 4))
+
+    def test_card_block_icon_is_the_facts_site_base_number(self):
+        cards = {c["number"]: c for c in self.rows("cards")}
+        self.assertEqual({n: (c["facts_site"], c.get("block_icon")) for n, c in cards.items()},
+                         {"EB04-061": ("jp", 4), "OP01-016": ("jp", 1), "OP13-079": ("jp", 4)})
+
+    def test_observations_carry_no_block_icon(self):
+        for site in self.PAGES:
+            self.assertTrue(all("block_icon" not in o for o in self.rows("card_observations", site)))
+
+    def test_question_mark_is_stored_half_width_from_both_widths(self):
+        self.assertIn("？", BI_JP)  # the jp page really prints the full-width form
+        for site in self.PAGES:
+            imu = [o for o in self.rows("card_observations", site) if o["name"] in ("Imu", "イム")]
+            self.assertEqual([o["attributes"] for o in imu], [["?"]], site)
+
+    def test_control_unmapped_full_width_question_mark_stops_the_run(self):
+        table = {k: v for k, v in model.ATTRIBUTES.items() if k != "？"}
+        with mock.patch.object(model, "ATTRIBUTES", table), self.assertRaisesRegex(ValueError, "unknown attribute"):
+            model.observation_fields("jp", next(b for b in run.parse_page(BI_JP) if b["image_id"] == "OP13-079"))
+
+
+class Rekey(Harness, unittest.TestCase):
+    """The 2026-10-08 rekey: old-parser observations are replaced, not superseded (alyssa, general 86832)."""
+
+    def make_legacy(self):
+        """Rewrite the observations as the old parser wrote them: block_icon from the
+        block it read (integer only, X omitted), no "?" attribute, key over those fields."""
+        icons = {p["card_key"]: p["block_icon"] for p in self.rows("printing") if p["variant"] == "base"}
+        out = []
+        for o in self.rows("card_observation"):
+            fields = {k: v for k, v in o.items() if k not in run.OBS_META}
+            fields["attributes"] = [a for a in fields["attributes"] if a != "?"]
+            if isinstance(icons.get(o["card_key"]), int):
+                fields["block_icon"] = icons[o["card_key"]]
+            h = model.observation_hash(fields)
+            out.append(run.ordered("card_observation", {
+                "key": f"{o['card_key']}:en:{h}", "card_key": o["card_key"], "site": "en", "lang": "en",
+                "observation_hash": h, **fields, "first_seen_at": o["first_seen_at"], "last_seen_at": T1}))
+        out.sort(key=lambda r: r["key"])
+        (self.repo / "data/card_observations/en.jsonl").write_text("".join(run.line("card_observation", r) + "\n" for r in out))
+        return out
+
+    def test_rekey_keeps_first_seen_at_and_supersedes_nothing(self):
+        self.baseline()
+        after_parser = sorted(o["key"] for o in self.rows("card_observation"))
+        legacy = self.make_legacy()
+        # A row the old parser wrote without block_icon (X, or no base on the
+        # page) hashes the same under both parsers and is left alone.
+        old_icon = [o for o in legacy if "block_icon" in o]
+        self.assertEqual((len(legacy), len(old_icon)), (9, 7))
+        self.fetch(FIX, T2)
+        r = self.go()
+        obs = self.rows("card_observation")
+        self.assertEqual(r["counts"]["rekeyed"], len(old_icon))
+        self.assertEqual(sorted(o["key"] for o in obs), after_parser)
+        self.assertTrue(all("superseded_at" not in o and "block_icon" not in o for o in obs))
+        self.assertEqual({o["first_seen_at"] for o in obs}, {T1})
+
+    def test_after_the_rekey_a_rerun_makes_no_errata(self):
+        # The positive control upper asked for (roberto-internal 86831): the
+        # rekey is a pure function of the new parser, so it cannot recur.
+        self.baseline()
+        self.make_legacy()
+        self.fetch(FIX, T2)
+        self.go()
+        before = self.data()
+        r = self.go()
+        self.assertEqual((r["counts"]["added"], r["counts"]["changed"], r["counts"]["rekeyed"]), (0, 0, 0))
+        self.assertEqual(self.data(), before)
+
+    def test_control_a_real_erratum_on_a_legacy_row_is_still_an_erratum(self):
+        self.baseline()
+        legacy = self.make_legacy()
+        # Change the printed name on a card whose legacy row carries block_icon,
+        # so the rekey path sees the row and must refuse it.
+        target = next(o for o in legacy if "block_icon" in o)
+        number = {c["key"]: c["number"] for c in map(json.loads, (self.repo / "data/cards.jsonl").read_text().splitlines())}[target["card_key"]]
+        block = re.search(rf'<dl class="modalCol" id="{number}">.*?</dl>', FIX, re.S).group(0)
+        self.fetch(FIX.replace(block, block.replace(f'<div class="cardName">{target["name"]}', '<div class="cardName">Errata Name'), 1), T2)
+        r = self.go()
+        closed = [o for o in self.rows("card_observation") if "superseded_at" in o]
+        self.assertEqual([(o["card_key"], o["superseded_at"]) for o in closed], [(target["card_key"], T2)])
+        self.assertIn("block_icon", closed[0])  # the old row is kept as written, as any erratum is
+        self.assertEqual(r["counts"]["rekeyed"], 6)
+
+    def test_control_without_the_rekey_every_legacy_row_is_superseded(self):
+        # What option A would have written: proves the rekey tests can go red.
+        self.baseline()
+        legacy = self.make_legacy()
+        self.fetch(FIX, T2)
+        with mock.patch.object(run, "parser_only_change", lambda old, fields: False), \
+                mock.patch.object(run, "validate", lambda store: None):
+            self.go()
+        closed = [o for o in self.rows("card_observation") if "superseded_at" in o]
+        self.assertEqual(len(closed), len([o for o in legacy if "block_icon" in o]))
+
+
 class DataCheck(Harness, unittest.TestCase):
     """scripts/data_check.py on a real run's output, then broken one way at a time."""
 
