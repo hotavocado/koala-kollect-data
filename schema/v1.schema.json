@@ -1,0 +1,808 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/koala-kollect/koala-kollect-data/schema/v1.schema.json",
+  "title": "koala-kollect-data v1",
+  "description": "One record per JSONL line. Each data file holds one record type, named in manifest.json. Validate a line against #/$defs/<type>.",
+  "$defs": {
+    "site": {
+      "description": "The official card-list site a fact was read from. Sites, not languages: en and asia-en are both English and differ in products and promos.",
+      "enum": [
+        "en",
+        "asia-en",
+        "jp",
+        "tc",
+        "cn"
+      ]
+    },
+    "lang": {
+      "enum": [
+        "en",
+        "ja",
+        "zh-Hant",
+        "zh-Hans"
+      ]
+    },
+    "region": {
+      "enum": [
+        "en",
+        "asia",
+        "jp",
+        "cn"
+      ]
+    },
+    "timestamp": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$"
+    },
+    "partial_date": {
+      "description": "Day, month or year precision. JP magazine inserts often carry only a month.",
+      "type": "string",
+      "pattern": "^[0-9]{4}(-[0-9]{2}(-[0-9]{2})?)?$"
+    },
+    "card_key": {
+      "type": "string",
+      "pattern": "^card_[0-9a-z]{12}$"
+    },
+    "printing_key": {
+      "type": "string",
+      "pattern": "^prt_[0-9a-z]{12}$"
+    },
+    "distribution_key": {
+      "type": "string",
+      "pattern": "^dist_[0-9a-z]{12}$"
+    },
+    "product_key": {
+      "description": "{site}:{series_id}, e.g. jp:550117, cn:OPC-16.",
+      "type": "string",
+      "pattern": "^(en|asia-en|jp|tc|cn):[A-Za-z0-9-]+$"
+    },
+    "color": {
+      "enum": [
+        "red",
+        "green",
+        "blue",
+        "purple",
+        "black",
+        "yellow"
+      ]
+    },
+    "attribute": {
+      "enum": [
+        "slash",
+        "strike",
+        "ranged",
+        "special",
+        "wisdom"
+      ]
+    },
+    "category": {
+      "enum": [
+        "leader",
+        "character",
+        "event",
+        "stage",
+        "don"
+      ]
+    },
+    "card": {
+      "description": "Rules identity. Canonical facts come from the jp observation (JP is the authority); every site's own reading is kept in card_observation. Natural key: number for numbered cards, don_design for DON cards (Mike 86397: each DON design is its own card; normal and gold of one design are printings of it).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "category",
+        "colors",
+        "attributes",
+        "facts_site",
+        "first_seen_at"
+      ],
+      "properties": {
+        "key": {
+          "$ref": "#/$defs/card_key"
+        },
+        "number": {
+          "description": "OP01-001, P-117, ST20-004. Unique where present. Absent on DON cards, which carry don_design instead.",
+          "type": "string",
+          "minLength": 1
+        },
+        "don_design": {
+          "description": "DON cards only: {first product code}:{art slug}, e.g. OP-01:monkey-d-luffy. Unique. Normal and gold DON of one design share this card and differ as printings.",
+          "type": "string",
+          "pattern": "^[A-Za-z0-9-]+:[a-z0-9-]+$"
+        },
+        "category": {
+          "$ref": "#/$defs/category"
+        },
+        "colors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/color"
+          },
+          "uniqueItems": true
+        },
+        "cost": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "life": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "power": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "counter": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "attributes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/attribute"
+          },
+          "uniqueItems": true
+        },
+        "block_icon": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "facts_site": {
+          "description": "Which site's observation the canonical facts above were copied from. jp unless the card has no jp observation yet.",
+          "$ref": "#/$defs/site"
+        },
+        "first_seen_at": {
+          "$ref": "#/$defs/timestamp"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "category": {
+                "const": "don"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "don_design"
+            ],
+            "not": {
+              "required": [
+                "number"
+              ]
+            }
+          },
+          "else": {
+            "not": {
+              "required": [
+                "don_design"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "card_observation": {
+      "description": "One site's reading of a card (facts AND text), versioned by content hash. A changed block closes the old row (superseded_at) and opens a new one, so errata windows keep a record.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "card_key",
+        "site",
+        "lang",
+        "observation_hash",
+        "name",
+        "category",
+        "colors",
+        "attributes",
+        "types",
+        "first_seen_at",
+        "last_seen_at"
+      ],
+      "properties": {
+        "key": {
+          "description": "{card_key}:{site}:{observation_hash}",
+          "type": "string",
+          "pattern": "^card_[0-9a-z]{12}:(en|asia-en|jp|tc|cn):[0-9a-f]{16}$"
+        },
+        "card_key": {
+          "$ref": "#/$defs/card_key"
+        },
+        "site": {
+          "$ref": "#/$defs/site"
+        },
+        "lang": {
+          "$ref": "#/$defs/lang"
+        },
+        "observation_hash": {
+          "description": "First 16 hex of sha256 over the parsed block, not the raw page HTML.",
+          "type": "string",
+          "pattern": "^[0-9a-f]{16}$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "category": {
+          "$ref": "#/$defs/category"
+        },
+        "colors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/color"
+          },
+          "uniqueItems": true
+        },
+        "cost": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "life": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "power": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "counter": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "attributes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/attribute"
+          },
+          "uniqueItems": true
+        },
+        "block_icon": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "types": {
+          "description": "As printed, in the site's language.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "effect": {
+          "type": "string"
+        },
+        "trigger": {
+          "type": "string"
+        },
+        "first_seen_at": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "last_seen_at": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "superseded_at": {
+          "$ref": "#/$defs/timestamp"
+        }
+      }
+    },
+    "printing": {
+      "description": "One physical print as one site lists it. Never deleted and carries no removed_at: where it is listed lives on printing_product, and a printing moves between series pages under the same image id.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "card_key",
+        "site",
+        "rarity",
+        "variant",
+        "image_url",
+        "source_text",
+        "first_seen_at",
+        "last_seen_at"
+      ],
+      "properties": {
+        "key": {
+          "$ref": "#/$defs/printing_key"
+        },
+        "card_key": {
+          "$ref": "#/$defs/card_key"
+        },
+        "site": {
+          "$ref": "#/$defs/site"
+        },
+        "rarity": {
+          "description": "As printed: C, UC, R, SR, SEC, L, P, SP, ...",
+          "type": "string",
+          "minLength": 1
+        },
+        "variant": {
+          "enum": [
+            "base",
+            "parallel",
+            "alt_art",
+            "gold",
+            "reprint",
+            "manga",
+            "serial",
+            "other"
+          ],
+          "description": "gold = gold DON!! of a DON design; base is the normal one."
+        },
+        "image_url": {
+          "description": "Official URL. Linked, never re-hosted.",
+          "type": "string",
+          "pattern": "^https://"
+        },
+        "source_text": {
+          "description": "The verbatim Card Set(s) / 入手情報 / 獲取方法 string, unparsed, so a better parser can re-derive without a re-scrape.",
+          "type": "string"
+        },
+        "first_seen_at": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "last_seen_at": {
+          "$ref": "#/$defs/timestamp"
+        }
+      }
+    },
+    "printing_locator": {
+      "description": "Where a printing is found on its site. Measured stable (roberto 86390: 55 EN and 48 JP weekly snapshots, no id moved or vanished), so one row per printing in practice; the table exists so a future renumber is a new row, not a new printing.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "printing_key",
+        "site",
+        "image_id",
+        "first_seen_at",
+        "last_seen_at"
+      ],
+      "properties": {
+        "key": {
+          "description": "{site}:{image_id}. Unique.",
+          "type": "string",
+          "pattern": "^(en|asia-en|jp|tc|cn):.+$"
+        },
+        "printing_key": {
+          "$ref": "#/$defs/printing_key"
+        },
+        "site": {
+          "$ref": "#/$defs/site"
+        },
+        "image_id": {
+          "description": "Site-local. Bandai sites: base number plus an optional _pN or _rN suffix (OP14-108_p3, P-001_p5, ..._r1). cn: the API's numeric id. Suffixes do not line up across sites.",
+          "type": "string",
+          "minLength": 1
+        },
+        "suffix_family": {
+          "description": "Absent when the id has no suffix or the site has none (cn).",
+          "enum": [
+            "p",
+            "r"
+          ]
+        },
+        "suffix_n": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "first_seen_at": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "last_seen_at": {
+          "$ref": "#/$defs/timestamp"
+        }
+      },
+      "dependentRequired": {
+        "suffix_family": [
+          "suffix_n"
+        ],
+        "suffix_n": [
+          "suffix_family"
+        ]
+      }
+    },
+    "product": {
+      "description": "A series page on one site: a sealed product, or a listing bucket such as promos.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "site",
+        "series_id",
+        "name",
+        "kind",
+        "first_seen_at",
+        "last_seen_at"
+      ],
+      "properties": {
+        "key": {
+          "$ref": "#/$defs/product_key"
+        },
+        "site": {
+          "$ref": "#/$defs/site"
+        },
+        "series_id": {
+          "description": "550117, 569901, OPC-16",
+          "type": "string",
+          "minLength": 1
+        },
+        "code": {
+          "description": "OP-17, EB-04, OPC-16, PRBC-01",
+          "type": "string"
+        },
+        "name": {
+          "description": "As the site writes it.",
+          "type": "string",
+          "minLength": 1
+        },
+        "name_en": {
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "starter",
+            "booster",
+            "extra",
+            "premium",
+            "family",
+            "limited",
+            "promo_bucket",
+            "other"
+          ]
+        },
+        "release_date": {
+          "$ref": "#/$defs/partial_date"
+        },
+        "product_url": {
+          "type": "string",
+          "pattern": "^https://"
+        },
+        "first_seen_at": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "last_seen_at": {
+          "$ref": "#/$defs/timestamp"
+        }
+      }
+    },
+    "printing_product": {
+      "description": "A printing listed under a series page. Many-to-many (one id sits under two pages today). removed_at lives HERE: a printing leaving the promo page for Other Product Card closes this row and opens another, the printing itself is unchanged.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "printing_key",
+        "product_key",
+        "first_seen_at",
+        "last_seen_at"
+      ],
+      "properties": {
+        "key": {
+          "description": "{printing_key}@{product_key}",
+          "type": "string",
+          "pattern": "^prt_[0-9a-z]{12}@(en|asia-en|jp|tc|cn):[A-Za-z0-9-]+$"
+        },
+        "printing_key": {
+          "$ref": "#/$defs/printing_key"
+        },
+        "product_key": {
+          "$ref": "#/$defs/product_key"
+        },
+        "first_seen_at": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "last_seen_at": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "removed_at": {
+          "description": "Set only by a clean run (no fetch error, nonzero parse) that no longer finds the listing. Never deleted.",
+          "$ref": "#/$defs/timestamp"
+        }
+      }
+    },
+    "distribution": {
+      "description": "Where a printing came from: an event, a channel, a bundle.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "region",
+        "kind",
+        "name"
+      ],
+      "properties": {
+        "key": {
+          "$ref": "#/$defs/distribution_key"
+        },
+        "region": {
+          "$ref": "#/$defs/region"
+        },
+        "kind": {
+          "enum": [
+            "promo_pack",
+            "tournament_prize",
+            "participation",
+            "event_pack",
+            "meetup",
+            "pre_release",
+            "magazine_insert",
+            "retail_tieup",
+            "bundle",
+            "movie",
+            "championship",
+            "store_tournament",
+            "online",
+            "other"
+          ]
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name_native": {
+          "type": "string"
+        },
+        "starts_on": {
+          "$ref": "#/$defs/partial_date"
+        },
+        "ends_on": {
+          "$ref": "#/$defs/partial_date"
+        },
+        "tier": {
+          "enum": [
+            "participant",
+            "winner",
+            "finalist",
+            "top_cut",
+            "judge",
+            "all"
+          ]
+        },
+        "quantity_note": {
+          "type": "string"
+        },
+        "source_url": {
+          "type": "string",
+          "pattern": "^https?://"
+        }
+      }
+    },
+    "printing_distribution": {
+      "description": "One claim that a printing came from a distribution, with the source and the exact quote. Several claims per printing are normal and may disagree (P-157); the UI ranks them, the data keeps them all.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "printing_key",
+        "distribution_key",
+        "source",
+        "source_url",
+        "quote",
+        "confidence",
+        "observed_at"
+      ],
+      "properties": {
+        "key": {
+          "description": "ev_ + first 16 hex of sha256(printing_key|distribution_key|source|source_url), so a re-run upserts instead of duplicating.",
+          "type": "string",
+          "pattern": "^ev_[0-9a-f]{16}$"
+        },
+        "printing_key": {
+          "$ref": "#/$defs/printing_key"
+        },
+        "distribution_key": {
+          "$ref": "#/$defs/distribution_key"
+        },
+        "source": {
+          "enum": [
+            "official_cardlist",
+            "official_event",
+            "official_topic",
+            "tcgcsv",
+            "namuwiki",
+            "manual"
+          ]
+        },
+        "source_url": {
+          "type": "string",
+          "pattern": "^https?://"
+        },
+        "quote": {
+          "type": "string",
+          "minLength": 1
+        },
+        "confidence": {
+          "enum": [
+            "authoritative",
+            "corroborated",
+            "inferred"
+          ]
+        },
+        "observed_at": {
+          "$ref": "#/$defs/timestamp"
+        }
+      }
+    },
+    "printing_link": {
+      "description": "The same art across sites. Image ids do not line up across languages, so this is matching work with review, never derived from ids.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "printing_a",
+        "printing_b",
+        "method",
+        "confidence"
+      ],
+      "properties": {
+        "key": {
+          "description": "{printing_a}={printing_b}, a sorts before b.",
+          "type": "string",
+          "pattern": "^prt_[0-9a-z]{12}=prt_[0-9a-z]{12}$"
+        },
+        "printing_a": {
+          "$ref": "#/$defs/printing_key"
+        },
+        "printing_b": {
+          "$ref": "#/$defs/printing_key"
+        },
+        "method": {
+          "enum": [
+            "manual",
+            "image_hash",
+            "number_and_distribution"
+          ]
+        },
+        "confidence": {
+          "enum": [
+            "authoritative",
+            "corroborated",
+            "inferred"
+          ]
+        },
+        "reviewed_by": {
+          "type": "string"
+        },
+        "reviewed_at": {
+          "$ref": "#/$defs/timestamp"
+        }
+      }
+    },
+    "ingest_run": {
+      "description": "Data-repo audit only (runs/), not synced to the app. A run with any refusal never stamps removed_at.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "run_id",
+        "site",
+        "started_at",
+        "finished_at",
+        "pages_fetched",
+        "pages_unchanged",
+        "blocks_parsed",
+        "added",
+        "changed",
+        "removed",
+        "refusals"
+      ],
+      "properties": {
+        "run_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "site": {
+          "$ref": "#/$defs/site"
+        },
+        "started_at": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "finished_at": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "pages_fetched": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "pages_unchanged": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "blocks_parsed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "added": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "changed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "removed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "refusals": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "http_error",
+            "zero_parse"
+          ],
+          "properties": {
+            "http_error": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "zero_parse": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "new_products": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/product_key"
+          }
+        }
+      }
+    },
+    "manifest": {
+      "description": "manifest.json at the repo root. The app sync reads this first and refuses on any sha256 or row-count mismatch.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "generated_at",
+        "files"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "generated_at": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "files": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "type",
+              "rows",
+              "sha256"
+            ],
+            "properties": {
+              "type": {
+                "enum": [
+                  "card",
+                  "card_observation",
+                  "printing",
+                  "printing_locator",
+                  "product",
+                  "printing_product",
+                  "distribution",
+                  "printing_distribution",
+                  "printing_link"
+                ]
+              },
+              "rows": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
