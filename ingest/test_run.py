@@ -99,6 +99,15 @@ class Run(Harness, unittest.TestCase):
         self.assertEqual(runs[0].read_bytes(), first)
         self.assertEqual(self.data(), before)
 
+    def test_older_page_after_newer_data_is_refused(self):
+        self.fetch(FIX, T2)
+        self.go()
+        before = self.data()
+        self.fetch(without(FIX, "OP17-019"), T1)  # an older snapshot, and it differs
+        with self.assertRaisesRegex(run.RunError, "older than the data"):
+            self.go()
+        self.assertEqual(self.data(), before)
+
     def test_redeploy_stamp_changes_no_row(self):
         self.baseline()
         urls = sorted(p["image_url"] for p in self.rows("printing"))

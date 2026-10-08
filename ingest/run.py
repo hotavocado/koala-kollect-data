@@ -162,6 +162,12 @@ def run_site(store, site_dir, site, state):
     new_products, touched = [], set()
     for sid, label, t, blocks in sorted(clean):
         product_key = f"{site}:{sid}"
+        # An older page replayed over newer data would supersede current facts
+        # with stale ones, stamped earlier than what they replace. The product's
+        # last_seen_at is the newest clean fetch of this page; equal is a replay.
+        last = store.recs["product"].get(product_key, {}).get("last_seen_at")
+        if last and t < last:
+            raise RunError(f"{site}:{sid} fetched {t}, older than the data ({last}); nothing written")
         before = counts["added"]
         store.upsert("product", {"key": product_key, "site": site, **model.product_fields(site, sid, label)}, t, counts)
         if counts["added"] > before:
