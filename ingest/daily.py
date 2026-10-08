@@ -25,6 +25,8 @@ import argparse
 import json
 import os
 import sys
+import time
+from collections import Counter
 from pathlib import Path
 
 import cn
@@ -85,22 +87,40 @@ def decide(fetch_failures, result):
     return failures, changed
 
 
+def fetch_line(site, log, seconds):
+    """One line per site: HTTP status counts, retried pages and wall time.
+
+    A block or a throttle from a new address space shows here first, as non-200
+    statuses or as pages that needed a retry, before it shows as a refusal.
+    """
+    statuses = Counter("failed" if e.get("status") is None else str(e["status"]) for e in log)
+    retried = sum(1 for e in log if e.get("attempt_errors") and "error" not in e)
+    status = ", ".join(f"{k}: {v}" for k, v in sorted(statuses.items()))
+    return f"fetch {site}: {len(log)} pages, status {{{status}}}, retried {retried}, {seconds:.0f}s"
+
+
 def fetch_all(pageset, sites):
     """Fetch every site and the cn list. Returns (failures, cn_rows)."""
     failures = []
     for site in sites:
+        t0 = time.monotonic()
         try:
             log = fetch.fetch_site(site, pageset)
         except Exception as e:  # the index or dropdown itself failed
             failures.append(f"{site}: fetch stopped: {type(e).__name__}: {e}")
+            print(f"fetch {site}: STOPPED after {time.monotonic() - t0:.0f}s: {type(e).__name__}: {e}", flush=True)
             continue
+        print(fetch_line(site, log, time.monotonic() - t0), flush=True)
         for entry in log:
             if "error" in entry:
                 failures.append(f"{site}:{entry['series_id']} fetch failed: {entry['error']}")
+    t0 = time.monotonic()
     try:
         cn_rows = cn.list_all()
+        print(f"fetch cn: {len(cn_rows)} rows, {time.monotonic() - t0:.0f}s", flush=True)
     except Exception as e:
         failures.append(f"cn: list failed: {type(e).__name__}: {e}")
+        print(f"fetch cn: FAILED after {time.monotonic() - t0:.0f}s: {type(e).__name__}: {e}", flush=True)
         cn_rows = None
     return failures, cn_rows
 
