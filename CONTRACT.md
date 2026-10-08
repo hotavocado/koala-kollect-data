@@ -247,7 +247,21 @@ authority on which pack a printing came from.
   than the data are refused, the same replay guard as the card pages.
 - **Claims are never removed.** A page that drops off a list keeps its claims.
 
-DATED_SHARE_PLACEHOLDER
+**How much is dated (measured 2026-10-08, first full run).** A promo printing is
+dated when at least one of its claims carries `starts_on`. Not every promo has a
+date: many pages are schedules or carry no date, and a card-list name dates its
+printings only when it names one (a magazine's on-sale date, a month, a period).
+
+| site | promo printings | dated | share | from event pages | from the card-list name only |
+|---|---|---|---|---|---|
+| en | 374 | 315 | 84% | 315 | 0 |
+| asia-en | 389 | 271 | 70% | 140 | 131 |
+| jp | 460 | 315 | 68% | 213 | 102 |
+| tc | 389 | 165 | 42% | 34 | 131 |
+| all four | 1612 | 1066 | 66% | | |
+
+The same run put 139 claims in review (en 103 from 17 distinct page/list name
+pairs, jp 36 from 4, asia-en and tc none) and found no card-block contradictions.
 
 ## Transition (2026-10-08)
 

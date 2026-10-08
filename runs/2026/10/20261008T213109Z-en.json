@@ -1,0 +1,19 @@
+{
+ "run_id": "20261008T213109Z-en",
+ "site": "en",
+ "started_at": "2026-10-08T21:31:09Z",
+ "finished_at": "2026-10-08T21:31:30Z",
+ "pages_fetched": 60,
+ "pages_unchanged": 60,
+ "blocks_parsed": 4844,
+ "blocks_without_source_text": 1,
+ "added": 1379,
+ "changed": 0,
+ "removed": 0,
+ "refusals": {
+  "http_error": 0,
+  "zero_parse": 0,
+  "count_drop": 0,
+  "count_mismatch": 0
+ }
+}

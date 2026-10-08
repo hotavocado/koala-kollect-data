@@ -1,6 +1,6 @@
 {
  "schema_version": 1,
- "generated_at": "2026-10-08T16:11:35Z",
+ "generated_at": "2026-10-08T21:26:03Z",
  "files": {
   "data/card_observations/asia-en.jsonl": {
    "type": "card_observation",
@@ -26,6 +26,16 @@
    "type": "card",
    "rows": 2824,
    "sha256": "d37c259f37e86b462a306a7aa362bc4b914aaaa91fb9c3e16dbc488c1e082157"
+  },
+  "data/distributions.jsonl": {
+   "type": "distribution",
+   "rows": 664,
+   "sha256": "954e555e970d9d704b4a7600d29a62c9c3df760e10a5a7f0b7a02de4fa502aeb"
+  },
+  "data/printing_distributions.jsonl": {
+   "type": "printing_distribution",
+   "rows": 5398,
+   "sha256": "bc27e07ab47ab9bd97d014614104c7e75d046ca1fc9f94daeade750c8f520970"
   },
   "data/printing_locators/asia-en.jsonl": {
    "type": "printing_locator",
