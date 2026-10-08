@@ -124,9 +124,12 @@ def lines_of(html):
 # --- dates ---------------------------------------------------------------------
 
 DATE_LABELS = re.compile(
-    r"^(?:date|dates|event date|event period|period|schedule|distribution period"
-    r"|開催日|開催日時|開催期間|開催日程|日程|配布期間"
-    r"|舉辦日期|活動日期|活動期間)\s*[:：]?$", re.I)
+    r"^(?:date|dates|date (?:&|and) time|event date|event period|period|schedule|distribution period"
+    r"|開催日|開催日時|開催期間|開催日程|日程|配布期間|実施期間"
+    r"|舉辦日期|舉辦期間|活動日期|活動期間)\s*[:：]?$", re.I)
+# Not labels, measured on the survey pages: 応募期間 / 事前応募期間 (the entry
+# window, not the event), 開催日程／会場 (heads a per-venue list), Legal Date
+# (when a card becomes legal).
 _MONTHS = {m: i for i, m in enumerate(
     ["january", "february", "march", "april", "may", "june", "july", "august",
      "september", "october", "november", "december"], 1)}
