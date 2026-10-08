@@ -52,7 +52,7 @@ promos.
 - `image_id` is site-local. Bandai sites use the base number plus an optional `_pN`
   or `_rN` suffix; cn uses the API's numeric id. Suffixes do not line up across
   sites, so the same art in two languages is a `printing_link`, never a shared
-  printing. Per site, image ids were measured stable (55 EN and 48 JP weekly
+  printing. tcgcsv (DON printings only) uses TCGplayer's numeric productId. Per site, image ids were measured stable (55 EN and 48 JP weekly
   snapshots, Wayback 2023-2026 on the EN promo page). **cn is an assumption, not
   yet measured:** nothing has covered the stability of the API's numeric id, and
   the cn list also carries its own suffixed `cardNumber` (`P-084_01`: two digits,
@@ -63,8 +63,19 @@ promos.
   No official card list carries DON cards (0 on all five sites, measured
   2026-10-08), so DON designs are minted from tcgcsv, and a DON card's
   `facts_site` is `tcgcsv`. The schema refuses `tcgcsv` on any other category.
-  **Open:** the `site` of a DON printing and its locator. Both are still the
-  five-site enum, and a tcgcsv-only DON printing has no official site.
+  A DON printing's `site` is `tcgcsv` and its locator is `tcgcsv:{productId}`,
+  TCGplayer's own integer id (roberto 86534), which phase 3's price rows key on
+  too. `tcgcsv` is a printing and locator site only, never a product,
+  observation or run site, and a tcgcsv printing must be `rarity: DON`,
+  `variant: base` or `gold`.
+  The card is minted from the art, never from the product: a design reissued
+  in a later DON pack is a new productId and so a second printing of the same
+  card, found by its `don_design`.
+  **Assumption, not yet measured:** a normal and a gold DON are separate
+  TCGplayer products, so one product is one printing. If they turn out to be
+  one product with a variant field, the locator becomes
+  `tcgcsv:{productId}:{variant}` and the row is otherwise unchanged. The ingest
+  measures this at its tcgcsv step.
 
 ## Write rules
 

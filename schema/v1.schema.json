@@ -14,6 +14,17 @@
         "cn"
       ]
     },
+    "printing_site": {
+      "description": "Where a printing or its locator was read: an official site, or tcgcsv for DON printings only. No official site lists DON cards, so tcgcsv is their only source. Not a site for observations, products or runs.",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/site"
+        },
+        {
+          "const": "tcgcsv"
+        }
+      ]
+    },
     "lang": {
       "enum": [
         "en",
@@ -336,7 +347,7 @@
           "$ref": "#/$defs/card_key"
         },
         "site": {
-          "$ref": "#/$defs/site"
+          "$ref": "#/$defs/printing_site"
         },
         "rarity": {
           "description": "As printed: C, UC, R, SR, SEC, L, P, SP, ...",
@@ -357,7 +368,7 @@
           "description": "gold = gold DON!! of a DON design; base is the normal one."
         },
         "image_url": {
-          "description": "Official URL, absolute, with no query string or fragment. Bandai appends a site-wide deploy stamp (?260929) that changes on every redeploy; keeping it would make every printing differ on every run. Linked, never re-hosted.",
+          "description": "Absolute URL with no query string or fragment: the official site's, or TCGplayer's image for a tcgcsv DON printing. Bandai appends a site-wide deploy stamp (?260929) that changes on every redeploy; keeping it would make every printing differ on every run. Linked, never re-hosted.",
           "type": "string",
           "pattern": "^https://[^?#]+$"
         },
@@ -371,7 +382,34 @@
         "last_seen_at": {
           "$ref": "#/$defs/timestamp"
         }
-      }
+      },
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "site"
+            ],
+            "properties": {
+              "site": {
+                "const": "tcgcsv"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "rarity": {
+                "const": "DON"
+              },
+              "variant": {
+                "enum": [
+                  "base",
+                  "gold"
+                ]
+              }
+            }
+          }
+        }
+      ]
     },
     "printing_locator": {
       "description": "Where a printing is found on its site. Measured stable (roberto 86390: 55 EN and 48 JP weekly snapshots, no id moved or vanished), so one row per printing in practice; the table exists so a future renumber is a new row, not a new printing.",
@@ -389,16 +427,16 @@
         "key": {
           "description": "{site}:{image_id}. Unique.",
           "type": "string",
-          "pattern": "^(en|asia-en|jp|tc|cn):.+$"
+          "pattern": "^(en|asia-en|jp|tc|cn|tcgcsv):.+$"
         },
         "printing_key": {
           "$ref": "#/$defs/printing_key"
         },
         "site": {
-          "$ref": "#/$defs/site"
+          "$ref": "#/$defs/printing_site"
         },
         "image_id": {
-          "description": "Site-local. Bandai sites: base number plus an optional _pN or _rN suffix (OP14-108_p3, P-001_p5, ..._r1), measured stable per site. cn: the API's numeric id, an ASSUMPTION not yet measured (the cn list also carries its own suffixed cardNumber such as P-084_01). Suffixes do not line up across sites.",
+          "description": "Site-local. Bandai sites: base number plus an optional _pN or _rN suffix (OP14-108_p3, P-001_p5, ..._r1), measured stable per site. cn: the API's numeric id, an ASSUMPTION not yet measured (the cn list also carries its own suffixed cardNumber such as P-084_01). Suffixes do not line up across sites. tcgcsv: TCGplayer's productId, an integer (roberto 86534).",
           "type": "string",
           "minLength": 1
         },
@@ -427,7 +465,33 @@
         "suffix_n": [
           "suffix_family"
         ]
-      }
+      },
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "site"
+            ],
+            "properties": {
+              "site": {
+                "const": "tcgcsv"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "image_id": {
+                "pattern": "^[0-9]+$"
+              }
+            },
+            "not": {
+              "required": [
+                "suffix_family"
+              ]
+            }
+          }
+        }
+      ]
     },
     "product": {
       "description": "A series page on one site: a sealed product, or a listing bucket such as promos.",

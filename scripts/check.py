@@ -47,13 +47,14 @@ cases = [
     ("jp", "OP01-001_r1", ("OP01-001", "r", 1)),
     ("en", "ST20-004", ("ST20-004", None, None)),
     ("en", "EB01-012", ("EB01-012", None, None)),
+    ("tcgcsv", "512345", (None, None, None)),
 ]
 for site, iid, want in cases:
     got = parse_image_id(site, iid)
     got = (got["base"], got["suffix_family"], got["suffix_n"])
     print("ok   id   " if got == want else "FAIL id   ", site, iid, got)
     bad += got != want
-for site, iid in [("en", "OP01-001_x1"), ("en", "op01-001"), ("cn", "OP01-001"), ("jp", "OP01-001_p")]:
+for site, iid in [("en", "OP01-001_x1"), ("en", "op01-001"), ("cn", "OP01-001"), ("tcgcsv", "512345_p1"), ("jp", "OP01-001_p")]:
     try:
         parse_image_id(site, iid)
         bad += 1
