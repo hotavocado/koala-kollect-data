@@ -60,8 +60,11 @@ promos.
 - DON: each DON design is its own card (`category: don`, no `number`,
   `don_design` = `{first product code}:{art slug}`). The normal and gold DON of one
   design are two printings of that card (`variant: base` and `variant: gold`).
-  **Open:** which source DON designs are minted from. This depends on whether
-  the official card lists carry DON at all.
+  No official card list carries DON cards (0 on all five sites, measured
+  2026-10-08), so DON designs are minted from tcgcsv, and a DON card's
+  `facts_site` is `tcgcsv`. The schema refuses `tcgcsv` on any other category.
+  **Open:** the `site` of a DON printing and its locator. Both are still the
+  five-site enum, and a tcgcsv-only DON printing has no official site.
 
 ## Write rules
 
@@ -92,7 +95,10 @@ promos.
   everything without a re-scrape. When a site shows no provenance for a printing,
   `source_text` is the empty string and the run counts it in
   `blocks_without_source_text`. A jump in that count means a broken parser.
-- **Images are linked, never hosted.** `image_url` points at the official site.
+- **Images are linked, never hosted.** `image_url` is the absolute official URL
+  with no query string. Bandai's card images carry a site-wide deploy stamp
+  (`?260929`) that changes on every redeploy; keeping it would turn each
+  redeploy into a change to every printing.
 - `printing_links` and `distributions` are reviewed; the ingest may propose
   them only with `confidence: inferred`.
 

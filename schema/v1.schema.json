@@ -148,8 +148,15 @@
           "minimum": 0
         },
         "facts_site": {
-          "description": "Which site's current observation supplied the canonical facts. Fallback order: jp, en, asia-en, tc, cn (the first site with an observation wins), so a card with no JP printing still has facts.",
-          "$ref": "#/$defs/site"
+          "description": "Which source's current reading supplied the canonical facts. Fallback order: jp, en, asia-en, tc, cn (the first site with an observation wins), so a card with no JP printing still has facts. DON cards only may carry tcgcsv: no official site lists DON cards (0 on all five, 2026-10-08), so their facts come from tcgcsv.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/site"
+            },
+            {
+              "const": "tcgcsv"
+            }
+          ]
         },
         "first_seen_at": {
           "$ref": "#/$defs/timestamp"
@@ -179,6 +186,25 @@
               "required": [
                 "don_design"
               ]
+            }
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "facts_site"
+            ],
+            "properties": {
+              "facts_site": {
+                "const": "tcgcsv"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "category": {
+                "const": "don"
+              }
             }
           }
         }
@@ -331,9 +357,9 @@
           "description": "gold = gold DON!! of a DON design; base is the normal one."
         },
         "image_url": {
-          "description": "Official URL. Linked, never re-hosted.",
+          "description": "Official URL, absolute, with no query string or fragment. Bandai appends a site-wide deploy stamp (?260929) that changes on every redeploy; keeping it would make every printing differ on every run. Linked, never re-hosted.",
           "type": "string",
-          "pattern": "^https://"
+          "pattern": "^https://[^?#]+$"
         },
         "source_text": {
           "description": "The verbatim Card Set(s) / 入手情報 / 獲取方法 string, unparsed, so a better parser can re-derive without a re-scrape. Empty string when the site shows none (EN ST14-010_r1 has no provenance block); every empty one is counted on the run.",
