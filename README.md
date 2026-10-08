@@ -12,7 +12,10 @@ re-hosted.
 
 **Status:** schema only. The ingest that fills `data/` is next.
 
-**Licence:** not chosen yet. Until a LICENSE file lands, all rights are reserved.
+**Licence:** this dataset (its structure, provenance records, keys and links) is
+licensed [CC BY 4.0](LICENSE): reuse it freely, crediting "Koala Kollect" with a link
+to this repo. The card text quoted in it, and the card images it links to, are not
+ours to license. They remain Bandai's, and you are responsible for your own use of them.
 
 One Piece Card Game and its card text and images are owned by Bandai and Eiichiro
 Oda/Shueisha/Toei Animation. This project is not affiliated with them.
