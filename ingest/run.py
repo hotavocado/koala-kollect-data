@@ -47,8 +47,6 @@ PER_SITE = {"card_observation": "card_observations", "printing": "printings",
 SHARED = {"card": "cards", "distribution": "distributions",
           "printing_distribution": "printing_distributions", "printing_link": "printing_links"}
 TYPE_OF_DIR = {v: k for k, v in {**PER_SITE, **SHARED}.items()}
-# Fields of a card_observation row that are not facts it states.
-OBS_META = ("key", "card_key", "site", "lang", "observation_hash", "first_seen_at", "last_seen_at", "superseded_at")
 
 
 class RunError(Exception):
@@ -84,16 +82,6 @@ class Store:
                 self.recs[rtype].update(read_jsonl(f))
         for rtype, d in SHARED.items():
             self.recs[rtype].update(read_jsonl(self.repo / "data" / f"{d}.jsonl"))
-        # Transitional (CONTRACT.md): rows written before 2026-10-08's contract
-        # carry last_seen_at. Drop it on read, so no row is written with it.
-        # A product's last_seen_at was its page's newest clean fetch; keep it
-        # to seed the page's fetched_at where state/pages has none yet.
-        self.legacy_fetched_at = {}
-        for rtype, recs in self.recs.items():
-            for key, rec in recs.items():
-                t = rec.pop("last_seen_at", None)
-                if rtype == "product" and t:
-                    self.legacy_fetched_at[key] = t
         self.card_by_number = {c["number"]: k for k, c in self.recs["card"].items() if "number" in c}
         self.number_by_card = {k: n for n, k in self.card_by_number.items()}
 
@@ -261,19 +249,6 @@ def observe(store, site, clean, refused_blocks, page_refusals, counts):
         if cur and cur["observation_hash"] == h:
             continue
         key = f"{card_key}:{site}:{h}"
-        if cur and parser_only_change(cur, fields):
-            # The 2026-10-08 rekey (CONTRACT.md): the row was written by the
-            # old parser and the block has not changed, so it is not an
-            # erratum. Replace it under the key this parser gives it, keeping
-            # first_seen_at. Only a row still carrying block_icon can match,
-            # and no row is written with one, so this cannot fire twice.
-            del store.recs["card_observation"][cur["key"]]
-            store.recs["card_observation"][key] = ordered("card_observation", {
-                "key": key, "card_key": card_key, "site": site, "lang": model.LANG[site],
-                "observation_hash": h, **fields, "first_seen_at": cur["first_seen_at"]})
-            counts["changed"] += 1
-            counts["rekeyed"] += 1
-            continue
         if cur:
             cur["superseded_at"] = t
             counts["changed"] += 1
@@ -287,20 +262,6 @@ def observe(store, site, clean, refused_blocks, page_refusals, counts):
                 "key": key, "card_key": card_key, "site": site, "lang": model.LANG[site],
                 "observation_hash": h, **fields, "first_seen_at": t})
             counts["added"] += 1
-
-
-def parser_only_change(old, fields):
-    """True when an old-parser row and this parser's fields differ only by the 2026-10-08 changes.
-
-    Those are exactly two: block_icon left the observation, and "?" became an
-    attribute value where the old parser recorded none. Anything else is a
-    real change and goes through the erratum path.
-    """
-    if "block_icon" not in old:
-        return False
-    was = {k: v for k, v in old.items() if k not in OBS_META and k != "block_icon"}
-    now = dict(fields, attributes=[a for a in fields.get("attributes", []) if a != "?"])
-    return was == now
 
 
 def build_cards(store):
@@ -421,19 +382,18 @@ def write(files):
 def run(pageset, repo, sites=SITES, cn_rows=None, now=time.time):
     pageset, repo = Path(pageset), Path(repo)
     store = Store(repo)
+    # The committed data must already meet the schema. A row the schema refuses
+    # (a legacy last_seen_at or observation block_icon) stops the run before any
+    # fetch is read, so it can never be rewritten without its field quietly.
+    try:
+        validate(store)
+    except RunError as ex:
+        raise RunError(f"committed data: {ex}") from None
     states, results = {}, {}
     started = now()
     for site in sites:
         sp = repo / "state" / "pages" / f"{site}.json"
         states[site] = json.loads(sp.read_text("utf-8")) if sp.exists() else {}
-        # Transitional: a page whose state predates fetched_at takes it from its
-        # product's last_seen_at, the stamp the replay guard used to read, so
-        # the guard has no gap while the field moves.
-        # A page with no state entry at all gets one holding only fetched_at.
-        for pk, t in store.legacy_fetched_at.items():
-            s, sid = pk.split(":", 1)
-            if s == site:
-                states[site].setdefault(sid, {}).setdefault("fetched_at", t)
         t0 = now()
         counts, refusals, page_refusals = run_site(store, pageset / site, site, states[site])
         results[site] = {"counts": counts, "refusals": refusals, "page_refusals": page_refusals, "t0": t0, "t1": now()}
@@ -488,8 +448,6 @@ def main(argv):
               f"blocks {run_rec['blocks_parsed']} (no source_text {run_rec['blocks_without_source_text']}), "
               f"added {run_rec['added']}, changed {run_rec['changed']}, removed {run_rec['removed']}, "
               f"refusals {run_rec['refusals']}")
-        if r["counts"]["rekeyed"]:
-            print(f"  rekeyed {r['counts']['rekeyed']} observations (2026-10-08 parser change, not errata)")
         for sid, arm in sorted(r["page_refusals"].items()):
             print(f"  REFUSED {site}:{sid} {arm}")
     print(f"cards: {res['cards']}")

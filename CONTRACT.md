@@ -139,10 +139,10 @@ promos.
 
 ## Transition (2026-10-08)
 
-This version of the schema accepts both shapes while the ingest moves over, so
-that CI stays green at every step:
+The schema accepted both shapes while the ingest moved over, so that CI stayed
+green at every step:
 
-1. **This change:** `printing.block_icon` and the `"?"` value are legal.
+1. **Widening:** `printing.block_icon` and the `"?"` value are legal.
    `card_observation.block_icon` and every `last_seen_at` are still legal but
    deprecated, and `last_seen_at` is no longer required.
 2. **Ingest:** writes `block_icon` per printing, writes `"?"`, stops writing
@@ -165,12 +165,14 @@ that CI stays green at every step:
    `first_seen_at` preserved, and no `superseded_at` was written, so the errata
    history holds no erratum that did not happen. Old keys are gone from `data/`;
    the app cleared `card_observations` once on dev and re-synced (alyssa,
-   general 86832). This happens once: the ingest rekeys only a row that still
-   carries `block_icon` and differs by nothing else, and no row is written with
-   it.
-3. **Closing change:** once `check_data` shows that no data row carries the old
-   fields, the schema refuses them (each with a red control) and requires
-   `printing.block_icon`.
+   general 86832). It happened once. The closing change below removed the
+   ingest's rekey path, because the schema now refuses the old shape it matched.
+3. **Closing change (this version):** no data row carries the old fields, so
+   the schema refuses `card_observation.block_icon` and every `last_seen_at`,
+   each with a red control in `examples/invalid.jsonl`, and requires
+   `printing.block_icon`. A printing with no icon carries `null`.
+   The ingest validates the committed data before it reads any fetch, so a
+   row carrying an old field stops the run loudly; nothing drops it on read.
 
 ## Sync (app side)
 

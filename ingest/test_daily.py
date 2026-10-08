@@ -131,6 +131,19 @@ class FailsLoudly(Harness, unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertTrue(s["failures"][0].startswith("run stopped, nothing written:"), s["failures"])
 
+    def test_committed_data_the_schema_refuses_fails_the_run(self):
+        # A committed row carrying a field the closed schema refuses halts every
+        # daily run until main is fixed, so it must exit 1 (a red Action), never skip.
+        self.assertEqual(self.go()[0], 0)  # positive control
+        p = next((self.repo / "data/products").glob("*.jsonl"))
+        rows = p.read_text().splitlines()
+        p.write_text("\n".join([rows[0][:-1] + ',"last_seen_at":"2026-10-01T00:00:00Z"}', *rows[1:]]) + "\n")
+        before = {f: f.read_text() for f in (self.repo / "data").rglob("*.jsonl")}
+        code, s = self.go()
+        self.assertEqual((code, s["ok"], s["changed"]), (1, False, False))
+        self.assertTrue(s["failures"][0].startswith("run stopped, nothing written: committed data:"), s["failures"])
+        self.assertEqual({f: f.read_text() for f in (self.repo / "data").rglob("*.jsonl")}, before)
+
 
 class NewSeries(Harness, unittest.TestCase):
     def setUp(self):

@@ -220,40 +220,12 @@ class ReplayGuard(Harness, unittest.TestCase):
         self.go()
         self.assertEqual(self.state()[SID]["fetched_at"], T1)
 
-    def test_legacy_product_last_seen_at_seeds_fetched_at(self):
-        # Data written before the move: the product row carries last_seen_at and
-        # state/pages has no fetched_at. The guard must still refuse a replay.
-        self.fetch(FIX, T2)
-        self.go()
-        st = self.state()
-        del st[SID]["fetched_at"]
-        (self.repo / "state/pages/en.json").write_text(json.dumps(st))
-        p = self.repo / "data/products/en.jsonl"
-        p.write_text(p.read_text().replace(f'"first_seen_at":"{T2}"', f'"first_seen_at":"{T2}","last_seen_at":"{T2}"'))
-        before = self.data()
-        self.fetch(without(FIX, "OP17-019"), T1)
-        with self.assertRaisesRegex(run.RunError, "older than the data"):
-            self.go()
-        self.assertEqual(self.data(), before)
-
     def test_no_data_row_carries_last_seen_at(self):
         self.baseline()
         self.go()
         for f in (self.repo / "data").rglob("*.jsonl"):
             self.assertNotIn("last_seen_at", f.read_text(), f.name)
 
-    def test_legacy_last_seen_at_is_dropped_from_every_row(self):
-        # The re-ingest over data written before the move: every row of every
-        # type carries last_seen_at, including rows this run does not rewrite
-        # (an observation whose block is unchanged).
-        self.baseline()
-        for f in (self.repo / "data").rglob("*.jsonl"):
-            f.write_text("".join(json.dumps(dict(json.loads(x), last_seen_at=T1), ensure_ascii=False) + "\n"
-                                 for x in f.read_text().splitlines()))
-        self.fetch(FIX, T2)
-        self.go()
-        for f in (self.repo / "data").rglob("*.jsonl"):
-            self.assertNotIn("last_seen_at", f.read_text(), f.name)
 
 
 BI_EN = (Path(__file__).resolve().parent / "fixtures" / "block_icon_en.html").read_text("utf-8")
@@ -340,96 +312,49 @@ class NoBasePrinting(PrintingFacts):
     test_control_unmapped_full_width_question_mark_stops_the_run = None
 
 
-class ReplaySeed(Harness, unittest.TestCase):
-    def test_legacy_product_seeds_a_page_missing_from_state(self):
-        # codex PR 8 round 1 [P2]: a page absent from state/pages entirely must
-        # still take its legacy fetched_at, or the replay gets through.
-        self.fetch(FIX, T2)
-        self.go()
-        (self.repo / "state/pages/en.json").write_text("{}")
-        p = self.repo / "data/products/en.jsonl"
-        p.write_text(p.read_text().replace(f'"first_seen_at":"{T2}"', f'"first_seen_at":"{T2}","last_seen_at":"{T2}"'))
+class ClosedShape(Harness, unittest.TestCase):
+    """After the closing change a legacy-shaped observation stops the run; it is never reshaped quietly (roberto, general 86946)."""
+
+    def legacy_row(self, path="data/card_observations/en.jsonl", **extra):
+        p = self.repo / path
+        rows = [json.loads(l) for l in p.read_text().splitlines()]
+        rows[0].update(extra)
+        p.write_text("".join(json.dumps(r, ensure_ascii=False, separators=(",", ":")) + "\n" for r in rows))
+        return rows[0]["key"]
+
+    def test_observation_block_icon_is_refused_and_nothing_is_written(self):
+        self.baseline()
+        key = self.legacy_row(block_icon=1)
         before = self.data()
-        self.fetch(without(FIX, "OP17-019"), T1)
-        with self.assertRaisesRegex(run.RunError, "older than the data"):
+        self.fetch(FIX, T2)
+        with self.assertRaisesRegex(run.RunError, rf"committed data: .*card_observation {re.escape(key)}: .*block_icon"):
             self.go()
         self.assertEqual(self.data(), before)
 
-
-class Rekey(Harness, unittest.TestCase):
-    """The 2026-10-08 rekey: old-parser observations are replaced, not superseded (alyssa, general 86832)."""
-
-    def make_legacy(self):
-        """Rewrite the observations as the old parser wrote them: block_icon from the
-        block it read (integer only, X omitted), no "?" attribute, key over those fields."""
-        icons = {p["card_key"]: p["block_icon"] for p in self.rows("printing") if p["variant"] == "base"}
-        out = []
-        for o in self.rows("card_observation"):
-            fields = {k: v for k, v in o.items() if k not in run.OBS_META}
-            fields["attributes"] = [a for a in fields["attributes"] if a != "?"]
-            if isinstance(icons.get(o["card_key"]), int):
-                fields["block_icon"] = icons[o["card_key"]]
-            h = model.observation_hash(fields)
-            out.append(run.ordered("card_observation", {
-                "key": f"{o['card_key']}:en:{h}", "card_key": o["card_key"], "site": "en", "lang": "en",
-                "observation_hash": h, **fields, "first_seen_at": o["first_seen_at"], "last_seen_at": T1}))
-        out.sort(key=lambda r: r["key"])
-        (self.repo / "data/card_observations/en.jsonl").write_text("".join(run.line("card_observation", r) + "\n" for r in out))
-        return out
-
-    def test_rekey_keeps_first_seen_at_and_supersedes_nothing(self):
+    def test_observation_last_seen_at_is_refused_and_nothing_is_written(self):
         self.baseline()
-        after_parser = sorted(o["key"] for o in self.rows("card_observation"))
-        legacy = self.make_legacy()
-        # A row the old parser wrote without block_icon (X, or no base on the
-        # page) hashes the same under both parsers and is left alone.
-        old_icon = [o for o in legacy if "block_icon" in o]
-        self.assertEqual((len(legacy), len(old_icon)), (9, 7))
-        self.fetch(FIX, T2)
-        r = self.go()
-        obs = self.rows("card_observation")
-        self.assertEqual(r["counts"]["rekeyed"], len(old_icon))
-        self.assertEqual(sorted(o["key"] for o in obs), after_parser)
-        self.assertTrue(all("superseded_at" not in o and "block_icon" not in o for o in obs))
-        self.assertEqual({o["first_seen_at"] for o in obs}, {T1})
-
-    def test_after_the_rekey_a_rerun_makes_no_errata(self):
-        # The positive control upper asked for (roberto-internal 86831): the
-        # rekey is a pure function of the new parser, so it cannot recur.
-        self.baseline()
-        self.make_legacy()
-        self.fetch(FIX, T2)
-        self.go()
+        key = self.legacy_row(last_seen_at=T1)
         before = self.data()
-        r = self.go()
-        self.assertEqual((r["counts"]["added"], r["counts"]["changed"], r["counts"]["rekeyed"]), (0, 0, 0))
+        self.fetch(FIX, T2)
+        with self.assertRaisesRegex(run.RunError, rf"committed data: .*card_observation {re.escape(key)}: .*last_seen_at"):
+            self.go()
         self.assertEqual(self.data(), before)
 
-    def test_control_a_real_erratum_on_a_legacy_row_is_still_an_erratum(self):
+    def test_product_last_seen_at_is_refused_and_nothing_is_written(self):
+        # It used to be dropped on read and seed the page's fetched_at; every
+        # committed page carries fetched_at now, so a row with it is refused.
         self.baseline()
-        legacy = self.make_legacy()
-        # Change the printed name on a card whose legacy row carries block_icon,
-        # so the rekey path sees the row and must refuse it.
-        target = next(o for o in legacy if "block_icon" in o)
-        number = {c["key"]: c["number"] for c in map(json.loads, (self.repo / "data/cards.jsonl").read_text().splitlines())}[target["card_key"]]
-        block = re.search(rf'<dl class="modalCol" id="{number}">.*?</dl>', FIX, re.S).group(0)
-        self.fetch(FIX.replace(block, block.replace(f'<div class="cardName">{target["name"]}', '<div class="cardName">Errata Name'), 1), T2)
-        r = self.go()
-        closed = [o for o in self.rows("card_observation") if "superseded_at" in o]
-        self.assertEqual([(o["card_key"], o["superseded_at"]) for o in closed], [(target["card_key"], T2)])
-        self.assertIn("block_icon", closed[0])  # the old row is kept as written, as any erratum is
-        self.assertEqual(r["counts"]["rekeyed"], 6)
-
-    def test_control_without_the_rekey_every_legacy_row_is_superseded(self):
-        # What option A would have written: proves the rekey tests can go red.
-        self.baseline()
-        legacy = self.make_legacy()
+        key = self.legacy_row("data/products/en.jsonl", last_seen_at=T1)
+        before = self.data()
         self.fetch(FIX, T2)
-        with mock.patch.object(run, "parser_only_change", lambda old, fields: False), \
-                mock.patch.object(run, "validate", lambda store: None):
+        with self.assertRaisesRegex(run.RunError, rf"committed data: .*product {re.escape(key)}: .*last_seen_at"):
             self.go()
-        closed = [o for o in self.rows("card_observation") if "superseded_at" in o]
-        self.assertEqual(len(closed), len([o for o in legacy if "block_icon" in o]))
+        self.assertEqual(self.data(), before)
+
+    def test_control_the_same_run_without_the_legacy_field_succeeds(self):
+        self.baseline()
+        self.fetch(FIX, T2)
+        self.go()
 
 
 class DataCheck(Harness, unittest.TestCase):
