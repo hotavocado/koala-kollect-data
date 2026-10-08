@@ -21,6 +21,7 @@ runs/{YYYY}/{MM}/{run_id}.json        ingest_run (audit only, not synced)
 state/pages/{site}.json               last clean block count, hash and fetched_at per page (ingest only, not synced)
 state/cn_ids.jsonl                    cn id snapshot, numeric id and cardNumber (ingest only, not synced)
 state/product_pages/{site}.json       series each product page links, and the product index fetch time (ingest only, not synced)
+state/event_pages/{site}.json         event and topic pages already read, and the event list fetch time (ingest only, not synced)
 state/keepalive.txt                   date of the last heartbeat commit, written only after 30 quiet days (ingest only, not synced)
 ```
 
@@ -37,9 +38,10 @@ promos.
   is `null` when the site prints no block icon on that printing, which is a
   fact, not an absence (see Block icon below).
 - Timestamps are UTC, `YYYY-MM-DDTHH:MM:SSZ`. A product's `release_date` is a
-  full date, `YYYY-MM-DD` (see Release dates below). Distribution event dates
-  (`starts_on`, `ends_on`) may still be `YYYY` or `YYYY-MM`, because some
-  sources, such as JP magazine inserts, only give a month.
+  full date, `YYYY-MM-DD` (see Release dates below). A claim's event dates
+  (`printing_distribution.starts_on`, `ends_on`) may still be `YYYY` or
+  `YYYY-MM`, because some sources, such as monthly store battles, only give a
+  month.
 
 ## Identity
 
@@ -47,7 +49,7 @@ promos.
 |---|---|---|
 | card | `card_` + 12 [0-9a-z], minted once | `number`; for DON cards, `don_design` |
 | printing | `prt_` + 12 [0-9a-z], minted once | its locator, `{site}:{image_id}` |
-| distribution | `dist_` + 12 [0-9a-z], minted once | reviewed by hand |
+| distribution | `dist_` + 12 [0-9a-z], minted from the natural key | `{site}\|{source_text}`: the pack a site's card list names |
 | product | `{site}:{series_id}` | itself |
 | card_observation | `{card_key}:{site}:{observation_hash}` | itself |
 | printing_locator | `{site}:{image_id}` | itself |
@@ -118,8 +120,9 @@ promos.
   with no query string. Bandai's card images carry a site-wide deploy stamp
   (`?260929`) that changes on every redeploy; keeping it would turn each
   redeploy into a change to every printing.
-- `printing_links` and `distributions` are reviewed; the ingest may propose
-  them only with `confidence: inferred`.
+- `printing_links` are reviewed; the ingest may propose them only with
+  `confidence: inferred`. `distributions` are not reviewed: they mint from the
+  card list (see Promo origin below).
 - **Block icon is a printing fact.** `printing.block_icon` is the block icon as
   printed on that printing on that site: an integer, `"X"`, or `null` where the
   site prints none. `"X"` marks a card that never rotates out of standard. It is
@@ -194,6 +197,71 @@ all.
   dropdown), because a page published before its card list goes live links
   nothing yet. A product index older than the one the data was built from is
   refused, the same replay guard as the card pages.
+
+## Promo origin
+
+Where a promo printing came from, and when (ruled alyssa 87163). Every printing
+on a site's promo card list names its pack in `source_text`. That string is the
+authority on which pack a printing came from.
+
+- **One distribution per (site, `source_text`).** Its key is minted from
+  `{site}|{source_text}`, `name` is the string with the card list's own
+  decoration removed (a trailing カードリスト, a leading "Included in"),
+  `region` is the site's region (en: en, asia-en and tc: asia, jp: jp), and
+  `kind` comes from a keyword table over the name (`events.KINDS`); a name no
+  keyword matches is `other`, never a guess. A distribution holds no tier, date
+  or quantity: those differ by page and live on each claim.
+- **The card-list claim is authoritative.** Each promo printing gets one
+  `printing_distribution` with `source: official_cardlist`, the promo card
+  list's URL, `quote` = `source_text`, and `observed_at` = when the printing was
+  first listed there. It needs no page and no review. When the pack name itself
+  carries a date it is the claim's `starts_on`; a magazine name carries its
+  issue month beside its on-sale date, and only the on-sale date is read.
+- **Event-page claims: one per printing, distribution and page.** The ingest
+  reads each site's event and topic pages. A line that names a pack gives every
+  printing of that pack a claim with `source: official_event` (or
+  `official_topic`), the page URL, `quote` = that line verbatim, `tier` from the
+  prize heading above it, `quantity_note` as the page prints it, and the page's
+  event date. A name joins on the card-list string with spacing and the game's
+  own name ignored; a digit straight after the name is never part of it, so
+  "Vol.1" does not match inside "Vol.15". `observed_at` is the first fetch that
+  saw it.
+- **Review is two cases only, both `confidence: inferred`:** a page that names
+  the pack only once width, case and punctuation are folded ("Event Pack vol.7"
+  for "Event Pack Vol.7"), and a card block whose heading names pack A and shows
+  a card that the card list puts in no pack A on that site (the page contradicts
+  the list; the claim is made, pack A must be a known pack). Everything else is
+  `authoritative`.
+- **A page's date** is its first date label's value (Date, Date & Time, 開催日,
+  実施期間, 舉辦期間, …), else its only date-only line. A page with more than two
+  distinct date-only lines is a schedule of several events and is undated; so
+  is a page with no date. The entry window (応募期間) and a card's legal date are
+  not event dates.
+- **The event lists are walked 2 to 4 times and unioned.** List pages re-sort
+  between requests and one walk can list an entry twice and drop another, so a
+  single walk can miss pages; walks stop once one adds nothing new (measured
+  2026-10-08: the set of pages was stable across walks on all four sites, the
+  per-walk order was not). A daily run reads only pages it has never read and
+  pages still on the current events list; `state/event_pages/{site}.json` holds
+  the rest. A failed list or event page fails the run, and event lists older
+  than the data are refused, the same replay guard as the card pages.
+- **Claims are never removed.** A page that drops off a list keeps its claims.
+
+**How much is dated (measured 2026-10-08, first full run).** A promo printing is
+dated when at least one of its claims carries `starts_on`. Not every promo has a
+date: many pages are schedules or carry no date, and a card-list name dates its
+printings only when it names one (a magazine's on-sale date, a month, a period).
+
+| site | promo printings | dated | share | from event pages | from the card-list name only |
+|---|---|---|---|---|---|
+| en | 374 | 315 | 84% | 315 | 0 |
+| asia-en | 389 | 271 | 70% | 140 | 131 |
+| jp | 460 | 315 | 68% | 213 | 102 |
+| tc | 389 | 165 | 42% | 34 | 131 |
+| all four | 1612 | 1066 | 66% | | |
+
+The same run put 139 claims in review (en 103 from 17 distinct page/list name
+pairs, jp 36 from 4, asia-en and tc none) and found no card-block contradictions.
 
 ## Transition (2026-10-08)
 

@@ -610,18 +610,23 @@
       }
     },
     "distribution": {
-      "description": "Where a printing came from: an event, a channel, a bundle.",
+      "description": "Where a printing came from: the pack a site's card list names in source_text, one per (site, source_text). Tier, dates and quantity are not here: they live on each printing_distribution claim, one claim per source page.",
       "type": "object",
       "additionalProperties": false,
       "required": [
         "key",
+        "site",
         "region",
         "kind",
         "name"
       ],
       "properties": {
         "key": {
+          "description": "dist_ + mint of {site}|{source_text}.",
           "$ref": "#/$defs/distribution_key"
+        },
+        "site": {
+          "$ref": "#/$defs/site"
         },
         "region": {
           "$ref": "#/$defs/region"
@@ -649,25 +654,6 @@
           "minLength": 1
         },
         "name_native": {
-          "type": "string"
-        },
-        "starts_on": {
-          "$ref": "#/$defs/partial_date"
-        },
-        "ends_on": {
-          "$ref": "#/$defs/partial_date"
-        },
-        "tier": {
-          "enum": [
-            "participant",
-            "winner",
-            "finalist",
-            "top_cut",
-            "judge",
-            "all"
-          ]
-        },
-        "quantity_note": {
           "type": "string"
         },
         "source_url": {
@@ -729,6 +715,28 @@
         },
         "observed_at": {
           "$ref": "#/$defs/timestamp"
+        },
+        "tier": {
+          "description": "Who got it, as this source page states it: the prize heading nearest above the line naming the pack.",
+          "enum": [
+            "participant",
+            "winner",
+            "finalist",
+            "top_cut",
+            "judge",
+            "all"
+          ]
+        },
+        "starts_on": {
+          "description": "The event date this source page prints, or the date inside the card list's own pack name.",
+          "$ref": "#/$defs/partial_date"
+        },
+        "ends_on": {
+          "$ref": "#/$defs/partial_date"
+        },
+        "quantity_note": {
+          "description": "The quantity verbatim as the source page prints it, e.g. x1 or 2パック.",
+          "type": "string"
         }
       }
     },
