@@ -1,9 +1,9 @@
 """Check data/ and manifest.json the way the app sync reads them, plus the contract.
 
-Returns a list of errors; empty means the data is clean. Checks: every data
-file is listed in the manifest and every listed file exists with its sha256 and
-row count; LF, trailing newline, lines sorted by unique key, object keys in
-schema order; every record valid for its type; no HTML tag or entity left in
+Returns a list of errors; empty means the data is clean. Checks: every manifest
+path is one the app sync accepts; every data file is listed in the manifest and
+every listed file exists with its sha256 and row count; LF, trailing newline,
+lines sorted by unique key, object keys in schema order; every record valid for its type; no HTML tag or entity left in
 any string, however nested; and every field the schema types as a reference
 resolves to a row of that type.
 """
@@ -18,6 +18,9 @@ TYPE_OF_DIR = {"cards": "card", "card_observations": "card_observation", "printi
                "printing_locators": "printing_locator", "products": "product",
                "printing_products": "printing_product", "distributions": "distribution",
                "printing_distributions": "printing_distribution", "printing_links": "printing_link"}
+
+# The app sync's own path rule (koala-kollect, alyssa/2026-10-08-data-sync).
+SYNC_PATH = re.compile(r"^data/(?:[a-z_]+/)?[a-z_-]+\.jsonl$")
 
 # Lowercase tag names only: effect text carries attribute markers like <Slash>.
 MARKUP = re.compile(r"</?[a-z][a-z0-9]*\b[^>]*>|&(?:[a-z]+|#[0-9]+|#x[0-9a-f]+);")
@@ -39,6 +42,9 @@ def check_data(root, schema):
     keys = {t: set() for t in TYPE_OF_DIR.values()}
     records = []
     for path, entry in sorted(files.items()):
+        if not SYNC_PATH.match(path):
+            errors.append(f"{path}: not a data path the app sync accepts")
+            continue
         p = root / path
         if not p.exists():
             errors.append(f"{path}: in manifest.json but missing")

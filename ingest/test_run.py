@@ -236,6 +236,8 @@ class DataCheck(Harness, unittest.TestCase):
             ("markup in name", lambda: edit("data/products/en.jsonl",
                                             lambda t: t.replace("BOOSTER ", "BOOSTER <br>", 1))),
             ("markup in name", lambda: edit("data/products/en.jsonl", lambda t: t.replace("BOOSTER ", "BOOSTER &lt;", 1))),
+            ("README.md: not a data path the app sync accepts", lambda: edit(
+                "manifest.json", lambda t: t.replace('"files": {', '"files": {"README.md": {"type": "card", "rows": 1, "sha256": "' + "0" * 64 + '"}, ', 1))),
             ("markup in types", lambda: edit("data/card_observations/en.jsonl",
                                              lambda t: t.replace('"types":["', '"types":["&lt;br&gt;', 1))),
             ("printing_b prt_zzzzzzzzzzzz has no printing row", lambda: add_file(
