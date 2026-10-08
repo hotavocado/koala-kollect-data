@@ -10,3 +10,4 @@ jobs:
           python-version: "3.12"
       - run: pip install "jsonschema>=4.10"
       - run: python scripts/check.py
+      - run: python -m unittest discover -s ingest -p 'test_*.py' -v
