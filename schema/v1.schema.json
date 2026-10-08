@@ -78,12 +78,14 @@
       ]
     },
     "attribute": {
+      "description": "As printed. \"?\" is printed in place of an attribute (OP13-079 Imu): half-width on en and asia-en, full-width on jp and tc. Both are stored as half-width \"?\"; full-width is refused.",
       "enum": [
         "slash",
         "strike",
         "ranged",
         "special",
-        "wisdom"
+        "wisdom",
+        "?"
       ]
     },
     "category": {
@@ -155,6 +157,7 @@
           "uniqueItems": true
         },
         "block_icon": {
+          "description": "DERIVED: the block number printed on the facts site's base printing, for filtering by block. Never \"X\"; the fact of record is printing.block_icon, which can differ by printing and by site.",
           "type": "integer",
           "minimum": 0
         },
@@ -236,8 +239,7 @@
         "colors",
         "attributes",
         "types",
-        "first_seen_at",
-        "last_seen_at"
+        "first_seen_at"
       ],
       "properties": {
         "key": {
@@ -297,6 +299,7 @@
           "uniqueItems": true
         },
         "block_icon": {
+          "description": "DEPRECATED (transitional): block_icon moved to printing, where it is recorded per printing per site. Legal only until the ingest stops writing it; a later contract version refuses it.",
           "type": "integer",
           "minimum": 0
         },
@@ -317,6 +320,7 @@
           "$ref": "#/$defs/timestamp"
         },
         "last_seen_at": {
+          "description": "DEPRECATED (transitional): no longer required. It widened on every row on every run, so a no-change day rewrote every line. When a source was last checked lives in runs/. A later contract version refuses it.",
           "$ref": "#/$defs/timestamp"
         },
         "superseded_at": {
@@ -336,8 +340,7 @@
         "variant",
         "image_url",
         "source_text",
-        "first_seen_at",
-        "last_seen_at"
+        "first_seen_at"
       ],
       "properties": {
         "key": {
@@ -376,10 +379,26 @@
           "description": "The verbatim Card Set(s) / 入手情報 / 獲取方法 string, unparsed, so a better parser can re-derive without a re-scrape. Empty string when the site shows none (EN ST14-010_r1 has no provenance block); every empty one is counted on the run.",
           "type": "string"
         },
+        "block_icon": {
+          "description": "The block icon as printed on this printing on this site: an integer, \"X\" (never rotates out of standard), or null where the site prints none (a dash or empty). Sites can disagree on the same image id, and parallels of one card number can differ, so this is per printing per site. Optional while the ingest moves it here from card_observation.",
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "const": "X"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "first_seen_at": {
           "$ref": "#/$defs/timestamp"
         },
         "last_seen_at": {
+          "description": "DEPRECATED (transitional): no longer required. It widened on every row on every run, so a no-change day rewrote every line. When a source was last checked lives in runs/. A later contract version refuses it.",
           "$ref": "#/$defs/timestamp"
         }
       },
@@ -420,8 +439,7 @@
         "printing_key",
         "site",
         "image_id",
-        "first_seen_at",
-        "last_seen_at"
+        "first_seen_at"
       ],
       "properties": {
         "key": {
@@ -455,6 +473,7 @@
           "$ref": "#/$defs/timestamp"
         },
         "last_seen_at": {
+          "description": "DEPRECATED (transitional): no longer required. It widened on every row on every run, so a no-change day rewrote every line. When a source was last checked lives in runs/. A later contract version refuses it.",
           "$ref": "#/$defs/timestamp"
         }
       },
@@ -503,8 +522,7 @@
         "series_id",
         "name",
         "kind",
-        "first_seen_at",
-        "last_seen_at"
+        "first_seen_at"
       ],
       "properties": {
         "key": {
@@ -553,6 +571,7 @@
           "$ref": "#/$defs/timestamp"
         },
         "last_seen_at": {
+          "description": "DEPRECATED (transitional): no longer required. It widened on every row on every run, so a no-change day rewrote every line. When a source was last checked lives in runs/. A later contract version refuses it.",
           "$ref": "#/$defs/timestamp"
         }
       }
@@ -565,8 +584,7 @@
         "key",
         "printing_key",
         "product_key",
-        "first_seen_at",
-        "last_seen_at"
+        "first_seen_at"
       ],
       "properties": {
         "key": {
@@ -584,6 +602,7 @@
           "$ref": "#/$defs/timestamp"
         },
         "last_seen_at": {
+          "description": "DEPRECATED (transitional): no longer required. It widened on every row on every run, so a no-change day rewrote every line. When a source was last checked lives in runs/. A later contract version refuses it.",
           "$ref": "#/$defs/timestamp"
         },
         "removed_at": {

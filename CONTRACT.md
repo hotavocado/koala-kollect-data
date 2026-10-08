@@ -31,7 +31,9 @@ promos.
 - JSONL, UTF-8, LF, one record per line, trailing newline.
 - Lines sorted by `key`. Object keys in schema order. Then a re-run with no
   change is a byte-identical file, and the git diff is the changelog.
-- An absent value is omitted, never `null`.
+- An absent value is omitted, never `null`. One exception: `printing.block_icon`
+  is `null` when the site prints no block icon on that printing, which is a
+  fact, not an absence (see Block icon below).
 - Timestamps are UTC, `YYYY-MM-DDTHH:MM:SSZ`. Event and release dates may be
   `YYYY`, `YYYY-MM` or `YYYY-MM-DD`, because some sources only give a month.
 
@@ -114,6 +116,35 @@ promos.
   redeploy into a change to every printing.
 - `printing_links` and `distributions` are reviewed; the ingest may propose
   them only with `confidence: inferred`.
+- **Block icon is a printing fact.** `printing.block_icon` is the block icon as
+  printed on that printing on that site: an integer, `"X"`, or `null` where the
+  site prints none. `"X"` marks a card that never rotates out of standard. It is
+  per printing because parallels of one number differ, and per site because
+  sites disagree on the same image id. Measured 2026-10-08: EB04-061_p2 prints X
+  on en and 4 on the other three sites; OP01-016_p8 prints 1 on en and X on
+  asia-en, jp and tc. `card.block_icon` is a derivation: the number on the facts
+  site's base printing, for filtering by block. It is never `"X"`.
+- **`?` is an attribute value.** OP13-079 Imu prints `?` where an attribute goes:
+  half-width on en and asia-en, full-width on jp and tc. Both are stored as
+  half-width `"?"`, and the schema refuses the full-width form.
+- **No `last_seen_at` on data rows.** It widened on every row on every run, so a
+  day with no change still rewrote every line and the git diff stopped being
+  the changelog. Rows keep `first_seen_at` and their events (`removed_at`,
+  `superseded_at`). When each source was last checked lives in `runs/`.
+
+## Transition (2026-10-08)
+
+This version of the schema accepts both shapes while the ingest moves over, so
+that CI stays green at every step:
+
+1. **This change:** `printing.block_icon` and the `"?"` value are legal.
+   `card_observation.block_icon` and every `last_seen_at` are still legal but
+   deprecated, and `last_seen_at` is no longer required.
+2. **Ingest:** writes `block_icon` per printing, writes `"?"`, stops writing
+   `card_observation.block_icon` and `last_seen_at`, and re-ingests.
+3. **Closing change:** once `check_data` shows that no data row carries the old
+   fields, the schema refuses them (each with a red control) and requires
+   `printing.block_icon`.
 
 ## Sync (app side)
 
