@@ -93,13 +93,35 @@ def image_token(image_url, base):
     return name[at + len(base):]
 
 
+# Windo re-uploads leave copy marks in the file name: "(1)", "(2)", URL-encoded
+# (EB02-046%281%29.png), sometimes stacked, and a trailing _D (P-026_D.png). They
+# are re-uploads, not art (alyssa 87340): on 2026-10-08, 18 rows were the only
+# cn id for their number with jp listing it base only, and every one wore one.
+# Lowercase _d is not stripped: it reads as an art mark.
+_COPY_MARK = re.compile(r"(?:%28[0-9]+%29|\([0-9]+\))")
+
+
+def art_token(img_token):
+    """The image token the variant rule reads: copy marks and a trailing _D removed.
+
+    The printing keeps the raw image_token verbatim, so a re-rule costs nothing.
+    None (an unread image) stays None.
+    """
+    if img_token is None:
+        return None
+    return _COPY_MARK.sub("", img_token).removesuffix("_D")
+
+
 def has_marker(name):
     return MARKER in (name or "")
 
 
 def variant(number_token, img_token, marker):
-    """parallel when any signal is present, base when none is (alyssa 87295)."""
-    return "parallel" if (number_token or img_token or marker) else "base"
+    """parallel when any signal is present, base when none is (alyssa 87295).
+
+    img_token is the raw image token; it is read through art_token.
+    """
+    return "parallel" if (number_token or art_token(img_token) or marker) else "base"
 
 
 def disagree(number_token, img_token, marker):
@@ -109,7 +131,7 @@ def disagree(number_token, img_token, marker):
     """
     said = [bool(number_token), bool(marker)]
     if img_token is not None:
-        said.append(bool(img_token))
+        said.append(bool(art_token(img_token)))
     return len(set(said)) > 1
 
 

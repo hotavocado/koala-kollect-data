@@ -303,7 +303,14 @@ the printing a `parallel`; none makes it `base`:
 - the number token;
 - the image token: what the image file name carries after the base number
   (`1705891765183OP06-050P.png` gives `P`), kept as `image_token`. A file
-  named by a bare hash says nothing, so the image is unread, not a no;
+  named by a bare hash says nothing, so the image is unread, not a no.
+  Windo's re-upload marks are not art and are removed before the token is
+  read: `(N)`, URL-encoded as `%28N%29` and sometimes stacked, and a trailing
+  `_D` (alyssa 87340). On 2026-10-08, 18 rows were the only cn id for their
+  number while jp listed that number base only, and every one wore such a
+  mark. `image_token` keeps the raw token, marks included, so a later
+  re-rule costs nothing. Lowercase `_d` is kept as an art mark (23 rows, none
+  with that pattern);
 - the name marker （异画） ("alt art"), which is dropped from the card name.
 
 cn never emits `reprint`, and the schema refuses it there: `_NN` is a parallel

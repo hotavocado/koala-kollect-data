@@ -90,6 +90,52 @@ class Variant(unittest.TestCase):
         self.assertTrue(cnmodel.disagree("_01", None, False))  # the number says parallel, the name does not
 
 
+class CopyMarks(unittest.TestCase):
+    """alyssa 87340: copy marks and a trailing _D are re-uploads, not art.
+
+    18 rows on 2026-10-08 were the only cn id for their number, jp listing it
+    base only, and every one wore one. The raw token stays on the printing.
+    """
+    def test_art_token(self):
+        for raw, art in [("%281%29", ""), ("(1)", ""), ("%281%29%282%29%284%29", ""), ("_D", ""),
+                         ("SP%281%29", "SP"), ("_01%281%29", "_01"), ("_win_D", "_win"),
+                         ("_d%282%29", "_d"), ("_d", "_d"), ("P", "P"), ("", ""), (None, None)]:
+            with self.subTest(raw=raw):
+                self.assertEqual(cnmodel.art_token(raw), art)
+
+    def test_a_copy_mark_alone_is_base(self):
+        self.assertEqual(cnmodel.variant("", "%281%29", False), "base")   # 1938 OP02-077
+        self.assertEqual(cnmodel.variant("", "_D", False), "base")        # 1999 P-026
+        self.assertEqual(cnmodel.variant("", "_d", False), "parallel")    # lowercase stays an art mark
+        self.assertFalse(cnmodel.disagree("", "%281%29", False))
+
+    def test_left_after_the_strip_is_still_read(self):
+        # 5376 OP13-077: -1(1) leaves -1, and nothing ruled -1 out.
+        self.assertEqual(cnmodel.variant("", "-1%281%29", False), "parallel")
+
+    def test_run_keeps_the_raw_token(self):
+        tmp = Path(tempfile.mkdtemp())
+        try:
+            (tmp / "repo").mkdir()
+            cn = tmp / "cn"
+            (cn / "detail").mkdir(parents=True)
+            ids = [1938, 1999]
+            rows = [{k: DETAILS[i][k] for k in ("id", "cardNumber", "cardImg", "cardOfferType")} for i in ids]
+            prods = [{"id": n, "name": name} for n, name in enumerate(sorted({r["cardOfferType"] for r in rows}), 1)]
+            (cn / "_list.json").write_text(json.dumps({"fetched_at": T1, "rows": rows}, ensure_ascii=False), "utf-8")
+            (cn / "_products.json").write_text(json.dumps({"fetched_at": T1, "products": prods}, ensure_ascii=False), "utf-8")
+            for i in ids:
+                (cn / "detail" / f"{i}.json").write_text(json.dumps({"fetched_at": T1, "info": DETAILS[i]}, ensure_ascii=False), "utf-8")
+            store = run.Store(tmp / "repo")
+            counts, _, _ = run.run_cn(store, cn, {})
+            got = {p["image_url"].rsplit("/", 1)[-1]: (p["variant"], p.get("image_token")) for p in store.recs["printing"].values()}
+            self.assertEqual(sorted(got.values()), [("base", "%281%29"), ("base", "_D")])
+            self.assertEqual(counts["variant_disagreements"], 0)
+            run.validate(store)
+        finally:
+            shutil.rmtree(tmp)
+
+
 class Facts(unittest.TestCase):
     def test_rarity_spellings(self):
         self.assertEqual({cnmodel.rarity(r) for r in ["推广卡（P）", "宣传（P）", "P"]}, {"P"})
