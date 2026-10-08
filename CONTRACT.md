@@ -18,7 +18,7 @@ data/distributions.jsonl              distribution
 data/printing_distributions.jsonl     printing_distribution
 data/printing_links.jsonl             printing_link
 runs/{YYYY}/{MM}/{run_id}.json        ingest_run (audit only, not synced)
-state/pages/{site}.json               last clean block count and hash per page (ingest only, not synced)
+state/pages/{site}.json               last clean block count, hash and changed_at per page (ingest only, not synced)
 state/cn_ids.jsonl                    cn id snapshot, numeric id and cardNumber (ingest only, not synced)
 ```
 
@@ -141,7 +141,16 @@ that CI stays green at every step:
    `card_observation.block_icon` and every `last_seen_at` are still legal but
    deprecated, and `last_seen_at` is no longer required.
 2. **Ingest:** writes `block_icon` per printing, writes `"?"`, stops writing
-   `card_observation.block_icon` and `last_seen_at`, and re-ingests.
+   `card_observation.block_icon` and `last_seen_at`, and re-ingests. **Before
+   it stops writing `last_seen_at`, it moves the stale-page guard:** today
+   `run_site` refuses a page fetched earlier than its `product.last_seen_at`,
+   and that is the only committed per-page freshness stamp. The replacement is
+   `changed_at` in `state/pages/{site}.json`: the `fetched_at` of the newest
+   clean fetch whose block hash differed from the last one. A page fetched
+   before its `changed_at` is refused and nothing is written. The daily run
+   commits only on a real change, and a changed page rewrites its own
+   `changed_at` in that commit, so the committed stamp always covers the
+   committed data. An older replay with the same hash changes nothing anyway.
 3. **Closing change:** once `check_data` shows that no data row carries the old
    fields, the schema refuses them (each with a red control) and requires
    `printing.block_icon`.
