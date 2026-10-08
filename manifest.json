@@ -90,22 +90,22 @@
   "data/products/asia-en.jsonl": {
    "type": "product",
    "rows": 62,
-   "sha256": "dbde56edfe04ab3e9ba1c29f01f2d11cc895f2b828044279de9eb4e35a58503c"
+   "sha256": "cfd1be11410d22c69c26104a7aae5ff43304584be1be17423399b917282f8009"
   },
   "data/products/en.jsonl": {
    "type": "product",
    "rows": 60,
-   "sha256": "b8c384815c12e4fbb6774ea522fe21aa1b94cfe8c3b683b4fcc49d6ea578f7d0"
+   "sha256": "606921121f907b672b365710a72eea7f1f0279f9b1a5f11df7cb49fc1e0b4db2"
   },
   "data/products/jp.jsonl": {
    "type": "product",
    "rows": 62,
-   "sha256": "e7148171661f3a40b61c045a68de9a153f08b85e1d0d86f76aec2102bb46cdb3"
+   "sha256": "198baf7d06afc9cba1437ca5d7feeda93a92ed60855c3edc10afd3c2650a4221"
   },
   "data/products/tc.jsonl": {
    "type": "product",
    "rows": 62,
-   "sha256": "71bb0d2f4a17f8524d07f3512e5b1326fbdc5c8470c3a7cddf3b0cf3b5c39dd2"
+   "sha256": "3007d5501b1681f30f3f90d4071e98aa49b40b0c4538ceba5fea00e82ce84f59"
   }
  }
 }

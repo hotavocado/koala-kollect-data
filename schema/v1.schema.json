@@ -45,8 +45,13 @@
       "type": "string",
       "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$"
     },
+    "date": {
+      "description": "A calendar date, YYYY-MM-DD. Every release date on the product indexes is a full date (238 of 238, 2026-10-08).",
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+    },
     "partial_date": {
-      "description": "Day, month or year precision. JP magazine inserts often carry only a month.",
+      "description": "Day, month or year precision, for distribution events. JP magazine inserts often carry only a month.",
       "type": "string",
       "pattern": "^[0-9]{4}(-[0-9]{2}(-[0-9]{2})?)?$"
     },
@@ -497,9 +502,20 @@
       ]
     },
     "product": {
-      "description": "A series page on one site: a sealed product, or a listing bucket such as promos.",
+      "description": "A series page on one site: a sealed product, or a listing bucket such as promos. release_date and release_date_source come together. limited and promo_bucket rows are card pools, not products, and carry no date.",
       "type": "object",
       "additionalProperties": false,
+      "dependentRequired": {
+        "release_date": ["release_date_source"],
+        "release_date_source": ["release_date"]
+      },
+      "if": {
+        "required": ["kind"],
+        "properties": {"kind": {"enum": ["limited", "promo_bucket"]}}
+      },
+      "then": {
+        "properties": {"release_date": false, "release_date_source": false}
+      },
       "required": [
         "key",
         "site",
@@ -545,7 +561,13 @@
           ]
         },
         "release_date": {
-          "$ref": "#/$defs/partial_date"
+          "description": "This site's release date, read from the site's own product index. Never from tcgcsv.",
+          "$ref": "#/$defs/date"
+        },
+        "release_date_source": {
+          "description": "The product page whose entry on the site's product index carried release_date.",
+          "type": "string",
+          "pattern": "^https://(en|asia-en|www|asia-tc)\\.onepiece-cardgame\\.com/products/"
         },
         "product_url": {
           "type": "string",

@@ -1,6 +1,9 @@
 name: daily-ingest
-# Fetch every official card list, ingest it, and commit to main only when a
-# record was added, changed or removed (ingest/daily.py says which).
+# Fetch every official card list and product index, ingest them, and commit to
+# main only when a record was added, changed or removed (ingest/daily.py says
+# which). The product index gives each product's release date; product pages
+# already read are cached in state/product_pages, so a normal day reads only
+# the index pages and any new product page.
 #
 # Daily at 04:23 UTC (13:23 JST), off the hour because GitHub delays
 # top-of-hour schedules most. Added only after two workflow_dispatch dry runs

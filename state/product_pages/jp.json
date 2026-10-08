@@ -1,0 +1,783 @@
+{
+ "index_fetched_at": "2026-10-08T18:59:36Z",
+ "pages": {
+  "https://www.onepiece-cardgame.com/products/baseshop-binder001.html": {
+   "fetched_at": "2026-10-08T19:02:16Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/boosters/eb01.php": {
+   "fetched_at": "2026-10-08T19:07:43Z",
+   "series": [
+    "550201"
+   ]
+  },
+  "https://www.onepiece-cardgame.com/products/boosters/eb02.php": {
+   "fetched_at": "2026-10-08T19:06:23Z",
+   "series": [
+    "550202"
+   ]
+  },
+  "https://www.onepiece-cardgame.com/products/boosters/eb03.php": {
+   "fetched_at": "2026-10-08T19:05:08Z",
+   "series": [
+    "550203"
+   ]
+  },
+  "https://www.onepiece-cardgame.com/products/boosters/eb04.php": {
+   "fetched_at": "2026-10-08T19:04:22Z",
+   "series": [
+    "550204"
+   ]
+  },
+  "https://www.onepiece-cardgame.com/products/boosters/op01.php": {
+   "fetched_at": "2026-10-08T19:09:27Z",
+   "series": [
+    "550101"
+   ]
+  },
+  "https://www.onepiece-cardgame.com/products/boosters/op02.php": {
+   "fetched_at": "2026-10-08T19:09:17Z",
+   "series": [
+    "550102"
+   ]
+  },
+  "https://www.onepiece-cardgame.com/products/boosters/op03.php": {
+   "fetched_at": "2026-10-08T19:09:02Z",
+   "series": [
+    "550103"
+   ]
+  },
+  "https://www.onepiece-cardgame.com/products/boosters/op04.php": {
+   "fetched_at": "2026-10-08T19:08:42Z",
+   "series": [
+    "550104"
+   ]
+  },
+  "https://www.onepiece-cardgame.com/products/boosters/op05/": {
+   "fetched_at": "2026-10-08T19:08:23Z",
+   "series": [
+    "550105"
+   ]
+  },
+  "https://www.onepiece-cardgame.com/products/boosters/op06.php": {
+   "fetched_at": "2026-10-08T19:08:01Z",
+   "series": [
+    "550106"
+   ]
+  },
+  "https://www.onepiece-cardgame.com/products/boosters/op07.php": {
+   "fetched_at": "2026-10-08T19:07:38Z",
+   "series": [
+    "550107"
+   ]
+  },
+  "https://www.onepiece-cardgame.com/products/boosters/op08.php": {
+   "fetched_at": "2026-10-08T19:07:19Z",
+   "series": [
+    "550108"
+   ]
+  },
+  "https://www.onepiece-cardgame.com/products/boosters/op09/": {
+   "fetched_at": "2026-10-08T19:07:04Z",
+   "series": [
+    "550109"
+   ]
+  },
+  "https://www.onepiece-cardgame.com/products/boosters/op10.php": {
+   "fetched_at": "2026-10-08T19:06:45Z",
+   "series": [
+    "550110"
+   ]
+  },
+  "https://www.onepiece-cardgame.com/products/boosters/op11.php": {
+   "fetched_at": "2026-10-08T19:06:13Z",
+   "series": [
+    "550111"
+   ]
+  },
+  "https://www.onepiece-cardgame.com/products/boosters/op12.php": {
+   "fetched_at": "2026-10-08T19:05:59Z",
+   "series": [
+    "550112"
+   ]
+  },
+  "https://www.onepiece-cardgame.com/products/boosters/op13/": {
+   "fetched_at": "2026-10-08T19:05:11Z",
+   "series": [
+    "550113"
+   ]
+  },
+  "https://www.onepiece-cardgame.com/products/boosters/op14.php": {
+   "fetched_at": "2026-10-08T19:04:40Z",
+   "series": [
+    "550114"
+   ]
+  },
+  "https://www.onepiece-cardgame.com/products/boosters/op15.php": {
+   "fetched_at": "2026-10-08T19:04:14Z",
+   "series": [
+    "550115"
+   ]
+  },
+  "https://www.onepiece-cardgame.com/products/boosters/op17/": {
+   "fetched_at": "2026-10-08T19:03:00Z",
+   "series": [
+    "550117"
+   ]
+  },
+  "https://www.onepiece-cardgame.com/products/boosters/prb01.php": {
+   "fetched_at": "2026-10-08T19:07:10Z",
+   "series": [
+    "550301"
+   ]
+  },
+  "https://www.onepiece-cardgame.com/products/boosters/prb02.php": {
+   "fetched_at": "2026-10-08T19:05:33Z",
+   "series": [
+    "550302"
+   ]
+  },
+  "https://www.onepiece-cardgame.com/products/card_collection_007.html": {
+   "fetched_at": "2026-10-08T19:02:46Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/cardcase005.html": {
+   "fetched_at": "2026-10-08T19:02:42Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/collection-drama002.html": {
+   "fetched_at": "2026-10-08T19:03:45Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/collection-drama003.html": {
+   "fetched_at": "2026-10-08T19:03:42Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/collection-flame.html": {
+   "fetched_at": "2026-10-08T19:02:25Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/decks/familydeckset.php": {
+   "fetched_at": "2026-10-08T19:08:52Z",
+   "series": [
+    "550701"
+   ]
+  },
+  "https://www.onepiece-cardgame.com/products/decks/st01-04.php": {
+   "fetched_at": "2026-10-08T19:09:29Z",
+   "series": [
+    "550001",
+    "550002",
+    "550003",
+    "550004"
+   ]
+  },
+  "https://www.onepiece-cardgame.com/products/decks/st05.php": {
+   "fetched_at": "2026-10-08T19:09:22Z",
+   "series": [
+    "550005"
+   ]
+  },
+  "https://www.onepiece-cardgame.com/products/decks/st06.php": {
+   "fetched_at": "2026-10-08T19:09:19Z",
+   "series": [
+    "550006"
+   ]
+  },
+  "https://www.onepiece-cardgame.com/products/decks/st07.php": {
+   "fetched_at": "2026-10-08T19:09:04Z",
+   "series": [
+    "550007"
+   ]
+  },
+  "https://www.onepiece-cardgame.com/products/decks/st08.php": {
+   "fetched_at": "2026-10-08T19:08:57Z",
+   "series": [
+    "550008"
+   ]
+  },
+  "https://www.onepiece-cardgame.com/products/decks/st09.php": {
+   "fetched_at": "2026-10-08T19:08:54Z",
+   "series": [
+    "550009"
+   ]
+  },
+  "https://www.onepiece-cardgame.com/products/decks/st10.php": {
+   "fetched_at": "2026-10-08T19:08:38Z",
+   "series": [
+    "550010"
+   ]
+  },
+  "https://www.onepiece-cardgame.com/products/decks/st11.php": {
+   "fetched_at": "2026-10-08T19:08:18Z",
+   "series": [
+    "550011"
+   ]
+  },
+  "https://www.onepiece-cardgame.com/products/decks/st12.php": {
+   "fetched_at": "2026-10-08T19:08:08Z",
+   "series": [
+    "550012"
+   ]
+  },
+  "https://www.onepiece-cardgame.com/products/decks/st13.php": {
+   "fetched_at": "2026-10-08T19:07:48Z",
+   "series": [
+    "550013"
+   ]
+  },
+  "https://www.onepiece-cardgame.com/products/decks/st14.php": {
+   "fetched_at": "2026-10-08T19:07:31Z",
+   "series": [
+    "550014"
+   ]
+  },
+  "https://www.onepiece-cardgame.com/products/decks/st15-20.php": {
+   "fetched_at": "2026-10-08T19:07:14Z",
+   "series": [
+    "550015",
+    "550016",
+    "550017",
+    "550018",
+    "550019",
+    "550020"
+   ]
+  },
+  "https://www.onepiece-cardgame.com/products/decks/st21.php": {
+   "fetched_at": "2026-10-08T19:06:40Z",
+   "series": [
+    "550021"
+   ]
+  },
+  "https://www.onepiece-cardgame.com/products/decks/st22.php": {
+   "fetched_at": "2026-10-08T19:06:08Z",
+   "series": [
+    "550022"
+   ]
+  },
+  "https://www.onepiece-cardgame.com/products/decks/st23.php": {
+   "fetched_at": "2026-10-08T19:05:54Z",
+   "series": [
+    "550023"
+   ]
+  },
+  "https://www.onepiece-cardgame.com/products/decks/st24.php": {
+   "fetched_at": "2026-10-08T19:05:51Z",
+   "series": [
+    "550024"
+   ]
+  },
+  "https://www.onepiece-cardgame.com/products/decks/st25.php": {
+   "fetched_at": "2026-10-08T19:05:49Z",
+   "series": [
+    "550025"
+   ]
+  },
+  "https://www.onepiece-cardgame.com/products/decks/st26.php": {
+   "fetched_at": "2026-10-08T19:05:46Z",
+   "series": [
+    "550026"
+   ]
+  },
+  "https://www.onepiece-cardgame.com/products/decks/st27.php": {
+   "fetched_at": "2026-10-08T19:05:43Z",
+   "series": [
+    "550027"
+   ]
+  },
+  "https://www.onepiece-cardgame.com/products/decks/st28.php": {
+   "fetched_at": "2026-10-08T19:05:41Z",
+   "series": [
+    "550028"
+   ]
+  },
+  "https://www.onepiece-cardgame.com/products/decks/st29.php": {
+   "fetched_at": "2026-10-08T19:04:27Z",
+   "series": [
+    "550029"
+   ]
+  },
+  "https://www.onepiece-cardgame.com/products/eb05.html": {
+   "fetched_at": "2026-10-08T19:02:08Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/heroines-box.html": {
+   "fetched_at": "2026-10-08T19:02:11Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/op16.html": {
+   "fetched_at": "2026-10-08T19:03:49Z",
+   "series": [
+    "550116"
+   ]
+  },
+  "https://www.onepiece-cardgame.com/products/op18.html": {
+   "fetched_at": "2026-10-08T19:01:59Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/acrylicstand001.php": {
+   "fetched_at": "2026-10-08T19:08:47Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/acrylicstand002.php": {
+   "fetched_at": "2026-10-08T19:05:56Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/anniversaryset1st.php": {
+   "fetched_at": "2026-10-08T19:08:25Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/anniversaryset2nd-cn.php": {
+   "fetched_at": "2026-10-08T19:05:28Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/anniversaryset2nd-en.php": {
+   "fetched_at": "2026-10-08T19:05:26Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/anniversaryset2nd.php": {
+   "fetched_at": "2026-10-08T19:07:07Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/anniversaryset3rd.php": {
+   "fetched_at": "2026-10-08T19:05:31Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/binder001.php": {
+   "fetched_at": "2026-10-08T19:09:24Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/cardcase001.php": {
+   "fetched_at": "2026-10-08T19:09:07Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/cardcase002.php": {
+   "fetched_at": "2026-10-08T19:08:40Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/cardcase003.php": {
+   "fetched_at": "2026-10-08T19:08:06Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/cardcase004.php": {
+   "fetched_at": "2026-10-08T19:06:47Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/cardcollection-baseshop001.php": {
+   "fetched_at": "2026-10-08T19:04:34Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/cardcollection25th.php": {
+   "fetched_at": "2026-10-08T19:09:12Z",
+   "series": [
+    "550801"
+   ]
+  },
+  "https://www.onepiece-cardgame.com/products/other/championshipset2022.php": {
+   "fetched_at": "2026-10-08T19:08:35Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/championshipset2023.php": {
+   "fetched_at": "2026-10-08T19:08:27Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/championshipset2023_02.php": {
+   "fetched_at": "2026-10-08T19:07:53Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/dice001.php": {
+   "fetched_at": "2026-10-08T19:06:10Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/heroines-special.php": {
+   "fetched_at": "2026-10-08T19:04:55Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/official-9poket-binder001.php": {
+   "fetched_at": "2026-10-08T19:04:04Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/playmat-baseshop-limited001.php": {
+   "fetched_at": "2026-10-08T19:03:55Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/playmat001.php": {
+   "fetched_at": "2026-10-08T19:08:50Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/playmat002.php": {
+   "fetched_at": "2026-10-08T19:07:33Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/playmat003.php": {
+   "fetched_at": "2026-10-08T19:06:28Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/playmat004.php": {
+   "fetched_at": "2026-10-08T19:04:43Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/playmat005.php": {
+   "fetched_at": "2026-10-08T19:04:45Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/playmat_limited001.php": {
+   "fetched_at": "2026-10-08T19:07:24Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/playmat_limited002.php": {
+   "fetched_at": "2026-10-08T19:06:57Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/playmat_limited003.php": {
+   "fetched_at": "2026-10-08T19:05:18Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/playmat_limited004.php": {
+   "fetched_at": "2026-10-08T19:04:58Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/playmat_limited005.php": {
+   "fetched_at": "2026-10-08T19:04:11Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/premium-card_collection-leader.php": {
+   "fetched_at": "2026-10-08T19:06:35Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/premium-card_collection.php": {
+   "fetched_at": "2026-10-08T19:08:30Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/premium-card_collection_6assort001.php": {
+   "fetched_at": "2026-10-08T19:04:48Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/premium-card_collection_drama.php": {
+   "fetched_at": "2026-10-08T19:07:58Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/premium-card_collection_kumamoto-sp.php": {
+   "fetched_at": "2026-10-08T19:04:19Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/premium-card_collection_op-day24.php": {
+   "fetched_at": "2026-10-08T19:06:49Z",
+   "series": [
+    "550801"
+   ]
+  },
+  "https://www.onepiece-cardgame.com/products/other/premium-card_collection_op-day25.php": {
+   "fetched_at": "2026-10-08T19:05:05Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/premium-card_collection_selection001.php": {
+   "fetched_at": "2026-10-08T19:07:51Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/premium-card_collection_selection002.php": {
+   "fetched_at": "2026-10-08T19:07:22Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/premium-card_collection_selection003.php": {
+   "fetched_at": "2026-10-08T19:06:52Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/premium-card_collection_selection004.php": {
+   "fetched_at": "2026-10-08T19:05:21Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/premium-card_collection_selection005.php": {
+   "fetched_at": "2026-10-08T19:05:03Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/premium-card_collection_selection006.php": {
+   "fetched_at": "2026-10-08T19:04:09Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/premium-card_collection_uta.php": {
+   "fetched_at": "2026-10-08T19:08:13Z",
+   "series": [
+    "550801"
+   ]
+  },
+  "https://www.onepiece-cardgame.com/products/other/sleeve001.php": {
+   "fetched_at": "2026-10-08T19:09:31Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/sleeve002.php": {
+   "fetched_at": "2026-10-08T19:09:09Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/sleeve003.php": {
+   "fetched_at": "2026-10-08T19:08:45Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/sleeve004.php": {
+   "fetched_at": "2026-10-08T19:08:20Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/sleeve005.php": {
+   "fetched_at": "2026-10-08T19:07:56Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/sleeve006.php": {
+   "fetched_at": "2026-10-08T19:08:03Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/sleeve007.php": {
+   "fetched_at": "2026-10-08T19:08:33Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/sleeve008.php": {
+   "fetched_at": "2026-10-08T19:07:46Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/sleeve009.php": {
+   "fetched_at": "2026-10-08T19:07:36Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/sleeve010.php": {
+   "fetched_at": "2026-10-08T19:07:26Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/sleeve011.php": {
+   "fetched_at": "2026-10-08T19:07:17Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/sleeve012.php": {
+   "fetched_at": "2026-10-08T19:07:12Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/sleeve013.php": {
+   "fetched_at": "2026-10-08T19:06:59Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/sleeve014.php": {
+   "fetched_at": "2026-10-08T19:07:01Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/sleeve015.php": {
+   "fetched_at": "2026-10-08T19:06:54Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/sleeve016.php": {
+   "fetched_at": "2026-10-08T19:06:42Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/sleeve017.php": {
+   "fetched_at": "2026-10-08T19:09:34Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/sleeve018.php": {
+   "fetched_at": "2026-10-08T19:06:32Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/sleeve019.php": {
+   "fetched_at": "2026-10-08T19:06:30Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/sleeve020.php": {
+   "fetched_at": "2026-10-08T19:06:18Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/sleeve021.php": {
+   "fetched_at": "2026-10-08T19:06:25Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/sleeve022.php": {
+   "fetched_at": "2026-10-08T19:06:16Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/sleeve023.php": {
+   "fetched_at": "2026-10-08T19:05:23Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/sleeve024.php": {
+   "fetched_at": "2026-10-08T19:06:01Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/sleeve025.php": {
+   "fetched_at": "2026-10-08T19:06:03Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/sleeve026.php": {
+   "fetched_at": "2026-10-08T19:05:36Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/sleeve027.php": {
+   "fetched_at": "2026-10-08T19:05:13Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/sleeve028.php": {
+   "fetched_at": "2026-10-08T19:05:16Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/sleeve029.php": {
+   "fetched_at": "2026-10-08T19:05:00Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/sleeve030.php": {
+   "fetched_at": "2026-10-08T19:04:53Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/sleeve031.php": {
+   "fetched_at": "2026-10-08T19:04:50Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/sleeve032.php": {
+   "fetched_at": "2026-10-08T19:04:32Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/sleeve033.php": {
+   "fetched_at": "2026-10-08T19:04:37Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/sleeve034.php": {
+   "fetched_at": "2026-10-08T19:04:29Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/sleeve035.php": {
+   "fetched_at": "2026-10-08T19:04:25Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/sleeve036.php": {
+   "fetched_at": "2026-10-08T19:04:17Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/sleeve037.php": {
+   "fetched_at": "2026-10-08T19:04:06Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/sleeve038.php": {
+   "fetched_at": "2026-10-08T19:04:01Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/sleeve_cardcase_uta.php": {
+   "fetched_at": "2026-10-08T19:08:15Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/soundloader.php": {
+   "fetched_at": "2026-10-08T19:07:29Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/soundloader002.php": {
+   "fetched_at": "2026-10-08T19:05:38Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/storage001.php": {
+   "fetched_at": "2026-10-08T19:09:14Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/storage002.php": {
+   "fetched_at": "2026-10-08T19:08:59Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/storage003.php": {
+   "fetched_at": "2026-10-08T19:08:10Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/storage004.php": {
+   "fetched_at": "2026-10-08T19:07:41Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/storage005.php": {
+   "fetched_at": "2026-10-08T19:06:37Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/storage006.php": {
+   "fetched_at": "2026-10-08T19:06:20Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/other/storage007.php": {
+   "fetched_at": "2026-10-08T19:06:06Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/playmat-baseshop02.html": {
+   "fetched_at": "2026-10-08T19:03:39Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/playmat007.html": {
+   "fetched_at": "2026-10-08T19:02:03Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/playmat_flame-flame-fruit.html": {
+   "fetched_at": "2026-10-08T19:02:20Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/playmat_limited006.html": {
+   "fetched_at": "2026-10-08T19:02:50Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/sleeve039.html": {
+   "fetched_at": "2026-10-08T19:03:52Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/sleeve040.html": {
+   "fetched_at": "2026-10-08T19:03:35Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/sleeve041.html": {
+   "fetched_at": "2026-10-08T19:02:54Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/sleeve042.html": {
+   "fetched_at": "2026-10-08T19:02:57Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/sleeve043.html": {
+   "fetched_at": "2026-10-08T19:02:29Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/sleeve044.html": {
+   "fetched_at": "2026-10-08T19:02:33Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/st30.html": {
+   "fetched_at": "2026-10-08T19:03:59Z",
+   "series": [
+    "550030"
+   ]
+  },
+  "https://www.onepiece-cardgame.com/products/st31.html": {
+   "fetched_at": "2026-10-08T19:03:29Z",
+   "series": [
+    "550031"
+   ]
+  },
+  "https://www.onepiece-cardgame.com/products/st32.html": {
+   "fetched_at": "2026-10-08T19:03:24Z",
+   "series": [
+    "550032"
+   ]
+  },
+  "https://www.onepiece-cardgame.com/products/st33.html": {
+   "fetched_at": "2026-10-08T19:03:20Z",
+   "series": [
+    "550033"
+   ]
+  },
+  "https://www.onepiece-cardgame.com/products/st34.html": {
+   "fetched_at": "2026-10-08T19:03:15Z",
+   "series": [
+    "550034"
+   ]
+  },
+  "https://www.onepiece-cardgame.com/products/st35.html": {
+   "fetched_at": "2026-10-08T19:03:10Z",
+   "series": [
+    "550035"
+   ]
+  },
+  "https://www.onepiece-cardgame.com/products/st36.html": {
+   "fetched_at": "2026-10-08T19:03:05Z",
+   "series": [
+    "550036"
+   ]
+  },
+  "https://www.onepiece-cardgame.com/products/storage008.html": {
+   "fetched_at": "2026-10-08T19:02:37Z",
+   "series": []
+  }
+ }
+}

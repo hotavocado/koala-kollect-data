@@ -20,6 +20,10 @@ New series are found by diffing each site's series dropdown against the
 committed product list, before the run, so a new series whose page is refused
 is still reported. The notice is written to --out for the workflow to open as an
 issue labelled new-series (upper 86676).
+
+Each site's product index is fetched too, for release dates (products.py). It is
+part of the run: a failed index or product page fails the run like a card page,
+and a page set with no product index for a site is a failure, never a skip.
 """
 import argparse
 import json
@@ -31,6 +35,8 @@ from pathlib import Path
 
 import cn
 import fetch
+import model
+import products
 import run
 from bandai import series_options
 
@@ -73,6 +79,8 @@ def decide(fetch_failures, result):
     changed = False
     for site, r in result["sites"].items():
         c = r["counts"]
+        if r.get("dates") is None:
+            failures.append(f"{site}: no product index in the page set, so no release dates were read")
         for arm, n in r["refusals"].items():
             if n:
                 failures.append(f"{site}: {n} page(s) refused ({arm}): "
@@ -99,8 +107,39 @@ def fetch_line(site, log, seconds):
     return f"fetch {site}: {len(log)} pages, status {{{status}}}, retried {retried}, {seconds:.0f}s"
 
 
-def fetch_all(pageset, sites):
-    """Fetch every site and the cn list. Returns (failures, cn_rows)."""
+def undated(repo, site, index_html):
+    """True when the site has a product with no date yet, counting a new dropdown series as one.
+
+    While it is true, the product fetch re-reads the product pages that linked no
+    series, since one of them may now link the new card list.
+    """
+    rows = run.read_jsonl(Path(repo) / "data" / "products" / f"{site}.jsonl").values()
+    if any(r["kind"] not in products.UNDATED_KINDS and "release_date" not in r for r in rows):
+        return True
+    committed = {r["key"] for r in rows}
+    return any(model.KIND_BY_DIGIT.get(sid[3:4]) not in products.UNDATED_KINDS for sid, _ in new_options(index_html, committed, site))
+
+
+def fetch_products(pageset, repo, site):
+    """Fetch one site's product index and the product pages it needs. Returns failures."""
+    t0 = time.monotonic()
+    sp = Path(repo) / "state" / "product_pages" / f"{site}.json"
+    cache = json.loads(sp.read_text("utf-8")).get("pages", {}) if sp.exists() else {}
+    index = Path(pageset) / site / "_index.html"
+    need = undated(repo, site, index.read_text("utf-8", "replace") if index.exists() else "")
+    try:
+        log = products.fetch_site(site, pageset, cache, need)
+    except Exception as e:
+        print(f"fetch {site} products: STOPPED after {time.monotonic() - t0:.0f}s: {type(e).__name__}: {e}", flush=True)
+        return [f"{site}: products fetch stopped: {type(e).__name__}: {e}"]
+    print(f"fetch {site} products: {len(log['index'])} index pages over {len(log['walks'])} walks "
+          f"(new product pages per walk {[w['new'] for w in log['walks']]}), {len(log['pages'])} product pages "
+          f"(undated product: {need}), {time.monotonic() - t0:.0f}s", flush=True)
+    return products.failures(log)
+
+
+def fetch_all(pageset, sites, repo):
+    """Fetch every site, its product index and the cn list. Returns (failures, cn_rows)."""
     failures = []
     for site in sites:
         t0 = time.monotonic()
@@ -114,6 +153,7 @@ def fetch_all(pageset, sites):
         for entry in log:
             if "error" in entry:
                 failures.append(f"{site}:{entry['series_id']} fetch failed: {entry['error']}")
+        failures += fetch_products(pageset, repo, site)
     t0 = time.monotonic()
     try:
         cn_rows = cn.list_all()
@@ -141,7 +181,7 @@ def daily(pageset, repo, out, sites=SITES, dry_run=False, fake=None, fetcher=Non
         (out / stale).unlink(missing_ok=True)
     if fake and not dry_run:
         raise ValueError("--fake-option is a control and needs --dry-run, so a fake series never reaches Mike")
-    fetch_failures, cn_rows = (fetcher or fetch_all)(pageset, sites)
+    fetch_failures, cn_rows = (fetcher or fetch_all)(pageset, sites, repo)
 
     found = {}
     for site in sites:
@@ -176,6 +216,7 @@ def daily(pageset, repo, out, sites=SITES, dry_run=False, fake=None, fetcher=Non
                "notice_title": note[0] if note else None}
     if result:
         summary["sites"] = {s: r["run"] for s, r in result["sites"].items()}
+        summary["dates"] = {s: r["dates"] for s, r in result["sites"].items()}
         summary["cards"] = result["cards"]
         summary["cn"] = result["cn"]
     (out / "summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=1) + "\n", "utf-8")
@@ -196,6 +237,8 @@ def main(argv):
     for site, r in s.get("sites", {}).items():
         print(f"{site}: pages {r['pages_fetched']} (unchanged {r['pages_unchanged']}), blocks {r['blocks_parsed']}, "
               f"added {r['added']}, changed {r['changed']}, removed {r['removed']}, refusals {r['refusals']}")
+        if site in s.get("dates", {}):
+            print(f"  {run.date_line(s['dates'][site])}")
     if "cn" in s:
         print(f"cards: {s['cards']}  cn: {s['cn']}")
     if s["notice_title"]:

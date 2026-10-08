@@ -6,6 +6,7 @@ from jsonschema import Draft202012Validator
 sys.path.insert(0, str(Path(__file__).parent))
 from image_id import parse_image_id
 from data_check import check_data
+from tcgcsv_check import check as tcgcsv_check
 
 root = Path(__file__).resolve().parent.parent
 schema = json.loads((root / "schema/v1.schema.json").read_text())
@@ -70,6 +71,12 @@ for e in data_errors[:20]:
 if (root / "manifest.json").exists():
     print("ok   data " if not data_errors else f"FAIL data {len(data_errors)} errors", "manifest.json and every file it lists")
 bad += len(data_errors)
+
+# tcgcsv cross-check of en release dates: printed, never counted. tcgcsv is a
+# cross-check and never a source (CONTRACT.md), and a network failure here
+# must not turn a push red.
+for ln in tcgcsv_check(root):
+    print(ln)
 
 print("RESULT", "GREEN" if bad == 0 else f"RED ({bad})")
 sys.exit(1 if bad else 0)
