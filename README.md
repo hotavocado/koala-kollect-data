@@ -15,8 +15,10 @@ and `tc`, from each site's official card list (first run 2026-10-08), updated
 daily. Each product carries that site's release date, read from the site's own
 product index. Not yet: `cn` printings, DON cards, and event and promo
 distributions. `state/` holds what the ingest needs between runs (each page's
-last clean count and hash, the series each product page links, and the `cn` id
-snapshot); the app does not read it.
+last clean count and hash, the series each product page links, the `cn` id
+snapshot, and `keepalive.txt`, the date of the last heartbeat commit that stops
+GitHub switching the daily schedule off after a quiet spell); the app does not
+read it.
 
 **Licence:** this dataset (its structure, provenance records, keys and links) is
 licensed [CC BY 4.0](LICENSE): reuse it freely, crediting "Koala Kollect" with a link

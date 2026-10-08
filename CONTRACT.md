@@ -21,6 +21,7 @@ runs/{YYYY}/{MM}/{run_id}.json        ingest_run (audit only, not synced)
 state/pages/{site}.json               last clean block count, hash and fetched_at per page (ingest only, not synced)
 state/cn_ids.jsonl                    cn id snapshot, numeric id and cardNumber (ingest only, not synced)
 state/product_pages/{site}.json       series each product page links, and the product index fetch time (ingest only, not synced)
+state/keepalive.txt                   date of the last heartbeat commit, written only after 30 quiet days (ingest only, not synced)
 ```
 
 `site` is one of `en`, `asia-en`, `jp`, `tc`, `cn`. These are sites, not
