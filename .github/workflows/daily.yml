@@ -11,8 +11,9 @@ name: daily-ingest
 #
 # GitHub disables a public repo's schedules after 60 days with no repository
 # activity. This workflow commits only when the data changes, so a long quiet
-# spell can switch it off without a failed run to show for it. The Actions tab
-# says so when it happens; re-enable the workflow there.
+# spell could switch it off without a failed run to show for it. The keepalive
+# job below commits a heartbeat once main has been quiet for 30 days. If the
+# schedule is disabled anyway, the Actions tab says so; re-enable it there.
 #
 # check.yml will NOT run on the commits this makes: a push made with
 # GITHUB_TOKEN does not trigger other workflows. So the gate step below runs
@@ -113,3 +114,39 @@ jobs:
           fi
           gh label create new-series --color FBCA04 --description "A series the daily ingest has not seen before" --force
           gh issue create --title "$title" --body-file "$RUNNER_TEMP/daily/notice_body.md" --label new-series
+
+  keepalive:
+    # Runs after ingest whatever its result, so a failing ingest still keeps
+    # the schedule alive and keeps failing where someone can see it.
+    needs: ingest
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    env:
+      DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
+    steps:
+      # main, not github.sha: the ingest job may have just pushed a commit.
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # GitHub does not define "repository activity" for the 60-day rule. This
+      # rests on a commit to main counting. A scheduled run cannot count, or the
+      # rule could never fire. If this premise is wrong, the signal is the
+      # schedule showing as disabled in the Actions tab.
+      - name: Commit a heartbeat if main has been quiet for 30 days
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898213+github-actions[bot]@users.noreply.github.com"
+          before=$(git rev-parse HEAD)
+          args=("$GITHUB_WORKSPACE" --days 30)
+          if [ "$DRY_RUN" = true ]; then args+=(--dry-run); fi
+          python ingest/keepalive.py "${args[@]}"
+          if [ "$(git rev-parse HEAD)" != "$before" ]; then
+            git push origin HEAD:main
+          fi
