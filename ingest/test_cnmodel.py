@@ -109,9 +109,13 @@ class CopyMarks(unittest.TestCase):
         self.assertEqual(cnmodel.variant("", "_d", False), "parallel")    # lowercase stays an art mark
         self.assertFalse(cnmodel.disagree("", "%281%29", False))
 
-    def test_left_after_the_strip_is_still_read(self):
-        # 5376 OP13-077: -1(1) leaves -1, and nothing ruled -1 out.
-        self.assertEqual(cnmodel.variant("", "-1%281%29", False), "parallel")
+    def test_a_dash_n_goes_only_with_its_mark(self):
+        # alyssa 87354: "-1(1)" is one copy mark (5376 OP13-077, jp base only);
+        # a bare -N is a real cn token and stays.
+        self.assertEqual(cnmodel.art_token("-1%281%29"), "")
+        self.assertEqual(cnmodel.variant("", "-1%281%29", False), "base")
+        self.assertEqual(cnmodel.art_token("-03"), "-03")
+        self.assertEqual(cnmodel.variant("", "-03", False), "parallel")
 
     def test_run_keeps_the_raw_token(self):
         tmp = Path(tempfile.mkdtemp())

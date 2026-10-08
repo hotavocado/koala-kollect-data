@@ -97,8 +97,10 @@ def image_token(image_url, base):
 # (EB02-046%281%29.png), sometimes stacked, and a trailing _D (P-026_D.png). They
 # are re-uploads, not art (alyssa 87340): on 2026-10-08, 18 rows were the only
 # cn id for their number with jp listing it base only, and every one wore one.
-# Lowercase _d is not stripped: it reads as an art mark.
-_COPY_MARK = re.compile(r"(?:%28[0-9]+%29|\([0-9]+\))")
+# Lowercase _d is not stripped: it reads as an art mark. A -N goes only when it
+# sits directly in front of a mark ("-1(1)", OP13-077): a bare -NN is a real
+# inline cn token (OP06-050-03), so it stays (alyssa 87354).
+_COPY_MARK = re.compile(r"(?:-[0-9]+)?(?:%28[0-9]+%29|\([0-9]+\))")
 
 
 def art_token(img_token):

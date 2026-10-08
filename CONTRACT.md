@@ -305,8 +305,10 @@ the printing a `parallel`; none makes it `base`:
   (`1705891765183OP06-050P.png` gives `P`), kept as `image_token`. A file
   named by a bare hash says nothing, so the image is unread, not a no.
   Windo's re-upload marks are not art and are removed before the token is
-  read: `(N)`, URL-encoded as `%28N%29` and sometimes stacked, and a trailing
-  `_D` (alyssa 87340). On 2026-10-08, 18 rows were the only cn id for their
+  read: `(N)`, URL-encoded as `%28N%29` and sometimes stacked, with a `-N`
+  directly in front of it (`-1(1)`, OP13-077), and a trailing `_D` (alyssa
+  87340, 87354). A bare `-N` is not a mark and stays: `-NN` is a real inline
+  cn token (OP06-050-03). On 2026-10-08, 18 rows were the only cn id for their
   number while jp listed that number base only, and every one wore such a
   mark. `image_token` keeps the raw token, marks included, so a later
   re-rule costs nothing. Lowercase `_d` is kept as an art mark (23 rows, none
