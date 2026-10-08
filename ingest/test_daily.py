@@ -78,8 +78,12 @@ class CommitPredicate(Harness, unittest.TestCase):
         self.t = T2
         code, s = self.go()
         self.assertEqual((code, s["ok"], s["changed"]), (0, True, False))
-        # The tree did move: every last_seen_at widened. That is not a change.
-        self.assertNotEqual(before, self.tree())
+        # Only runs/ and state/pages (fetched_at) moved; data/ and the manifest
+        # are byte-identical now that rows carry no last_seen_at.
+        after = self.tree()
+        self.assertNotEqual(before, after)
+        keep = lambda t: {k: v for k, v in t.items() if k.startswith("data/") or k == "manifest.json"}  # noqa: E731
+        self.assertEqual(keep(before), keep(after))
         self.assertEqual(s["sites"]["en"]["pages_unchanged"], 1)
 
     def test_control_a_clean_removal_is_a_change(self):

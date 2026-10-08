@@ -122,8 +122,13 @@ promos.
   per printing because parallels of one number differ, and per site because
   sites disagree on the same image id. Measured 2026-10-08: EB04-061_p2 prints X
   on en and 4 on the other three sites; OP01-016_p8 prints 1 on en and X on
-  asia-en, jp and tc. `card.block_icon` is a derivation: the number on the facts
-  site's base printing, for filtering by block. It is never `"X"`.
+  asia-en, jp and tc. `card.block_icon` is a derivation, for filtering by
+  block: the number on the facts site's base printing. When the facts site
+  lists no base printing, it is that site's value if every one of its
+  printings for the card agrees, and omitted otherwise, because a card-level
+  value picked from disagreeing printings would be arbitrary (P-081 and P-082
+  on jp, 2026-10-08: no base, every printing 3). It is never `"X"`, and it is
+  omitted when the printing it would come from shows none.
 - **`?` is an attribute value.** OP13-079 Imu prints `?` where an attribute goes:
   half-width on en and asia-en, full-width on jp and tc. Both are stored as
   half-width `"?"`, and the schema refuses the full-width form.
@@ -153,6 +158,16 @@ that CI stays green at every step:
    last changed: a guard keyed on content change would pass a replay older
    than the last fetch but newer than the last change, which is the replay it
    exists to refuse.
+   **Dated exception, 2026-10-08: card_observation rows were rekeyed in place,
+   not superseded.** Dropping `block_icon` from the observation and reading `"?"`
+   as an attribute changed the hash, and so the key, of 11,206 rows that had not
+   changed on the page. Each was replaced under its new key with its
+   `first_seen_at` preserved, and no `superseded_at` was written, so the errata
+   history holds no erratum that did not happen. Old keys are gone from `data/`;
+   the app cleared `card_observations` once on dev and re-synced (alyssa,
+   general 86832). This happens once: the ingest rekeys only a row that still
+   carries `block_icon` and differs by nothing else, and no row is written with
+   it.
 3. **Closing change:** once `check_data` shows that no data row carries the old
    fields, the schema refuses them (each with a red control) and requires
    `printing.block_icon`.

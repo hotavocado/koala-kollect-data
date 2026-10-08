@@ -47,7 +47,8 @@ PER_SITE = {"card_observation": "card_observations", "printing": "printings",
 SHARED = {"card": "cards", "distribution": "distributions",
           "printing_distribution": "printing_distributions", "printing_link": "printing_links"}
 TYPE_OF_DIR = {v: k for k, v in {**PER_SITE, **SHARED}.items()}
-SEEN = ("first_seen_at", "last_seen_at")
+# Fields of a card_observation row that are not facts it states.
+OBS_META = ("key", "card_key", "site", "lang", "observation_hash", "first_seen_at", "last_seen_at", "superseded_at")
 
 
 class RunError(Exception):
@@ -83,6 +84,16 @@ class Store:
                 self.recs[rtype].update(read_jsonl(f))
         for rtype, d in SHARED.items():
             self.recs[rtype].update(read_jsonl(self.repo / "data" / f"{d}.jsonl"))
+        # Transitional (CONTRACT.md): rows written before 2026-10-08's contract
+        # carry last_seen_at. Drop it on read, so no row is written with it.
+        # A product's last_seen_at was its page's newest clean fetch; keep it
+        # to seed the page's fetched_at where state/pages has none yet.
+        self.legacy_fetched_at = {}
+        for rtype, recs in self.recs.items():
+            for key, rec in recs.items():
+                t = rec.pop("last_seen_at", None)
+                if rtype == "product" and t:
+                    self.legacy_fetched_at[key] = t
         self.card_by_number = {c["number"]: k for k, c in self.recs["card"].items() if "number" in c}
         self.number_by_card = {k: n for n, k in self.card_by_number.items()}
 
@@ -97,19 +108,18 @@ class Store:
         return loc["printing_key"] if loc else model.mint("prt", locator_key)
 
     def upsert(self, rtype, rec, t, counts):
-        """Insert, or update keeping first_seen_at and widening last_seen_at.
+        """Insert, or update keeping the earliest first_seen_at.
 
-        A change to anything but the seen-times counts as changed, so a re-run
-        over the same pages, or a later run that only bumps last_seen_at, adds 0
-        and changes 0.
+        A change to anything but first_seen_at counts as changed, so a re-run
+        over the same pages adds 0 and changes 0 and writes the same bytes.
         """
         old = self.recs[rtype].get(rec["key"])
         if old is None:
-            new = dict(rec, first_seen_at=t, last_seen_at=t)
+            new = dict(rec, first_seen_at=t)
             counts["added"] += 1
         else:
-            new = dict(rec, first_seen_at=min(old["first_seen_at"], t), last_seen_at=max(old["last_seen_at"], t))
-            strip = lambda r: {k: v for k, v in r.items() if k not in SEEN}  # noqa: E731
+            new = dict(rec, first_seen_at=min(old["first_seen_at"], t))
+            strip = lambda r: {k: v for k, v in r.items() if k != "first_seen_at"}  # noqa: E731
             if strip(ordered(rtype, new)) != strip(old):
                 counts["changed"] += 1
         self.recs[rtype][rec["key"]] = ordered(rtype, new)
@@ -126,7 +136,7 @@ def guard(site_dir, entry, prev):
         return "zero_parse", []
     if len(blocks) != independent_count(html):
         return "count_mismatch", blocks
-    if prev and len(blocks) < DROP_FLOOR * prev["blocks"]:
+    if prev and "blocks" in prev and len(blocks) < DROP_FLOOR * prev["blocks"]:
         return "count_drop", blocks
     return None, blocks
 
@@ -163,9 +173,11 @@ def run_site(store, site_dir, site, state):
     for sid, label, t, blocks in sorted(clean):
         product_key = f"{site}:{sid}"
         # An older page replayed over newer data would supersede current facts
-        # with stale ones, stamped earlier than what they replace. The product's
-        # last_seen_at is the newest clean fetch of this page; equal is a replay.
-        last = store.recs["product"].get(product_key, {}).get("last_seen_at")
+        # with stale ones, stamped earlier than what they replace. fetched_at in
+        # state/pages is this page's fetch time in the last committed run, the
+        # fetch time and not the last change, so a replay older than the last
+        # fetch but newer than the last change is refused too. Equal is a re-run.
+        last = state.get(sid, {}).get("fetched_at")
         if last and t < last:
             raise RunError(f"{site}:{sid} fetched {t}, older than the data ({last}); nothing written")
         before = counts["added"]
@@ -175,7 +187,7 @@ def run_site(store, site_dir, site, state):
         h = page_hash(blocks)
         if state.get(sid, {}).get("hash") == h:
             counts["pages_unchanged"] += 1
-        state[sid] = {"blocks": len(blocks), "hash": h}
+        state[sid] = {"blocks": len(blocks), "fetched_at": t, "hash": h}
         seen_here = set()
         for b in blocks:
             counts["blocks_parsed"] += 1
@@ -191,16 +203,16 @@ def run_site(store, site_dir, site, state):
                 printing = {"key": prt, "card_key": card_key, "site": site, "rarity": b["rarity"],
                             "variant": model.VARIANT_BY_FAMILY[parsed["suffix_family"]],
                             "image_url": model.image_url(site, model.page_url(site, sid), b["image_src"]),
-                            "source_text": b["source_text"]}
+                            "source_text": b["source_text"],
+                            "block_icon": model.printing_block_icon(b["block_icon"])}
             except ValueError as ex:
                 raise RunError(f"{site}:{sid} {b['image_id']}: {ex}") from ex
             if prt in touched:
                 # Listed on a second page this run: the first page (lowest
-                # series id) supplied its fields; only the seen-times widen.
-                old = store.recs["printing"][prt]
-                old["first_seen_at"], old["last_seen_at"] = min(old["first_seen_at"], t), max(old["last_seen_at"], t)
-                store.recs["printing_locator"][locator_key]["last_seen_at"] = max(
-                    store.recs["printing_locator"][locator_key]["last_seen_at"], t)
+                # series id) supplied its fields; only first_seen_at can move.
+                for rtype, key in (("printing", prt), ("printing_locator", locator_key)):
+                    old = store.recs[rtype][key]
+                    old["first_seen_at"] = min(old["first_seen_at"], t)
             else:
                 touched.add(prt)
                 store.upsert("printing", printing, t, counts)
@@ -247,23 +259,48 @@ def observe(store, site, clean, refused_blocks, page_refusals, counts):
             raise RunError(f"{site} {b['image_id']}: {ex}") from ex
         h = model.observation_hash(fields)
         if cur and cur["observation_hash"] == h:
-            cur["last_seen_at"] = max(cur["last_seen_at"], t)
+            continue
+        key = f"{card_key}:{site}:{h}"
+        if cur and parser_only_change(cur, fields):
+            # The 2026-10-08 rekey (CONTRACT.md): the row was written by the
+            # old parser and the block has not changed, so it is not an
+            # erratum. Replace it under the key this parser gives it, keeping
+            # first_seen_at. Only a row still carrying block_icon can match,
+            # and no row is written with one, so this cannot fire twice.
+            del store.recs["card_observation"][cur["key"]]
+            store.recs["card_observation"][key] = ordered("card_observation", {
+                "key": key, "card_key": card_key, "site": site, "lang": model.LANG[site],
+                "observation_hash": h, **fields, "first_seen_at": cur["first_seen_at"]})
+            counts["changed"] += 1
+            counts["rekeyed"] += 1
             continue
         if cur:
             cur["superseded_at"] = t
             counts["changed"] += 1
-        key = f"{card_key}:{site}:{h}"
         prior = store.recs["card_observation"].get(key)
         if prior:
             # The text went back to an earlier version: reopen that row.
             prior.pop("superseded_at", None)
-            prior["last_seen_at"] = max(prior["last_seen_at"], t)
             counts["changed"] += 1
         else:
             store.recs["card_observation"][key] = ordered("card_observation", {
                 "key": key, "card_key": card_key, "site": site, "lang": model.LANG[site],
-                "observation_hash": h, **fields, "first_seen_at": t, "last_seen_at": t})
+                "observation_hash": h, **fields, "first_seen_at": t})
             counts["added"] += 1
+
+
+def parser_only_change(old, fields):
+    """True when an old-parser row and this parser's fields differ only by the 2026-10-08 changes.
+
+    Those are exactly two: block_icon left the observation, and "?" became an
+    attribute value where the old parser recorded none. Anything else is a
+    real change and goes through the erratum path.
+    """
+    if "block_icon" not in old:
+        return False
+    was = {k: v for k, v in old.items() if k not in OBS_META and k != "block_icon"}
+    now = dict(fields, attributes=[a for a in fields.get("attributes", []) if a != "?"])
+    return was == now
 
 
 def build_cards(store):
@@ -274,6 +311,20 @@ def build_cards(store):
         first[o["card_key"]] = min(first.get(o["card_key"], o["first_seen_at"]), o["first_seen_at"])
         if "superseded_at" not in o:
             obs[o["card_key"]][o["site"]] = o
+    # card.block_icon is derived (CONTRACT.md): the number printed on the facts
+    # site's base printing; with no base there, the value every one of that
+    # site's printings of the card agrees on. Never "X"; omitted when the base
+    # shows none or the printings disagree, because then no card-level value is honest.
+    on_site = defaultdict(list)
+    for p in store.recs["printing"].values():
+        on_site[(p["card_key"], p["site"])].append(p)
+    base_icon = {}
+    for k, ps in on_site.items():
+        base = [p for p in ps if p["variant"] == "base"]
+        values = {json.dumps(p.get("block_icon")) for p in (base or ps)}
+        v = json.loads(values.pop()) if len(values) == 1 else None
+        if isinstance(v, int):
+            base_icon[k] = v
     counts = defaultdict(int)
     for card_key, by_site in obs.items():
         facts_site = next(s for s in FACTS_ORDER if s in by_site)
@@ -281,9 +332,11 @@ def build_cards(store):
         old = store.recs["card"].get(card_key)
         rec = {"key": card_key, "number": store.number_by_card[card_key], "facts_site": facts_site,
                "first_seen_at": old["first_seen_at"] if old else first[card_key]}
-        for k in ("category", "colors", "cost", "life", "power", "counter", "attributes", "block_icon"):
+        for k in ("category", "colors", "cost", "life", "power", "counter", "attributes"):
             if k in o:
                 rec[k] = o[k]
+        if (card_key, facts_site) in base_icon:
+            rec["block_icon"] = base_icon[(card_key, facts_site)]
         rec = ordered("card", rec)
         if old is None:
             counts["added"] += 1
@@ -350,7 +403,7 @@ def manifest(files, repo):
                         "sha256": hashlib.sha256(text.encode()).hexdigest()}
         for ln in text.splitlines():
             r = json.loads(ln)
-            for k in ("last_seen_at", "first_seen_at", "observed_at"):
+            for k in ("first_seen_at", "removed_at", "superseded_at", "observed_at"):
                 if k in r:
                     newest = max(newest, r[k])
     return json.dumps({"schema_version": 1, "generated_at": newest, "files": entries},
@@ -373,6 +426,14 @@ def run(pageset, repo, sites=SITES, cn_rows=None, now=time.time):
     for site in sites:
         sp = repo / "state" / "pages" / f"{site}.json"
         states[site] = json.loads(sp.read_text("utf-8")) if sp.exists() else {}
+        # Transitional: a page whose state predates fetched_at takes it from its
+        # product's last_seen_at, the stamp the replay guard used to read, so
+        # the guard has no gap while the field moves.
+        # A page with no state entry at all gets one holding only fetched_at.
+        for pk, t in store.legacy_fetched_at.items():
+            s, sid = pk.split(":", 1)
+            if s == site:
+                states[site].setdefault(sid, {}).setdefault("fetched_at", t)
         t0 = now()
         counts, refusals, page_refusals = run_site(store, pageset / site, site, states[site])
         results[site] = {"counts": counts, "refusals": refusals, "page_refusals": page_refusals, "t0": t0, "t1": now()}
@@ -427,6 +488,8 @@ def main(argv):
               f"blocks {run_rec['blocks_parsed']} (no source_text {run_rec['blocks_without_source_text']}), "
               f"added {run_rec['added']}, changed {run_rec['changed']}, removed {run_rec['removed']}, "
               f"refusals {run_rec['refusals']}")
+        if r["counts"]["rekeyed"]:
+            print(f"  rekeyed {r['counts']['rekeyed']} observations (2026-10-08 parser change, not errata)")
         for sid, arm in sorted(r["page_refusals"].items()):
             print(f"  REFUSED {site}:{sid} {arm}")
     print(f"cards: {res['cards']}")

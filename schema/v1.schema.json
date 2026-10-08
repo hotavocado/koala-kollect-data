@@ -157,7 +157,7 @@
           "uniqueItems": true
         },
         "block_icon": {
-          "description": "DERIVED: the block number printed on the facts site's base printing, for filtering by block. Never \"X\"; the fact of record is printing.block_icon, which can differ by printing and by site.",
+          "description": "DERIVED: the block number printed on the facts site's base printing, for filtering by block. When the facts site has no base printing: that site's value if every one of its printings for the card agrees, else omitted, because the card-level value would be ambiguous. Never \"X\"; the fact of record is printing.block_icon, which can differ by printing and by site.",
           "type": "integer",
           "minimum": 0
         },

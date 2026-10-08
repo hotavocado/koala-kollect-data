@@ -12,9 +12,9 @@ removal guard. A refusal is how a layout change or a truncated page shows up,
 so a run that refused a page is not a run to commit.
 
 changed=true only when the run added, changed or removed a record, or the cn id
-snapshot moved. Every row's last_seen_at widens on every fetch, so the tree
-always differs; that is not a change (86674: a no-change day rewrites 70,494
-lines that differ only in seen-times).
+snapshot moved. A no-change day still writes runs/ and the fetched_at stamps in
+state/pages, so the tree always differs; that is not a change. (Until the
+2026-10-08 contract, every row's last_seen_at widened too, 86674.)
 
 New series are found by diffing each site's series dropdown against the
 committed product list, before the run, so a new series whose page is refused

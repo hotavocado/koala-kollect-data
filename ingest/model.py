@@ -27,10 +27,10 @@ COLORS = {
 ATTRIBUTES = {
     "Slash": "slash", "Strike": "strike", "Ranged": "ranged", "Special": "special", "Wisdom": "wisdom",
     "斬": "slash", "打": "strike", "射": "ranged", "特": "special", "知": "wisdom",
+    # OP13-079 Imu prints "?" where an attribute goes: half-width on en and
+    # asia-en, full-width on jp and tc. Both are stored half-width (CONTRACT.md).
+    "?": "?", "？": "?",
 }
-# Printed as "?" on 2 blocks per site: the card has no attribute in the schema's
-# vocabulary, so it maps to none rather than to a guess.
-ATTRIBUTE_UNKNOWN = {"?", "？"}
 LIFE_LABELS = {"Life", "ライフ", "生命值"}
 COST_LABELS = {"Cost", "コスト", "費用"}
 CATEGORIES = {"LEADER": "leader", "CHARACTER": "character", "EVENT": "event", "STAGE": "stage"}
@@ -98,14 +98,22 @@ def observation_fields(site, b):
     rec["power"] = _int(b["power"], "power")
     rec["counter"] = _int(b["counter"], "counter")
     # Alt texts already join two attributes with "/" ("Slash/Special").
-    rec["attributes"] = _split("/".join(b["attributes"]), ATTRIBUTES, "attribute", ATTRIBUTE_UNKNOWN)
-    # "X" is printed on 27 blocks per site; the schema's block_icon is an integer,
-    # so X is omitted (kept verbatim on the page, recoverable by a re-parse).
-    rec["block_icon"] = None if b["block_icon"] in (None, "X") else _int(b["block_icon"], "block icon")
+    rec["attributes"] = _split("/".join(b["attributes"]), ATTRIBUTES, "attribute")
+    # No block_icon: it is a printing fact (printing_block_icon below), because
+    # parallels of one number and sites differ on it.
     rec["types"] = [t for t in (b["types"] or "").split("/") if t]
     rec["effect"] = b["effect"]
     rec["trigger"] = b["trigger"]
     return {k: v for k, v in rec.items() if v is not None}
+
+
+def printing_block_icon(raw):
+    """As printed on this printing: an integer, "X" (never rotates out), or None where none is printed."""
+    if raw is None:
+        return None
+    if raw == "X":
+        return "X"
+    return _int(raw, "block icon")
 
 
 def observation_hash(fields):
