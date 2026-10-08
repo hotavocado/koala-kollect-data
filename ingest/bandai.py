@@ -18,7 +18,10 @@ _NAME = re.compile(r'<div class="cardName">(.*?)</div>', re.S)
 _IMG = re.compile(r'<div class="frontCol">\s*<img[^>]*?(?:data-src|src)="(?P<src>[^"]*?/images/cardlist/card/[^"]+)"', re.S)
 _ATTR_BLOCK = re.compile(r'<div class="attribute">(.*?)</div>', re.S)
 _ATTR_ALT = re.compile(r'<img[^>]*alt="([^"]*)"')
-_TAG = re.compile(r"<[^>]+>")
+# Real tags only. Some effect text carries the attribute marker unescaped
+# ("by <Slash> attribute cards", 24 times across 8 pages on 2026-10-08), and a
+# match-anything pattern deleted the word.
+_TAG = re.compile(r"</?[a-z][a-z0-9]*\b[^>]*>")
 _WS = re.compile(r"\s+")
 
 # Independent count: image ids in card-image URLs, not the block regex above.
@@ -94,5 +97,11 @@ def series_options(page_html):
     for sid, label in opts:
         if sid not in seen:
             seen.add(sid)
+            # Option text carries its line break entity-escaped
+            # (&lt;br class=&quot;spInline&quot;&gt;), so _text would unescape it
+            # into a literal tag. Drop exactly that here rather than unescaping
+            # before stripping in _text, which would treat any escaped text in
+            # any field as markup.
+            label = re.sub(r"&lt;br\b.*?&gt;", " ", label)
             out.append((sid, _text(label)))
     return out

@@ -83,6 +83,24 @@ class Bandai(unittest.TestCase):
         self.assertIn("569117", opts)
         self.assertIn("569901", opts)
 
+    def test_series_label_drops_escaped_br(self):
+        # The page serves "PREMIUM BOOSTER &lt;br class=&quot;spInline&quot;&gt;-ONE ...".
+        opts = dict(series_options(load("en_569117.html")))
+        self.assertEqual(opts["569301"], "PREMIUM BOOSTER -ONE PIECE CARD THE BEST- [PRB-01]")
+        for label in opts.values():
+            self.assertNotIn("<", label)
+
+    def test_effect_keeps_attribute_marker(self):
+        # en_569103_slash.html: two blocks cut from series 569103. OP03-032 serves
+        # the marker raw ("by <Slash> attribute"), OP03-008 escaped (&lt;Slash&gt;).
+        # Both must come out as <Slash>; neither may lose the word.
+        effects = {b["image_id"]: b["effect"] for b in parse_page(load("en_569103_slash.html"))}
+        self.assertEqual(set(effects), {"OP03-032", "OP03-008"})
+        for image_id, effect in effects.items():
+            self.assertIn("<Slash>", effect, image_id)
+            self.assertNotIn("by  ", effect, image_id)
+            self.assertNotIn("<br", effect, image_id)
+
     # Controls: a live fetch breaks these ways, and the check must go red.
     def test_control_cut_mid_block(self):
         # Cut just after the block's image tag and before its </dl>: the image is

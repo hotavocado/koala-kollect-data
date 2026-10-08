@@ -18,6 +18,8 @@ data/distributions.jsonl              distribution
 data/printing_distributions.jsonl     printing_distribution
 data/printing_links.jsonl             printing_link
 runs/{YYYY}/{MM}/{run_id}.json        ingest_run (audit only, not synced)
+state/pages/{site}.json               last clean block count and hash per page (ingest only, not synced)
+state/cn_ids.jsonl                    cn id snapshot, numeric id and cardNumber (ingest only, not synced)
 ```
 
 `site` is one of `en`, `asia-en`, `jp`, `tc`, `cn`. These are sites, not
