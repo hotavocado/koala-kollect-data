@@ -18,8 +18,31 @@ def validator(t):
     return Draft202012Validator({"$schema": schema["$schema"], "$defs": schema["$defs"], "$ref": f"#/$defs/{t}"})
 
 
-for line in (root / "examples/valid.jsonl").read_text().splitlines():
-    row = json.loads(line)
+def repeated_keys(rows):
+    """(type, key) pairs on more than one line. A per-record schema check cannot
+    see this, and the app sync upserts by key, so a repeat silently overwrites."""
+    seen, out = set(), []
+    for row in rows:
+        k = (row["type"], row["record"].get("key", row["record"].get("run_id")))
+        if k in seen:
+            out.append(k)
+        seen.add(k)
+    return out
+
+
+valid_rows = [json.loads(line) for line in (root / "examples/valid.jsonl").read_text().splitlines()]
+for k in repeated_keys(valid_rows):
+    bad += 1
+    print("FAIL valid key repeated across lines:", k)
+# Control: the two cn:6987 locator lines 5abe44b shipped (alyssa, general 87334).
+twice = [{"type": "printing_locator", "record": {"key": "cn:6987", "printing_key": p}} for p in ("prt_000000000002", "prt_w95hkvuf16bf")]
+if repeated_keys(twice) == [("printing_locator", "cn:6987")]:
+    print("ok   red   a key on two lines")
+else:
+    bad += 1
+    print("FAIL control passed: a key on two lines")
+
+for row in valid_rows:
     errs = list(validator(row["type"]).iter_errors(row["record"]))
     if errs:
         bad += 1

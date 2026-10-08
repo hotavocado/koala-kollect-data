@@ -390,4 +390,7 @@ either.
 
 `python scripts/check.py` validates the examples against the schema. It also
 confirms that each control in `examples/invalid.jsonl` fails with the error
-named in its `expect` field, and runs the image-id parser cases. CI runs it on every push.
+named in its `expect` field, refuses a key that appears on two lines of the
+valid examples (the sync upserts by key, so a repeat overwrites silently; the
+data files get the same check, within and across files), and runs the
+image-id parser cases. CI runs it on every push.
