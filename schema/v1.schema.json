@@ -298,11 +298,6 @@
           },
           "uniqueItems": true
         },
-        "block_icon": {
-          "description": "DEPRECATED (transitional): block_icon moved to printing, where it is recorded per printing per site. Legal only until the ingest stops writing it; a later contract version refuses it.",
-          "type": "integer",
-          "minimum": 0
-        },
         "types": {
           "description": "As printed, in the site's language.",
           "type": "array",
@@ -317,10 +312,6 @@
           "type": "string"
         },
         "first_seen_at": {
-          "$ref": "#/$defs/timestamp"
-        },
-        "last_seen_at": {
-          "description": "DEPRECATED (transitional): no longer required. It widened on every row on every run, so a no-change day rewrote every line. When a source was last checked lives in runs/. A later contract version refuses it.",
           "$ref": "#/$defs/timestamp"
         },
         "superseded_at": {
@@ -340,6 +331,7 @@
         "variant",
         "image_url",
         "source_text",
+        "block_icon",
         "first_seen_at"
       ],
       "properties": {
@@ -380,7 +372,7 @@
           "type": "string"
         },
         "block_icon": {
-          "description": "The block icon as printed on this printing on this site: an integer, \"X\" (never rotates out of standard), or null where the site prints none (a dash or empty). Sites can disagree on the same image id, and parallels of one card number can differ, so this is per printing per site. Optional while the ingest moves it here from card_observation.",
+          "description": "The block icon as printed on this printing on this site: an integer, \"X\" (never rotates out of standard), or null where the site prints none (a dash or empty). Sites can disagree on the same image id, and parallels of one card number can differ, so this is per printing per site.",
           "anyOf": [
             {
               "type": "integer",
@@ -395,10 +387,6 @@
           ]
         },
         "first_seen_at": {
-          "$ref": "#/$defs/timestamp"
-        },
-        "last_seen_at": {
-          "description": "DEPRECATED (transitional): no longer required. It widened on every row on every run, so a no-change day rewrote every line. When a source was last checked lives in runs/. A later contract version refuses it.",
           "$ref": "#/$defs/timestamp"
         }
       },
@@ -470,10 +458,6 @@
           "minimum": 0
         },
         "first_seen_at": {
-          "$ref": "#/$defs/timestamp"
-        },
-        "last_seen_at": {
-          "description": "DEPRECATED (transitional): no longer required. It widened on every row on every run, so a no-change day rewrote every line. When a source was last checked lives in runs/. A later contract version refuses it.",
           "$ref": "#/$defs/timestamp"
         }
       },
@@ -569,10 +553,6 @@
         },
         "first_seen_at": {
           "$ref": "#/$defs/timestamp"
-        },
-        "last_seen_at": {
-          "description": "DEPRECATED (transitional): no longer required. It widened on every row on every run, so a no-change day rewrote every line. When a source was last checked lives in runs/. A later contract version refuses it.",
-          "$ref": "#/$defs/timestamp"
         }
       }
     },
@@ -599,10 +579,6 @@
           "$ref": "#/$defs/product_key"
         },
         "first_seen_at": {
-          "$ref": "#/$defs/timestamp"
-        },
-        "last_seen_at": {
-          "description": "DEPRECATED (transitional): no longer required. It widened on every row on every run, so a no-change day rewrote every line. When a source was last checked lives in runs/. A later contract version refuses it.",
           "$ref": "#/$defs/timestamp"
         },
         "removed_at": {
