@@ -6,8 +6,8 @@ Run by .github/workflows/daily.yml. It writes the data repo through run.py and
 leaves committing to the workflow, which commits only when this exits 0 and
 says changed=true.
 
-Exits 1, and the workflow commits nothing, when any page or the cn list failed
-to fetch, when run.py stops (RunError), or when any page was refused by the
+Exits 1, and the workflow commits nothing, when any page, the cn list or a cn
+detail failed to fetch, when run.py stops (RunError), or when any page was refused by the
 removal guard. A refusal is how a layout change or a truncated page shows up,
 so a run that refused a page is not a run to commit.
 
@@ -28,6 +28,10 @@ and a page set with no product index for a site is a failure, never a skip.
 Each site's event and topic lists are fetched too, for where promos came from
 (events.py): 2 to 4 walks of every list, unioned, then the pages never read and
 the pages still on the current list. A failed list or event page fails the run.
+
+cn is fetched into the page set as cn/ (cn.fetch_pageset): the list, the
+products, and a detail call only for ids the data repo has no printing for, so
+a normal day costs the list plus the new ids. A failed detail fails the run.
 """
 import argparse
 import json
@@ -90,6 +94,14 @@ def decide(fetch_failures, result):
             if n:
                 failures.append(f"{site}: {n} page(s) refused ({arm}): "
                                 + ", ".join(sorted(s for s, a in r["page_refusals"].items() if a == arm)))
+        if c["added"] or c["changed"] or c["removed"]:
+            changed = True
+    cn_run = result.get("cn_run")
+    if cn_run:
+        for arm, n in cn_run["refusals"].items():
+            if n:
+                failures.append(f"cn: {n} refused ({arm})")
+        c = cn_run["counts"]
         if c["added"] or c["changed"] or c["removed"]:
             changed = True
     if any(result["cards"].values()):
@@ -159,8 +171,14 @@ def fetch_events(pageset, repo, site):
     return events.failures(log)
 
 
+def cn_known_ids(repo):
+    """cn ids the data repo already has a printing for: their details are not fetched again."""
+    rows = run.read_jsonl(Path(repo) / "data" / "printing_locators" / "cn.jsonl").values()
+    return {int(r["image_id"]) for r in rows}
+
+
 def fetch_all(pageset, sites, repo):
-    """Fetch every site, its product index and the cn list. Returns (failures, cn_rows)."""
+    """Fetch every site, its product index and the cn page set. Returns the failures."""
     failures = []
     for site in sites:
         t0 = time.monotonic()
@@ -178,13 +196,15 @@ def fetch_all(pageset, sites, repo):
         failures += fetch_events(pageset, repo, site)
     t0 = time.monotonic()
     try:
-        cn_rows = cn.list_all()
-        print(f"fetch cn: {len(cn_rows)} rows, {time.monotonic() - t0:.0f}s", flush=True)
+        known = cn_known_ids(repo)
+        cn_failures = cn.fetch_pageset(Path(pageset) / "cn", known)
+        failures += cn_failures
+        print(f"fetch cn: list and products, details for new ids ({len(known)} already held), "
+              f"{len(cn_failures)} failed, {time.monotonic() - t0:.0f}s", flush=True)
     except Exception as e:
         failures.append(f"cn: list failed: {type(e).__name__}: {e}")
         print(f"fetch cn: FAILED after {time.monotonic() - t0:.0f}s: {type(e).__name__}: {e}", flush=True)
-        cn_rows = None
-    return failures, cn_rows
+    return failures
 
 
 def parse_fake(spec):
@@ -203,7 +223,7 @@ def daily(pageset, repo, out, sites=SITES, dry_run=False, fake=None, fetcher=Non
         (out / stale).unlink(missing_ok=True)
     if fake and not dry_run:
         raise ValueError("--fake-option is a control and needs --dry-run, so a fake series never reaches Mike")
-    fetch_failures, cn_rows = (fetcher or fetch_all)(pageset, sites, repo)
+    fetch_failures = (fetcher or fetch_all)(pageset, sites, repo)
 
     found = {}
     for site in sites:
@@ -221,7 +241,7 @@ def daily(pageset, repo, out, sites=SITES, dry_run=False, fake=None, fetcher=Non
     result, stopped = None, None
     if not fetch_failures:
         try:
-            result = (runner or run.run)(pageset, repo, sites, cn_rows)
+            result = (runner or run.run)(pageset, repo, sites)
         except run.RunError as e:
             stopped = f"run stopped, nothing written: {e}"
         except Exception as e:  # e.g. model.product_fields on an unmapped product kind
@@ -243,6 +263,8 @@ def daily(pageset, repo, out, sites=SITES, dry_run=False, fake=None, fetcher=Non
                              for s, r in result["sites"].items()}
         summary["cards"] = result["cards"]
         summary["cn"] = result["cn"]
+        if result.get("cn_run"):
+            summary["cn_run"] = result["cn_run"]["run"]
     (out / "summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=1) + "\n", "utf-8")
     return (0 if not failures else 1), summary
 
@@ -266,6 +288,11 @@ def main(argv):
         if site in s.get("origin", {}):
             o = s["origin"][site]
             print(f"  {run.origin_line(o['distributions'], o['events'])}")
+    if "cn_run" in s:
+        r = s["cn_run"]
+        print(f"cn: details read {r['pages_fetched']}, rows {r['blocks_parsed']}, added {r['added']}, "
+              f"changed {r['changed']}, removed {r['removed']}, refusals {r['refusals']}, "
+              f"variant signals disagree on {r['variant_disagreements']}")
     if "cn" in s:
         print(f"cards: {s['cards']}  cn: {s['cn']}")
     if s["notice_title"]:

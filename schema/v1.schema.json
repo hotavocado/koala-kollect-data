@@ -391,11 +391,74 @@
             }
           ]
         },
+        "number_token": {
+          "description": "cn only. What cn writes after the base card number, verbatim: _NN (P-084_01) or inline (P, SP, LP, CP, -03, P-R, P-SR). The card is keyed on the base number; the token is evidence for variant. Absent when cn writes none.",
+          "type": "string",
+          "minLength": 1
+        },
+        "image_token": {
+          "description": "cn only. What the image file name carries after the base number, verbatim (OP06-050P.png -> P, OP01-016_06.png -> _06). Absent when the name carries the bare number, or no number at all (a hash name says nothing).",
+          "type": "string",
+          "minLength": 1
+        },
         "first_seen_at": {
           "$ref": "#/$defs/timestamp"
         }
       },
       "allOf": [
+        {
+          "if": {
+            "required": [
+              "site"
+            ],
+            "properties": {
+              "site": {
+                "not": {
+                  "const": "cn"
+                }
+              }
+            }
+          },
+          "then": {
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "number_token"
+                  ]
+                },
+                {
+                  "required": [
+                    "image_token"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "site"
+            ],
+            "properties": {
+              "site": {
+                "const": "cn"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "variant": {
+                "description": "cn infers variant from three signals and never emits reprint (alyssa 87295).",
+                "enum": [
+                  "base",
+                  "parallel"
+                ]
+              }
+            }
+          }
+        },
         {
           "if": {
             "required": [
@@ -881,6 +944,11 @@
           "items": {
             "$ref": "#/$defs/product_key"
           }
+        },
+        "variant_disagreements": {
+          "description": "cn only. Printings written this run whose variant signals (number token, image token, name marker) did not all agree. Any one present makes the printing a parallel; this counts the rows where that call rested on less than all of them (alyssa 87295).",
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
