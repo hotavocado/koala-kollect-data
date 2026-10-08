@@ -18,7 +18,7 @@ data/distributions.jsonl              distribution
 data/printing_distributions.jsonl     printing_distribution
 data/printing_links.jsonl             printing_link
 runs/{YYYY}/{MM}/{run_id}.json        ingest_run (audit only, not synced)
-state/pages/{site}.json               last clean block count, hash and changed_at per page (ingest only, not synced)
+state/pages/{site}.json               last clean block count, hash and fetched_at per page (ingest only, not synced)
 state/cn_ids.jsonl                    cn id snapshot, numeric id and cardNumber (ingest only, not synced)
 ```
 
@@ -145,12 +145,14 @@ that CI stays green at every step:
    it stops writing `last_seen_at`, it moves the stale-page guard:** today
    `run_site` refuses a page fetched earlier than its `product.last_seen_at`,
    and that is the only committed per-page freshness stamp. The replacement is
-   `changed_at` in `state/pages/{site}.json`: the `fetched_at` of the newest
-   clean fetch whose block hash differed from the last one. A page fetched
-   before its `changed_at` is refused and nothing is written. The daily run
-   commits only on a real change, and a changed page rewrites its own
-   `changed_at` in that commit, so the committed stamp always covers the
-   committed data. An older replay with the same hash changes nothing anyway.
+   `fetched_at` in `state/pages/{site}.json`: the fetch time of that page in
+   the last committed run. A page fetched before its `fetched_at` is refused
+   and nothing is written. Every committed run rewrites `fetched_at` for each
+   page it fetched clean, in the same commit, so the committed stamp always
+   covers the committed data. It is the fetch time, not the time the content
+   last changed: a guard keyed on content change would pass a replay older
+   than the last fetch but newer than the last change, which is the replay it
+   exists to refuse.
 3. **Closing change:** once `check_data` shows that no data row carries the old
    fields, the schema refuses them (each with a red control) and requires
    `printing.block_icon`.
