@@ -24,6 +24,10 @@ issue labelled new-series (upper 86676).
 Each site's product index is fetched too, for release dates (products.py). It is
 part of the run: a failed index or product page fails the run like a card page,
 and a page set with no product index for a site is a failure, never a skip.
+
+Each site's event and topic lists are fetched too, for where promos came from
+(events.py): 2 to 4 walks of every list, unioned, then the pages never read and
+the pages still on the current list. A failed list or event page fails the run.
 """
 import argparse
 import json
@@ -36,6 +40,7 @@ from pathlib import Path
 import cn
 import fetch
 import model
+import events
 import products
 import run
 from bandai import series_options
@@ -138,6 +143,22 @@ def fetch_products(pageset, repo, site):
     return products.failures(log)
 
 
+def fetch_events(pageset, repo, site):
+    """Fetch one site's event lists and the event pages it needs. Returns failures."""
+    t0 = time.monotonic()
+    sp = Path(repo) / "state" / "event_pages" / f"{site}.json"
+    cache = json.loads(sp.read_text("utf-8")).get("pages", {}) if sp.exists() else {}
+    try:
+        log = events.fetch_site(site, pageset, cache)
+    except Exception as e:
+        print(f"fetch {site} events: STOPPED after {time.monotonic() - t0:.0f}s: {type(e).__name__}: {e}", flush=True)
+        return [f"{site}: events fetch stopped: {type(e).__name__}: {e}"]
+    print(f"fetch {site} events: {len(log['index'])} list pages over {len(log['walks'])} walks "
+          f"(new event pages per walk {[w['new'] for w in log['walks']]}), {len(log['pages'])} event pages "
+          f"({len(cache)} read before), {time.monotonic() - t0:.0f}s", flush=True)
+    return events.failures(log)
+
+
 def fetch_all(pageset, sites, repo):
     """Fetch every site, its product index and the cn list. Returns (failures, cn_rows)."""
     failures = []
@@ -154,6 +175,7 @@ def fetch_all(pageset, sites, repo):
             if "error" in entry:
                 failures.append(f"{site}:{entry['series_id']} fetch failed: {entry['error']}")
         failures += fetch_products(pageset, repo, site)
+        failures += fetch_events(pageset, repo, site)
     t0 = time.monotonic()
     try:
         cn_rows = cn.list_all()
@@ -217,6 +239,8 @@ def daily(pageset, repo, out, sites=SITES, dry_run=False, fake=None, fetcher=Non
     if result:
         summary["sites"] = {s: r["run"] for s, r in result["sites"].items()}
         summary["dates"] = {s: r["dates"] for s, r in result["sites"].items()}
+        summary["origin"] = {s: {"distributions": r["distributions"], "events": r["origin"]}
+                             for s, r in result["sites"].items()}
         summary["cards"] = result["cards"]
         summary["cn"] = result["cn"]
     (out / "summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=1) + "\n", "utf-8")
@@ -239,6 +263,9 @@ def main(argv):
               f"added {r['added']}, changed {r['changed']}, removed {r['removed']}, refusals {r['refusals']}")
         if site in s.get("dates", {}):
             print(f"  {run.date_line(s['dates'][site])}")
+        if site in s.get("origin", {}):
+            o = s["origin"][site]
+            print(f"  {run.origin_line(o['distributions'], o['events'])}")
     if "cn" in s:
         print(f"cards: {s['cards']}  cn: {s['cn']}")
     if s["notice_title"]:

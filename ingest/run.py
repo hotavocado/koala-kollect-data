@@ -33,6 +33,7 @@ from pathlib import Path
 
 from jsonschema import Draft202012Validator
 
+import events
 import model
 import products
 from bandai import independent_count, parse_page
@@ -40,6 +41,7 @@ from bandai import independent_count, parse_page
 ROOT = Path(__file__).resolve().parent.parent
 SCHEMA = json.loads((ROOT / "schema/v1.schema.json").read_text("utf-8"))
 SITES = ["en", "asia-en", "jp", "tc"]
+REGION = {"en": "en", "asia-en": "asia", "jp": "jp", "tc": "asia"}
 FACTS_ORDER = ["jp", "en", "asia-en", "tc", "cn"]
 ARMS = ["http_error", "zero_parse", "count_drop", "count_mismatch"]
 DROP_FLOOR = 0.9
@@ -278,6 +280,133 @@ def date_site(store, site, site_dir, pstate, counts):
     return out
 
 
+def claim_key(printing, dist, source, url):
+    return "ev_" + hashlib.sha256(f"{printing}|{dist}|{source}|{url}".encode()).hexdigest()[:16]
+
+
+def put(store, rtype, rec, counts):
+    """Insert or replace one distribution or claim. A claim keeps its earliest observed_at."""
+    old = store.recs[rtype].get(rec["key"])
+    if old is not None and "observed_at" in old:
+        rec = dict(rec, observed_at=min(old["observed_at"], rec["observed_at"]))
+    rec = ordered(rtype, rec)
+    if old is None:
+        counts["added"] += 1
+    elif rec != old:
+        counts["changed"] += 1
+    store.recs[rtype][rec["key"]] = rec
+
+
+def with_dates(rec, dates):
+    if dates:
+        rec["starts_on"] = dates[0]
+        if dates[1]:
+            rec["ends_on"] = dates[1]
+    return rec
+
+
+def link_site(store, site, counts):
+    """Mint each promo printing's distribution from its card-list source_text. Returns {source_text: [printing_key]}.
+
+    The card list is the authority on which pack a printing came from (alyssa
+    87163), so this claim is authoritative and needs no page: it is read from
+    the store. One distribution per (site, source_text).
+    """
+    by_name = defaultdict(list)
+    prods = store.recs["product"]
+    for pp in sorted(store.recs["printing_product"].values(), key=lambda r: r["key"]):
+        prod = prods.get(pp["product_key"])
+        if "removed_at" in pp or prod is None or prod["site"] != site or prod["kind"] != "promo_bucket":
+            continue
+        prt = store.recs["printing"].get(pp["printing_key"])
+        text = prt.get("source_text") if prt else None
+        if not text:
+            continue
+        dist = model.mint("dist", f"{site}|{text}")
+        name = events.core(text)
+        put(store, "distribution", {"key": dist, "site": site, "region": REGION[site],
+                                    "kind": events.kind_of(name), "name": name}, counts)
+        rec = {"key": claim_key(prt["key"], dist, "official_cardlist", prod["product_url"]), "printing_key": prt["key"],
+               "distribution_key": dist, "source": "official_cardlist", "source_url": prod["product_url"],
+               "quote": text, "confidence": "authoritative", "observed_at": pp["first_seen_at"]}
+        put(store, "printing_distribution", with_dates(rec, events.name_dates(text)), counts)
+        if prt["key"] not in by_name[text]:
+            by_name[text].append(prt["key"])
+    return by_name
+
+
+def events_site(store, site, site_dir, estate, by_name, counts):
+    """Claims from the event and topic pages this page set read. Returns the counts.
+
+    One claim per (printing, distribution, page): the line that names the
+    pack, the tier above it, the quantity on it and the page's date.
+    Authoritative when the line prints the card list's string (give or take
+    spacing and the brand); inferred, for review, when it only matches with
+    width, case and punctuation folded. A card block whose heading names pack
+    A and shows a card whose promo printings the card list puts in no pack A is
+    an inferred claim of A on those printings: the page contradicts the list.
+
+    estate is state/event_pages/{site}.json, updated in place: the pages read,
+    so a daily run fetches only new pages and the current list.
+    """
+    try:
+        pages, _current, index_at = events.read(site_dir, site)
+    except (OSError, ValueError) as ex:
+        raise RunError(f"{site} events: {ex}") from None
+    last = estate.get("index_fetched_at")
+    if last and index_at < last:
+        raise RunError(f"{site} event lists fetched {index_at}, older than the data ({last}); nothing written")
+    names = {t: m for t in by_name if (m := events.matcher(t))}
+    dist_of = {t: model.mint("dist", f"{site}|{t}") for t in names}
+    promo_by_card = defaultdict(list)
+    for t, prts in by_name.items():
+        for p in prts:
+            promo_by_card[store.recs["printing"][p]["card_key"]].append((p, t))
+    out = {"pages_read": len(pages), "pages_dated": 0, "claims": 0, "inferred": 0, "contradictions": 0}
+    seen_pages = estate.setdefault("pages", {})
+    for href, (html, t) in sorted(pages.items()):
+        seen_pages[href] = t
+        lines = events.lines_of(html)
+        dates = events.event_dates(lines)
+        out["pages_dated"] += bool(dates)
+        source = "official_event" if "/events/" in href else "official_topic"
+
+        def claim(prt, text, quote, conf, tier=None, qty=None):
+            rec = {"key": claim_key(prt, dist_of[text], source, href), "printing_key": prt,
+                   "distribution_key": dist_of[text], "source": source, "source_url": href, "quote": quote,
+                   "confidence": conf, "observed_at": t}
+            if tier:
+                rec["tier"] = tier
+            if qty:
+                rec["quantity_note"] = qty
+            put(store, "printing_distribution", with_dates(rec, dates), counts)
+            out["claims"] += 1
+            out["inferred"] += conf == "inferred"
+
+        named = set()
+        for c in events.claims(lines, names):
+            if c["name"] in named:
+                continue
+            named.add(c["name"])
+            for prt in by_name[c["name"]]:
+                claim(prt, c["name"], c["line"], "authoritative" if c["match"] == "exact" else "inferred",
+                      c["tier"], c["quantity"])
+        for head, nums in events.card_blocks(html):
+            hits = [n for n in names if events.find(head, names[n])]
+            if not hits:
+                continue
+            pack = max(hits, key=len)
+            for num in nums:
+                card = store.card_by_number.get(num)
+                prts = promo_by_card.get(card, [])
+                if prts and all(text != pack for _, text in prts):
+                    out["contradictions"] += 1
+                    for prt, _ in prts:
+                        claim(prt, pack, head, "inferred")
+    estate["index_fetched_at"] = index_at
+    return out
+
+
 def observe(store, site, clean, refused_blocks, page_refusals, counts):
     """One current card_observation per (card, site), read from a deterministic block."""
     current = {}
@@ -392,7 +521,7 @@ def snapshot_cn(repo, rows):
     return {path: body}, diff
 
 
-def render(store, states, repo, product_states=None):
+def render(store, states, repo, product_states=None, event_states=None):
     """Every file this run owns, as {path: text}. Nothing is written yet."""
     repo = Path(repo)
     out = {}
@@ -410,6 +539,8 @@ def render(store, states, repo, product_states=None):
         out[repo / "state" / "pages" / f"{site}.json"] = json.dumps(st, sort_keys=True, indent=1) + "\n"
     for site, st in (product_states or {}).items():
         out[repo / "state" / "product_pages" / f"{site}.json"] = json.dumps(st, ensure_ascii=False, sort_keys=True, indent=1) + "\n"
+    for site, st in (event_states or {}).items():
+        out[repo / "state" / "event_pages" / f"{site}.json"] = json.dumps(st, ensure_ascii=False, sort_keys=True, indent=1) + "\n"
     return out
 
 
@@ -451,7 +582,7 @@ def run(pageset, repo, sites=SITES, cn_rows=None, now=time.time):
         validate(store)
     except RunError as ex:
         raise RunError(f"committed data: {ex}") from None
-    states, product_states, results = {}, {}, {}
+    states, product_states, event_states, results = {}, {}, {}, {}
     started = now()
     for site in sites:
         sp = repo / "state" / "pages" / f"{site}.json"
@@ -463,11 +594,17 @@ def run(pageset, repo, sites=SITES, cn_rows=None, now=time.time):
             pp = repo / "state" / "product_pages" / f"{site}.json"
             product_states[site] = json.loads(pp.read_text("utf-8")) if pp.exists() else {}
             dates = date_site(store, site, pageset / site, product_states[site], counts)
+        by_name = link_site(store, site, counts)
+        origin = None
+        if (pageset / site / "events" / "_log.json").exists():
+            ep = repo / "state" / "event_pages" / f"{site}.json"
+            event_states[site] = json.loads(ep.read_text("utf-8")) if ep.exists() else {}
+            origin = events_site(store, site, pageset / site, event_states[site], by_name, counts)
         results[site] = {"counts": counts, "refusals": refusals, "page_refusals": page_refusals, "dates": dates,
-                         "t0": t0, "t1": now()}
+                         "distributions": len(by_name), "origin": origin, "t0": t0, "t1": now()}
     card_counts = build_cards(store)
     validate(store)
-    files = render(store, states, repo, product_states)
+    files = render(store, states, repo, product_states, event_states)
     cn_diff = None
     if cn_rows is not None:
         cn_files, cn_diff = snapshot_cn(repo, cn_rows)
@@ -505,6 +642,14 @@ def date_line(d):
             f"product pages read {d['pages_read']}")
 
 
+def origin_line(dists, o):
+    head = f"distributions from the card list: {dists}"
+    if o is None:
+        return f"{head}; event pages: not in this page set, none read"
+    return (f"{head}; event pages read {o['pages_read']} (dated {o['pages_dated']}), claims {o['claims']} "
+            f"(inferred, for review {o['inferred']}, of them card-block contradictions {o['contradictions']})")
+
+
 def main(argv):
     ap = argparse.ArgumentParser()
     ap.add_argument("pageset")
@@ -527,6 +672,7 @@ def main(argv):
         for sid, arm in sorted(r["page_refusals"].items()):
             print(f"  REFUSED {site}:{sid} {arm}")
         print(f"  {date_line(r['dates'])}")
+        print(f"  {origin_line(r['distributions'], r['origin'])}")
     print(f"cards: {res['cards']}")
     if res["cn"]:
         print(f"cn snapshot: {res['cn']}")

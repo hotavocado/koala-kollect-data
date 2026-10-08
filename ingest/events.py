@@ -85,6 +85,33 @@ def bare(s):
     return re.sub(r"\s+", "", s)
 
 
+# A distribution's kind, from its card-list name. First match wins, so the event
+# family (championship, store battle) wins over the pack word inside it ("CS
+# 25-26 Event Pack" is a championship). No match is "other", never a guess.
+KINDS = [
+    ("online", re.compile(r"\bonline\b", re.I)),
+    ("championship", re.compile(r"championship|\bcs ?\d|regionals?\b|world tour|チャンピオンシップ|冠軍錦標賽|亞洲錦標賽|grand asia open", re.I)),
+    ("pre_release", re.compile(r"pre-?release", re.I)),
+    ("movie", re.compile(r"film red|映画|劇場|電影", re.I)),
+    ("magazine_insert", re.compile(r"ジャンプ|magazine|付録|応募者全員|雜誌", re.I)),
+    ("store_tournament", re.compile(r"store tournament|treasure cup|flagship|tournament (?:pack|kit)|winner pack|winner prize|sealed battle"
+                                    r"|standard battle|grand battle|store qualifier|store \d-on-\d|フラッグシップ|スタンダードバトル"
+                                    r"|エクストラグランドバトル|8パックバトル|旗艦戰|常規賽|8包現開賽|特規大獎賽", re.I)),
+    ("meetup", re.compile(r"pirates party|meet-?up|交流会|交流會", re.I)),
+    ("retail_tieup", re.compile(r"一番くじ|dodgers|dortmund|\bpsa\b|campaign|キャンペーン|購入者特典|獲取活動", re.I)),
+    ("bundle", re.compile(r"box topper|整盒購買特典", re.I)),
+    ("promo_pack", re.compile(r"promotion (?:pack|card set)|プロモーションパック|プロモーションカードセット|推廣卡包|推廣卡套組|推廣包", re.I)),
+    ("event_pack", re.compile(r"event pack|celebration pack|battle pack|dash pack|top player pack", re.I)),
+]
+
+
+def kind_of(name):
+    for kind, pat in KINDS:
+        if pat.search(name):
+            return kind
+    return "other"
+
+
 def matcher(name):
     """(exact pattern, normalised pattern) for one distribution name, or None when too short to join on.
 
@@ -212,6 +239,25 @@ def parse_dates(value):
     if ends < starts[: len(ends)]:
         return None  # out of order: some other date on the line, not a range
     return starts, (ends if ends != starts else None)
+
+
+_SALE = re.compile(r"[（(]([^（）()]*?)売[）)]")
+
+
+def name_dates(name):
+    """(starts_on, ends_on) the card list's own pack name carries, or None.
+
+    A magazine's name carries its issue month beside its on-sale date in
+    brackets ("Vジャンプ1月特大号付録（2023年11月21日売）"). The issue month is
+    not a date the card came out on, so when an on-sale date is there it is the
+    only thing read.
+    """
+    c = core(name)
+    m = _SALE.search(c)
+    try:
+        return parse_dates(m.group(1) if m else c)
+    except ValueError:
+        return None
 
 
 _INLINE_LABEL = re.compile(r"^(?:date|dates|event date|event period|period|日程|開催日|開催日程|開催期間|舉辦日期|活動日期|活動期間)\s*[:：]\s*(.+)$", re.I)
