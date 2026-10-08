@@ -55,7 +55,7 @@ class Harness:
         self.clock = itertools.count(1_791_331_200)
         self.page, self.t, self.status = FIX, T1, 200
         self.sid, self.options = SID, [(SID, LABEL)]
-        self.cn_rows, self.fetch_failures = None, []
+        self.cn_rows, self.cn_t, self.fetch_failures = None, None, []
         self.with_products = True
 
     def tearDown(self):
@@ -84,7 +84,7 @@ class Harness:
             (out / "_log.json").write_text(json.dumps({"site": "en", "index": [{"page": 1, "status": 200, "fetched_at": self.t}],
                                                       "pages": [{"href": href, "status": 200, "fetched_at": self.t}]}))
         if self.cn_rows is not None:
-            cn_pageset(Path(pageset) / "cn", self.cn_rows, self.t)
+            cn_pageset(Path(pageset) / "cn", self.cn_rows, self.cn_t or self.t)
         return list(self.fetch_failures) + ([f"en:{self.sid} fetch failed: HTTPError: 503"] if self.status != 200 else [])
 
     def runner(self, pageset, repo, sites):
@@ -140,12 +140,13 @@ class CommitPredicate(Harness, unittest.TestCase):
 
     def test_an_older_cn_list_stops_the_run(self):
         # The stale guard: a cn list fetched before the committed one is a replay.
+        # Only cn goes back; en stays current, so its own replay guard cannot be what fires.
         self.cn_rows, self.t = [(1, "OP01-001")], T2
         self.go()
-        self.t = T1
+        self.cn_t = T1
         code, s = self.go()
         self.assertEqual((code, s["ok"]), (1, False))
-        self.assertTrue(any("older than the data" in f for f in s["failures"]), s["failures"])
+        self.assertTrue(any("cn list fetched" in f and "older than the data" in f for f in s["failures"]), s["failures"])
 
 
 class FailsLoudly(Harness, unittest.TestCase):

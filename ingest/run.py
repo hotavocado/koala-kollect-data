@@ -584,7 +584,7 @@ def run_cn(store, cn_dir, state):
                 img = cnmodel.image_token(url, base)
                 marker = cnmodel.has_marker(info.get("cardName"))
                 variant = cnmodel.variant(token, img, marker)
-                source_text = info.get("type") or info.get("cardOfferType") or ""
+                source_text = cnmodel.source_text(info)
                 printing = {"key": prt, "card_key": store.card_key(base), "site": "cn",
                             "rarity": cnmodel.rarity(info.get("cardRarity")), "variant": variant,
                             "image_url": url, "source_text": source_text,

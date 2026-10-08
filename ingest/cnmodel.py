@@ -113,6 +113,18 @@ def disagree(number_token, img_token, marker):
     return len(set(said)) > 1
 
 
+def source_text(info):
+    """What the printing came in, as cn names it: `type` when it holds a name, else the product.
+
+    `type` names the promo pack on promos (特别宣传包) and holds a bare
+    number on some booster rows (OP02-067, id 1925: "2"), which names nothing.
+    """
+    t = info.get("type")
+    if t and not str(t).isdigit():
+        return t
+    return info.get("cardOfferType") or ""
+
+
 def rarity(raw):
     if raw not in RARITY:
         raise ValueError(f"unknown cn rarity {raw!r}")
