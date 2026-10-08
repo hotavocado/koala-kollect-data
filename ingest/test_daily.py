@@ -16,6 +16,7 @@ from pathlib import Path
 from unittest import mock
 
 import daily
+import products
 import run
 from test_run import FIX, SID, T1, T2, without
 
@@ -37,12 +38,13 @@ class Harness:
         self.page, self.t, self.status = FIX, T1, 200
         self.sid, self.options = SID, [(SID, LABEL)]
         self.cn_rows, self.fetch_failures = None, []
+        self.with_products = True
 
     def tearDown(self):
         shutil.rmtree(self.tmp)
 
-    def fetcher(self, pageset, sites):
-        """fetch.py-shaped output for en only, from the harness state."""
+    def fetcher(self, pageset, sites, repo=None):
+        """fetch.py- and products.py-shaped output for en only, from the harness state."""
         d = Path(pageset) / "en"
         d.mkdir(parents=True, exist_ok=True)
         (d / "_index.html").write_text(index(*self.options), "utf-8")
@@ -53,6 +55,16 @@ class Harness:
             entry["error"] = "HTTPError: 503"
             (d / f"{self.sid}.html").unlink(missing_ok=True)
         (d / "_fetch_log.json").write_text(json.dumps([entry]))
+        if self.with_products:
+            href = "https://en.onepiece-cardgame.com/products/boosters/op17.php"
+            out = d / "products"
+            (out / "pages").mkdir(parents=True, exist_ok=True)
+            (out / "index-1.html").write_text(
+                f'<li class="linkListColBox"><a href="{href}"><h4 class="linkListColTitle">{LABEL}</h4>'
+                f'<time class="newsDate" datetime="2026-08-22">x</time></a></li><a href="?page=1">1</a>', "utf-8")
+            (out / "pages" / products.page_file(href)).write_text(f'<a href="../../cardlist/?series={self.sid}">', "utf-8")
+            (out / "_log.json").write_text(json.dumps({"site": "en", "index": [{"page": 1, "status": 200, "fetched_at": self.t}],
+                                                      "pages": [{"href": href, "status": 200, "fetched_at": self.t}]}))
         return list(self.fetch_failures) + ([f"en:{self.sid} fetch failed: HTTPError: 503"] if self.status != 200 else []), \
             self.cn_rows
 
@@ -143,6 +155,29 @@ class FailsLoudly(Harness, unittest.TestCase):
         self.assertEqual((code, s["ok"], s["changed"]), (1, False, False))
         self.assertTrue(s["failures"][0].startswith("run stopped, nothing written: committed data:"), s["failures"])
         self.assertEqual({f: f.read_text() for f in (self.repo / "data").rglob("*.jsonl")}, before)
+
+
+class ReleaseDates(Harness, unittest.TestCase):
+    def test_the_daily_run_dates_the_product(self):
+        code, s = self.go()
+        self.assertEqual(code, 0)
+        self.assertEqual(s["dates"]["en"]["dated"], 1)
+        rec = json.loads((self.repo / "data/products/en.jsonl").read_text())
+        self.assertEqual(rec["release_date"], "2026-08-22")
+
+    def test_a_page_set_with_no_product_index_fails_the_run(self):
+        self.with_products = False
+        code, s = self.go()
+        self.assertEqual(code, 1)
+        self.assertIn("en: no product index in the page set, so no release dates were read", s["failures"])
+        self.assertFalse(s["changed"])
+
+    def test_undated_counts_a_new_dropdown_series_but_not_a_new_bucket(self):
+        self.go()
+        idx = index((SID, LABEL))
+        self.assertFalse(daily.undated(self.repo, "en", idx))
+        self.assertTrue(daily.undated(self.repo, "en", index((SID, LABEL), (NEW_SID, NEW_LABEL))))
+        self.assertFalse(daily.undated(self.repo, "en", index((SID, LABEL), ("569901", "Promotion card"))))
 
 
 class NewSeries(Harness, unittest.TestCase):

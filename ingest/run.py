@@ -18,6 +18,9 @@ Rules (CONTRACT.md):
 - A block with a blank required field, or a value outside a measured vocabulary,
   stops the whole run before anything is written.
 - DON cards are not written here (Mike 86520: they mint from tcgcsv).
+- A product's release_date comes from its site's product index (products.py),
+  only where the page set carries one ({site}/products/_log.json). A date is
+  sticky: a run sets or moves it and never clears it.
 """
 import argparse
 import hashlib
@@ -31,6 +34,7 @@ from pathlib import Path
 from jsonschema import Draft202012Validator
 
 import model
+import products
 from bandai import independent_count, parse_page
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -169,7 +173,13 @@ def run_site(store, site_dir, site, state):
         if last and t < last:
             raise RunError(f"{site}:{sid} fetched {t}, older than the data ({last}); nothing written")
         before = counts["added"]
-        store.upsert("product", {"key": product_key, "site": site, **model.product_fields(site, sid, label)}, t, counts)
+        product = {"key": product_key, "site": site, **model.product_fields(site, sid, label)}
+        # The date is not on the card list page; it comes from the product
+        # index after this loop. Carried over here so an upsert never drops it.
+        for k in ("release_date", "release_date_source"):
+            if k in store.recs["product"].get(product_key, {}):
+                product[k] = store.recs["product"][product_key][k]
+        store.upsert("product", product, t, counts)
         if counts["added"] > before:
             new_products.append(product_key)
         h = page_hash(blocks)
@@ -216,6 +226,56 @@ def run_site(store, site_dir, site, state):
     observe(store, site, clean, refused_blocks, page_refusals, counts)
     counts["new_products"] = new_products
     return counts, refusals, page_refusals
+
+
+def date_site(store, site, site_dir, pstate, counts):
+    """Set release_date on this site's products from its product index. Returns the date counts.
+
+    pstate is state/product_pages/{site}.json: the series each product page
+    links, so a daily run need not read every product page again. It is
+    updated in place with the pages this page set read.
+    """
+    try:
+        items, fetched, index_at = products.read(site_dir, site)
+    except (OSError, ValueError) as ex:
+        raise RunError(f"{site} product index: {ex}") from None
+    last = pstate.get("index_fetched_at")
+    if last and index_at < last:
+        raise RunError(f"{site} product index fetched {index_at}, older than the data ({last}); nothing written")
+    pages = pstate.setdefault("pages", {})
+    for href, (series, t) in fetched.items():
+        pages[href] = {"fetched_at": t, "series": series}
+    pstate["index_fetched_at"] = index_at
+    links = {href: p["series"] for href, p in pages.items()}
+    by_series = products.dates_by_series(items, links)
+    out = {"dated": 0, "set": 0, "moved": 0, "kept": 0, "undated": [], "pages_read": len(fetched)}
+    added = set(counts["new_products"])
+    for key, p in sorted(store.recs["product"].items()):
+        if p["site"] != site:
+            continue
+        if p["kind"] in products.UNDATED_KINDS:
+            continue
+        try:
+            hit = products.retail_date(by_series.get(p["series_id"], []))
+        except ValueError as ex:
+            raise RunError(f"{key}: {ex}") from None
+        if hit is None:
+            # Sticky: a product that drops off the index keeps the date it had.
+            if "release_date" in p:
+                out["dated"] += 1
+                out["kept"] += 1
+            else:
+                out["undated"].append(f"{key} {p['code']}" if p.get("code") else key)
+            continue
+        date, source = hit
+        out["dated"] += 1
+        if (p.get("release_date"), p.get("release_date_source")) == (date, source):
+            continue
+        out["moved" if "release_date" in p else "set"] += 1
+        store.recs["product"][key] = ordered("product", dict(p, release_date=date, release_date_source=source))
+        if key not in added:
+            counts["changed"] += 1
+    return out
 
 
 def observe(store, site, clean, refused_blocks, page_refusals, counts):
@@ -332,7 +392,7 @@ def snapshot_cn(repo, rows):
     return {path: body}, diff
 
 
-def render(store, states, repo):
+def render(store, states, repo, product_states=None):
     """Every file this run owns, as {path: text}. Nothing is written yet."""
     repo = Path(repo)
     out = {}
@@ -348,6 +408,8 @@ def render(store, states, repo):
                 line(rtype, r) + "\n" for r in sorted(store.recs[rtype].values(), key=lambda r: r["key"]))
     for site, st in states.items():
         out[repo / "state" / "pages" / f"{site}.json"] = json.dumps(st, sort_keys=True, indent=1) + "\n"
+    for site, st in (product_states or {}).items():
+        out[repo / "state" / "product_pages" / f"{site}.json"] = json.dumps(st, ensure_ascii=False, sort_keys=True, indent=1) + "\n"
     return out
 
 
@@ -389,17 +451,23 @@ def run(pageset, repo, sites=SITES, cn_rows=None, now=time.time):
         validate(store)
     except RunError as ex:
         raise RunError(f"committed data: {ex}") from None
-    states, results = {}, {}
+    states, product_states, results = {}, {}, {}
     started = now()
     for site in sites:
         sp = repo / "state" / "pages" / f"{site}.json"
         states[site] = json.loads(sp.read_text("utf-8")) if sp.exists() else {}
         t0 = now()
         counts, refusals, page_refusals = run_site(store, pageset / site, site, states[site])
-        results[site] = {"counts": counts, "refusals": refusals, "page_refusals": page_refusals, "t0": t0, "t1": now()}
+        dates = None
+        if (pageset / site / "products" / "_log.json").exists():
+            pp = repo / "state" / "product_pages" / f"{site}.json"
+            product_states[site] = json.loads(pp.read_text("utf-8")) if pp.exists() else {}
+            dates = date_site(store, site, pageset / site, product_states[site], counts)
+        results[site] = {"counts": counts, "refusals": refusals, "page_refusals": page_refusals, "dates": dates,
+                         "t0": t0, "t1": now()}
     card_counts = build_cards(store)
     validate(store)
-    files = render(store, states, repo)
+    files = render(store, states, repo, product_states)
     cn_diff = None
     if cn_rows is not None:
         cn_files, cn_diff = snapshot_cn(repo, cn_rows)
@@ -429,6 +497,14 @@ def run(pageset, repo, sites=SITES, cn_rows=None, now=time.time):
     return {"sites": results, "cards": dict(card_counts), "cn": cn_diff}
 
 
+def date_line(d):
+    if d is None:
+        return "release dates: not in this page set, none read"
+    return (f"release dates: dated {d['dated']} (set {d['set']}, moved {d['moved']}, kept off the index {d['kept']}), "
+            f"undated {len(d['undated'])}{' [' + ', '.join(d['undated']) + ']' if d['undated'] else ''}, "
+            f"product pages read {d['pages_read']}")
+
+
 def main(argv):
     ap = argparse.ArgumentParser()
     ap.add_argument("pageset")
@@ -450,6 +526,7 @@ def main(argv):
               f"refusals {run_rec['refusals']}")
         for sid, arm in sorted(r["page_refusals"].items()):
             print(f"  REFUSED {site}:{sid} {arm}")
+        print(f"  {date_line(r['dates'])}")
     print(f"cards: {res['cards']}")
     if res["cn"]:
         print(f"cn snapshot: {res['cn']}")

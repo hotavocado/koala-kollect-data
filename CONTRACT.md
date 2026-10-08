@@ -20,6 +20,7 @@ data/printing_links.jsonl             printing_link
 runs/{YYYY}/{MM}/{run_id}.json        ingest_run (audit only, not synced)
 state/pages/{site}.json               last clean block count, hash and fetched_at per page (ingest only, not synced)
 state/cn_ids.jsonl                    cn id snapshot, numeric id and cardNumber (ingest only, not synced)
+state/product_pages/{site}.json       series each product page links, and the product index fetch time (ingest only, not synced)
 ```
 
 `site` is one of `en`, `asia-en`, `jp`, `tc`, `cn`. These are sites, not
@@ -34,8 +35,10 @@ promos.
 - An absent value is omitted, never `null`. One exception: `printing.block_icon`
   is `null` when the site prints no block icon on that printing, which is a
   fact, not an absence (see Block icon below).
-- Timestamps are UTC, `YYYY-MM-DDTHH:MM:SSZ`. Event and release dates may be
-  `YYYY`, `YYYY-MM` or `YYYY-MM-DD`, because some sources only give a month.
+- Timestamps are UTC, `YYYY-MM-DDTHH:MM:SSZ`. A product's `release_date` is a
+  full date, `YYYY-MM-DD` (see Release dates below). Distribution event dates
+  (`starts_on`, `ends_on`) may still be `YYYY` or `YYYY-MM`, because some
+  sources, such as JP magazine inserts, only give a month.
 
 ## Identity
 
@@ -136,6 +139,60 @@ promos.
   day with no change still rewrote every line and the git diff stopped being
   the changelog. Rows keep `first_seen_at` and their events (`removed_at`,
   `superseded_at`). When each source was last checked lives in `runs/`.
+
+## Release dates
+
+`product.release_date` is that site's release date for that product, and
+`release_date_source` is the page it came from. The two come together or not at
+all.
+
+- **Source: the site's own product index**, `/products/?page=N`. Each item
+  there links a product page and carries a machine date,
+  `<time datetime="YYYY-MM-DD">`. `release_date_source` is that product page's
+  URL. Not the index page's URL: the index is newest first, so every new
+  product moves every older item down a page.
+- **The index can drop a product from one walk.** It sorts by date with no
+  tiebreak and sorts again on every request, so products sharing a date that
+  straddle a page boundary can be listed twice in one walk and not at all
+  (2026-10-08: en OP-06 and dp03 share 2024-03-15 across pages 13 and 14; one
+  walk listed dp03 twice and OP-06 never). A run walks the index two to four
+  times and unions the items, stopping at the first walk that adds nothing.
+  That makes a miss unlikely, not impossible: a real product without a date
+  can be a transient, and a later day's walk dates it. The run line names
+  every undated product by key and code.
+- **tcgcsv is never a source.** It is TCGplayer, so its dates are North
+  American releases. It agrees with Bandai en on every en product it carries
+  (58 of 58, 2026-10-08) and `scripts/check.py` prints any en disagreement as
+  a warning, never a failure. For asia-en, jp and tc a code match against
+  tcgcsv is a false join: it carries the en date, and those sites differ from
+  en on every shared code. The schema refuses a source outside the Bandai
+  products path.
+- **The join is the series link, never a code.** A product page links its card
+  list as `cardlist/?series=NNNNNN`, and that id equals `product.series_id` on
+  the same site. A code read from the title would miss the bundle pages (the
+  ST-01 to ST-04 page links four series) and the compound codes (en
+  `op14-eb04` links 569114). A page that links no series dates nothing.
+- **The date is per site.** asia-en and tc match jp on every shared product; en
+  differs from jp on all of them, and is earlier on ST-23 to ST-28. The
+  `{site}:{series_id}` row is already that grain.
+- **Retail, never pre-release.** When a site lists more than one page for a
+  series, the retail page's date is the product's date and a pre-release page
+  never is (a page whose file name ends `_pre`, or whose title code ends
+  `PRE]`). en ST-01: retail page 2022-12-02, Super Pre-Release page 2022-09-30;
+  the row reads 2022-12-02. Two retail pages with different dates for one
+  series have no right answer, so the run stops and writes nothing.
+- **Card pools carry no date.** `limited` (x801) and `promo_bucket` (x901)
+  rows are card pools, not products: several premium collection pages with
+  different dates link the same x801 series. The schema refuses a date on them.
+- **Sticky.** A run sets a date or moves it to the one the index now shows, and
+  never clears one. A product that drops off the index keeps the date it had.
+- **What a run reads.** The index, two to four walks, on every run. A product page once, the first
+  time it appears; its series links are kept in
+  `state/product_pages/{site}.json`. A page that linked no series is read again
+  while the site has a product with no date (or a new series in its card list
+  dropdown), because a page published before its card list goes live links
+  nothing yet. A product index older than the one the data was built from is
+  refused, the same replay guard as the card pages.
 
 ## Transition (2026-10-08)
 
