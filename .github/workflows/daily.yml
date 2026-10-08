@@ -2,14 +2,22 @@ name: daily-ingest
 # Fetch every official card list, ingest it, and commit to main only when a
 # record was added, changed or removed (ingest/daily.py says which).
 #
-# The schedule is added in its own PR after a workflow_dispatch dry run has
-# passed on main (upper 86597); until then this runs only by hand.
+# Daily at 04:23 UTC (13:23 JST), off the hour because GitHub delays
+# top-of-hour schedules most. Added only after two workflow_dispatch dry runs
+# passed on main from GitHub's runners (runs 37814566775 and 37816245391).
+#
+# GitHub disables a public repo's schedules after 60 days with no repository
+# activity. This workflow commits only when the data changes, so a long quiet
+# spell can switch it off without a failed run to show for it. The Actions tab
+# says so when it happens; re-enable the workflow there.
 #
 # check.yml will NOT run on the commits this makes: a push made with
 # GITHUB_TOKEN does not trigger other workflows. So the gate step below runs
 # the same checks (check.py, which includes data_check, and the tests) on the
 # written data before anything is committed.
 on:
+  schedule:
+    - cron: "23 4 * * *"
   workflow_dispatch:
     inputs:
       dry_run:
