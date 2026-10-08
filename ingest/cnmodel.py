@@ -204,7 +204,9 @@ def observation_fields(info):
     # (OP02-067, id 1925: ["蓝"]). Read it on leaders and characters only.
     raw_attrs = (info.get("cardAttribute") or []) if cat in ("leader", "character") else []
     rec["attributes"] = _split(raw_attrs, ATTRIBUTES, "attribute")
-    rec["types"] = [t for t in (info.get("cardFeatures") or "").split("/") if t]
+    # Types are split on "/", and on "," where cn typed one (6 of the first 742
+    # details: 纯毛族,和之国/赤鞘九人男). A space is part of a name (GERMA 66).
+    rec["types"] = [t for t in re.split(r"[/,]", info.get("cardFeatures") or "") if t]
     rec["effect"] = None if info.get("cardTextDesc") in NO_VALUE else info["cardTextDesc"]
     rec["trigger"] = None if info.get("cardTrigger") in NO_VALUE else info["cardTrigger"]
     if not rec["name"]:

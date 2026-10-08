@@ -120,6 +120,9 @@ class Facts(unittest.TestCase):
         self.assertEqual(cnmodel.source_text(DETAILS[2763]), DETAILS[2763]["cardOfferType"])  # type null
         self.assertEqual(cnmodel.source_text(DETAILS[6987]), DETAILS[6987]["cardOfferType"])  # type ""
 
+    def test_types_split_on_a_comma_too(self):
+        self.assertEqual(cnmodel.observation_fields(DETAILS[6987])["types"], ["四皇", "十字公会"])
+
     def test_marker_is_not_in_the_name(self):
         self.assertEqual(cnmodel.observation_fields(DETAILS[2181])["name"], "罗罗诺亚·佐罗")
 
