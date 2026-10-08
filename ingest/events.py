@@ -507,14 +507,15 @@ def fetch_site(site, out_dir, cache, pause=1.5, attempts=3, get=_get):
 def failures(log):
     """Every failed fetch in an events log, as text. Empty means the log is complete.
 
-    A list page past the end of a pager can fail without harm; a failed first
-    page of any list, or any failed event page, fails the run.
+    Any failed list page fails the run, whatever its page number. A pager ends
+    on a page that lists nothing new, never on a failed fetch (measured over the
+    first full run: 76 list fetches on four sites, all 200), so a failure on
+    page 2 or later is an outage, and reading past it would commit a truncated
+    event set.
     """
     site = log["site"]
-    out = []
-    for e in log["index"]:
-        if "error" in e and not re.search(r"-(?:[2-9]|\d{2,})$", e["name"]):
-            out.append(f"{site}: event list {e['name']} (walk {e['walk']}): {e['error']}")
+    out = [f"{site}: event list {e['name']} (walk {e['walk']}): {e['error']}"
+           for e in log["index"] if "error" in e]
     out += [f"{site}: event page {e['href']}: {e['error']}" for e in log["pages"] if "error" in e]
     out += [f"{site}: event page {e['href']}: HTTP {e['status']}" for e in log["pages"]
             if e.get("status") not in (200, None)]

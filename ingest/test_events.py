@@ -195,5 +195,40 @@ class Origin(unittest.TestCase):
         self.assertNotIn("Event Pack Vol.1", run.link_site(self.store, "en", self.counts))
 
 
+class ListFailure(unittest.TestCase):
+    """A failed list page fails the run whatever its page number (codex P1 on #12).
+
+    The pager stops at a page that lists nothing new. A failure on page 2 also
+    stops it, so before this rule a 503 there truncated the event set silently.
+    """
+
+    def walk(self, page2):
+        root = E.root_url("en")
+
+        def get(url):
+            if url == E.index_urls("en", "list_end", 2) and page2 == "503":
+                raise OSError("HTTP Error 503: Service Unavailable")
+            body = {
+                E.index_urls("en", "list_end", 1): '<a href="/events/a.php">a</a>',
+                E.index_urls("en", "list_end", 2): '<a href="/events/b.php">b</a>',
+                E.index_urls("en", "list_end", 3): '<a href="/events/b.php">b</a>',
+            }.get(url, "<p>nothing listed</p>")
+            if url.startswith(root + "/events/") and url.endswith(".php") and "?" not in url:
+                body = "<p>event</p>"
+            return 200, body.encode()
+
+        with tempfile.TemporaryDirectory() as d:
+            return E.fetch_site("en", d, {}, pause=0, attempts=1, get=get)
+
+    def test_clean_pager_passes(self):
+        log = self.walk("ok")
+        self.assertEqual(E.failures(log), [])
+        self.assertIn(E.root_url("en") + "/events/b.php", [p["href"] for p in log["pages"]])
+
+    def test_failed_second_page_fails_the_run(self):
+        bad = E.failures(self.walk("503"))
+        self.assertTrue(any("event list list_end-2" in f for f in bad), bad)
+
+
 if __name__ == "__main__":
     unittest.main()
