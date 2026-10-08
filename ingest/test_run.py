@@ -6,6 +6,7 @@ change nothing in data/, so those controls compare the whole data tree byte for
 byte, not only the refusal counter.
 """
 import hashlib
+import itertools
 import json
 import re
 import shutil
@@ -35,6 +36,8 @@ class Harness:
         self.repo, self.pages = self.tmp / "repo", self.tmp / "pages" / "en"
         self.pages.mkdir(parents=True)
         self.repo.mkdir()
+        # One second per call, so two runs in one test never share a run_id.
+        self.clock = itertools.count(1_791_331_200)
 
     def tearDown(self):
         shutil.rmtree(self.tmp)
@@ -49,7 +52,7 @@ class Harness:
         (self.pages / "_fetch_log.json").write_text(json.dumps([entry]))
 
     def go(self):
-        return run.run(self.tmp / "pages", self.repo, ["en"])["sites"]["en"]
+        return run.run(self.tmp / "pages", self.repo, ["en"], now=lambda: float(next(self.clock)))["sites"]["en"]
 
     def data(self):
         return {p.relative_to(self.repo).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
@@ -82,6 +85,18 @@ class Run(Harness, unittest.TestCase):
         r = self.go()
         self.assertEqual((r["counts"]["added"], r["counts"]["changed"], r["counts"]["removed"]), (0, 0, 0))
         self.assertEqual(r["counts"]["pages_unchanged"], 1)
+        self.assertEqual(self.data(), before)
+
+    def test_same_second_rerun_is_refused(self):
+        self.baseline()
+        before = self.data()
+        runs = sorted((self.repo / "runs").rglob("*.json"))
+        first = runs[0].read_bytes()
+        self.clock = itertools.count(1_791_331_200)  # replay the baseline's start second
+        with self.assertRaisesRegex(run.RunError, "already exists"):
+            self.go()
+        self.assertEqual(sorted((self.repo / "runs").rglob("*.json")), runs)
+        self.assertEqual(runs[0].read_bytes(), first)
         self.assertEqual(self.data(), before)
 
     def test_redeploy_stamp_changes_no_row(self):

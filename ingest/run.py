@@ -392,8 +392,12 @@ def run(pageset, repo, sites=SITES, cn_rows=None, now=time.time):
         if errs:
             raise RunError(f"ingest_run {site}: {errs[0].message}")
         r["run"] = run_rec
-        files[repo / "runs" / stamp[:4] / stamp[4:6] / f"{run_rec['run_id']}.json"] = json.dumps(
-            ordered("ingest_run", run_rec), ensure_ascii=False, indent=1) + "\n"
+        rp = repo / "runs" / stamp[:4] / stamp[4:6] / f"{run_rec['run_id']}.json"
+        # run_id has one-second resolution; a second run in the same second
+        # would replace the first one's audit record. Refuse before writing.
+        if rp.exists():
+            raise RunError(f"{rp.relative_to(repo)} already exists (a run started in the same second); nothing written")
+        files[rp] = json.dumps(ordered("ingest_run", run_rec), ensure_ascii=False, indent=1) + "\n"
     write(files)
     return {"sites": results, "cards": dict(card_counts), "cn": cn_diff}
 
