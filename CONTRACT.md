@@ -171,6 +171,8 @@ green at every step:
    the schema refuses `card_observation.block_icon` and every `last_seen_at`,
    each with a red control in `examples/invalid.jsonl`, and requires
    `printing.block_icon`. A printing with no icon carries `null`.
+   The ingest validates the committed data before it reads any fetch, so a
+   row carrying an old field stops the run loudly; nothing drops it on read.
 
 ## Sync (app side)
 

@@ -220,40 +220,12 @@ class ReplayGuard(Harness, unittest.TestCase):
         self.go()
         self.assertEqual(self.state()[SID]["fetched_at"], T1)
 
-    def test_legacy_product_last_seen_at_seeds_fetched_at(self):
-        # Data written before the move: the product row carries last_seen_at and
-        # state/pages has no fetched_at. The guard must still refuse a replay.
-        self.fetch(FIX, T2)
-        self.go()
-        st = self.state()
-        del st[SID]["fetched_at"]
-        (self.repo / "state/pages/en.json").write_text(json.dumps(st))
-        p = self.repo / "data/products/en.jsonl"
-        p.write_text(p.read_text().replace(f'"first_seen_at":"{T2}"', f'"first_seen_at":"{T2}","last_seen_at":"{T2}"'))
-        before = self.data()
-        self.fetch(without(FIX, "OP17-019"), T1)
-        with self.assertRaisesRegex(run.RunError, "older than the data"):
-            self.go()
-        self.assertEqual(self.data(), before)
-
     def test_no_data_row_carries_last_seen_at(self):
         self.baseline()
         self.go()
         for f in (self.repo / "data").rglob("*.jsonl"):
             self.assertNotIn("last_seen_at", f.read_text(), f.name)
 
-    def test_legacy_last_seen_at_is_dropped_from_every_row(self):
-        # The re-ingest over data written before the move: every row of every
-        # type carries last_seen_at, including rows this run does not rewrite
-        # (an observation whose block is unchanged).
-        self.baseline()
-        for f in (self.repo / "data").rglob("*.jsonl"):
-            f.write_text("".join(json.dumps(dict(json.loads(x), last_seen_at=T1), ensure_ascii=False) + "\n"
-                                 for x in f.read_text().splitlines()))
-        self.fetch(FIX, T2)
-        self.go()
-        for f in (self.repo / "data").rglob("*.jsonl"):
-            self.assertNotIn("last_seen_at", f.read_text(), f.name)
 
 
 BI_EN = (Path(__file__).resolve().parent / "fixtures" / "block_icon_en.html").read_text("utf-8")
@@ -340,20 +312,49 @@ class NoBasePrinting(PrintingFacts):
     test_control_unmapped_full_width_question_mark_stops_the_run = None
 
 
-class ReplaySeed(Harness, unittest.TestCase):
-    def test_legacy_product_seeds_a_page_missing_from_state(self):
-        # codex PR 8 round 1 [P2]: a page absent from state/pages entirely must
-        # still take its legacy fetched_at, or the replay gets through.
-        self.fetch(FIX, T2)
-        self.go()
-        (self.repo / "state/pages/en.json").write_text("{}")
-        p = self.repo / "data/products/en.jsonl"
-        p.write_text(p.read_text().replace(f'"first_seen_at":"{T2}"', f'"first_seen_at":"{T2}","last_seen_at":"{T2}"'))
+class ClosedShape(Harness, unittest.TestCase):
+    """After the closing change a legacy-shaped observation stops the run; it is never reshaped quietly (roberto, general 86946)."""
+
+    def legacy_row(self, path="data/card_observations/en.jsonl", **extra):
+        p = self.repo / path
+        rows = [json.loads(l) for l in p.read_text().splitlines()]
+        rows[0].update(extra)
+        p.write_text("".join(json.dumps(r, ensure_ascii=False, separators=(",", ":")) + "\n" for r in rows))
+        return rows[0]["key"]
+
+    def test_observation_block_icon_is_refused_and_nothing_is_written(self):
+        self.baseline()
+        key = self.legacy_row(block_icon=1)
         before = self.data()
-        self.fetch(without(FIX, "OP17-019"), T1)
-        with self.assertRaisesRegex(run.RunError, "older than the data"):
+        self.fetch(FIX, T2)
+        with self.assertRaisesRegex(run.RunError, rf"committed data: .*card_observation {re.escape(key)}: .*block_icon"):
             self.go()
         self.assertEqual(self.data(), before)
+
+    def test_observation_last_seen_at_is_refused_and_nothing_is_written(self):
+        self.baseline()
+        key = self.legacy_row(last_seen_at=T1)
+        before = self.data()
+        self.fetch(FIX, T2)
+        with self.assertRaisesRegex(run.RunError, rf"committed data: .*card_observation {re.escape(key)}: .*last_seen_at"):
+            self.go()
+        self.assertEqual(self.data(), before)
+
+    def test_product_last_seen_at_is_refused_and_nothing_is_written(self):
+        # It used to be dropped on read and seed the page's fetched_at; every
+        # committed page carries fetched_at now, so a row with it is refused.
+        self.baseline()
+        key = self.legacy_row("data/products/en.jsonl", last_seen_at=T1)
+        before = self.data()
+        self.fetch(FIX, T2)
+        with self.assertRaisesRegex(run.RunError, rf"committed data: .*product {re.escape(key)}: .*last_seen_at"):
+            self.go()
+        self.assertEqual(self.data(), before)
+
+    def test_control_the_same_run_without_the_legacy_field_succeeds(self):
+        self.baseline()
+        self.fetch(FIX, T2)
+        self.go()
 
 
 class DataCheck(Harness, unittest.TestCase):
