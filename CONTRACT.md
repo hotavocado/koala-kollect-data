@@ -89,7 +89,9 @@ promos.
   card still has facts.
 - **Raw strings stay raw.** `printing.source_text` and
   `printing_distribution.quote` are verbatim, so a better parser can re-derive
-  everything without a re-scrape.
+  everything without a re-scrape. When a site shows no provenance for a printing,
+  `source_text` is the empty string and the run counts it in
+  `blocks_without_source_text`. A jump in that count means a broken parser.
 - **Images are linked, never hosted.** `image_url` points at the official site.
 - `printing_links` and `distributions` are reviewed; the ingest may propose
   them only with `confidence: inferred`.
@@ -104,5 +106,5 @@ either.
 ## Checks
 
 `python scripts/check.py` validates the examples against the schema. It also
-confirms that each control in `examples/invalid.jsonl` fails for its stated
-reason, and runs the image-id parser cases. CI runs it on every push.
+confirms that each control in `examples/invalid.jsonl` fails with the error
+named in its `expect` field, and runs the image-id parser cases. CI runs it on every push.

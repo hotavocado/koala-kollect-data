@@ -28,11 +28,17 @@ for line in (root / "examples/valid.jsonl").read_text().splitlines():
 for line in (root / "examples/invalid.jsonl").read_text().splitlines():
     row = json.loads(line)
     errs = list(validator(row["type"]).iter_errors(row["record"]))
+    # A control proves something only if it fails for its OWN reason, so each
+    # names the error it must produce (any error alone would pass a broken rule).
+    msgs = [e.message for e in errs]
     if not errs:
         bad += 1
         print("FAIL control passed:", row["why"])
+    elif not any(row["expect"] in m for m in msgs):
+        bad += 1
+        print("FAIL control red for the wrong reason:", row["why"], "->", msgs)
     else:
-        print("ok   red  ", row["why"], "->", errs[0].message[:70])
+        print("ok   red  ", row["why"])
 
 cases = [
     ("en", "OP14-108_p3", ("OP14-108", "p", 3)),
