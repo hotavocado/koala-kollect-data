@@ -85,7 +85,7 @@
       ]
     },
     "card": {
-      "description": "Rules identity. Canonical facts come from the jp observation (JP is the authority); every site's own reading is kept in card_observation. Natural key: number for numbered cards, don_design for DON cards (Mike 86397: each DON design is its own card; normal and gold of one design are printings of it).",
+      "description": "Rules identity. Canonical facts come from one site's observation, jp first (JP is the authority), then en, asia-en, tc, cn; every site's own reading is kept in card_observation. Natural key: number for numbered cards, don_design for DON cards (Mike 86397: each DON design is its own card; normal and gold of one design are printings of it).",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -148,7 +148,7 @@
           "minimum": 0
         },
         "facts_site": {
-          "description": "Which site's observation the canonical facts above were copied from. jp unless the card has no jp observation yet.",
+          "description": "Which site's current observation supplied the canonical facts. Fallback order: jp, en, asia-en, tc, cn (the first site with an observation wins), so a card with no JP printing still has facts.",
           "$ref": "#/$defs/site"
         },
         "first_seen_at": {
@@ -372,7 +372,7 @@
           "$ref": "#/$defs/site"
         },
         "image_id": {
-          "description": "Site-local. Bandai sites: base number plus an optional _pN or _rN suffix (OP14-108_p3, P-001_p5, ..._r1). cn: the API's numeric id. Suffixes do not line up across sites.",
+          "description": "Site-local. Bandai sites: base number plus an optional _pN or _rN suffix (OP14-108_p3, P-001_p5, ..._r1), measured stable per site. cn: the API's numeric id, an ASSUMPTION not yet measured (the cn list also carries its own suffixed cardNumber such as P-084_01). Suffixes do not line up across sites.",
           "type": "string",
           "minLength": 1
         },
@@ -671,7 +671,7 @@
       }
     },
     "ingest_run": {
-      "description": "Data-repo audit only (runs/), not synced to the app. A run with any refusal never stamps removed_at.",
+      "description": "Data-repo audit only (runs/), not synced to the app. A page with any refusal never stamps removed_at.",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -730,7 +730,9 @@
           "additionalProperties": false,
           "required": [
             "http_error",
-            "zero_parse"
+            "zero_parse",
+            "count_drop",
+            "count_mismatch"
           ],
           "properties": {
             "http_error": {
@@ -738,6 +740,16 @@
               "minimum": 0
             },
             "zero_parse": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "count_drop": {
+              "description": "Pages whose parsed block count fell more than 10% below their last clean run.",
+              "type": "integer",
+              "minimum": 0
+            },
+            "count_mismatch": {
+              "description": "Pages whose parsed count disagrees with an independent block count in the same HTML.",
               "type": "integer",
               "minimum": 0
             }

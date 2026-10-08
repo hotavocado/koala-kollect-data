@@ -53,7 +53,10 @@ promos.
   or `_rN` suffix; cn uses the API's numeric id. Suffixes do not line up across
   sites, so the same art in two languages is a `printing_link`, never a shared
   printing. Per site, image ids were measured stable (55 EN and 48 JP weekly
-  snapshots, Wayback 2023-2026 on the EN promo page).
+  snapshots, Wayback 2023-2026 on the EN promo page). **cn is an assumption, not
+  yet measured:** nothing has covered the stability of the API's numeric id, and
+  the cn list also carries its own suffixed `cardNumber` (`P-084_01`: two digits,
+  no p or r). The ingest snapshots both, and later runs diff them.
 - DON: each DON design is its own card (`category: don`, no `number`,
   `don_design` = `{first product code}:{art slug}`). The normal and gold DON of one
   design are two printings of that card (`variant: base` and `variant: gold`).
@@ -66,14 +69,24 @@ promos.
   `printing_product` row. Printings have no `removed_at`, because a printing can
   move between series pages under the same image id (13 left the EN promo page
   for Other Product Card).
-- **Removal guard.** A run that saw a fetch error or parsed zero cards on a page
-  must not stamp `removed_at` from that page. It counts the refusal in its
-  `ingest_run`.
+- **Removal guard.** A page stamps `removed_at` only when it was read cleanly.
+  The run refuses removals from a page, and counts the refusal in its
+  `ingest_run`, when any of these holds:
+  - the fetch failed (`http_error`);
+  - zero cards parsed (`zero_parse`);
+  - the parsed count fell more than 10% below the page's last clean run
+    (`count_drop`); this catches a truncated 200 or a layout change;
+  - the parsed count disagrees with an independent count of card blocks in the
+    same HTML (`count_mismatch`).
+  A real removal larger than 10% keeps getting refused. It lands only through a
+  reviewed PR, never on its own.
 - **Change detection hashes parsed blocks, not raw HTML**, so a page-chrome edit
   is not a card change.
 - **Errata are versions.** A changed card block closes the current
   `card_observation` (`superseded_at`) and opens a new one. `card` holds the facts
-  from the jp observation (JP is the authority).
+  from one site's current observation, in this order: jp (the authority), en,
+  asia-en, tc, cn. `facts_site` records which one, so a China-only or EN-only
+  card still has facts.
 - **Raw strings stay raw.** `printing.source_text` and
   `printing_distribution.quote` are verbatim, so a better parser can re-derive
   everything without a re-scrape.
