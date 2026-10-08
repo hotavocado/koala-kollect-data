@@ -213,6 +213,17 @@ class DataCheck(Harness, unittest.TestCase):
             p = self.repo / rel
             p.write_text(fn(p.read_text("utf-8")), "utf-8")
 
+        def add_file(rel, rtype, row):
+            # A listed, correctly hashed file, so only the row itself can go red.
+            body = json.dumps(row, separators=(",", ":")) + "\n"
+            (self.repo / rel).write_text(body, "utf-8")
+            m = json.loads((self.repo / "manifest.json").read_text("utf-8"))
+            m["files"][rel] = {"type": rtype, "rows": 1, "sha256": hashlib.sha256(body.encode()).hexdigest()}
+            (self.repo / "manifest.json").write_text(json.dumps(m, indent=1) + "\n", "utf-8")
+
+        def a_printing():
+            return json.loads((self.repo / "data/printings/en.jsonl").read_text().splitlines()[0])["key"]
+
         cases = [
             ("sha256 mismatch", lambda: edit("data/products/en.jsonl", lambda t: t.replace("BOOSTER", "B00STER"))),
             ("row count mismatch", lambda: edit("manifest.json", lambda t: t.replace('"rows": 12', '"rows": 13', 1))),
@@ -225,6 +236,17 @@ class DataCheck(Harness, unittest.TestCase):
             ("markup in name", lambda: edit("data/products/en.jsonl",
                                             lambda t: t.replace("BOOSTER ", "BOOSTER <br>", 1))),
             ("markup in name", lambda: edit("data/products/en.jsonl", lambda t: t.replace("BOOSTER ", "BOOSTER &lt;", 1))),
+            ("markup in types", lambda: edit("data/card_observations/en.jsonl",
+                                             lambda t: t.replace('"types":["', '"types":["&lt;br&gt;', 1))),
+            ("printing_b prt_zzzzzzzzzzzz has no printing row", lambda: add_file(
+                "data/printing_links.jsonl", "printing_link",
+                {"key": f"{a_printing()}=prt_zzzzzzzzzzzz", "printing_a": a_printing(), "printing_b": "prt_zzzzzzzzzzzz",
+                 "method": "manual", "confidence": "inferred"})),
+            ("distribution_key dst_zzzzzzzzzzzz has no distribution row", lambda: add_file(
+                "data/printing_distributions.jsonl", "printing_distribution",
+                {"key": "ev_0000000000000000", "printing_key": a_printing(), "distribution_key": "dst_zzzzzzzzzzzz",
+                 "source": "official_cardlist", "source_url": "https://example.org/", "quote": "x",
+                 "confidence": "inferred", "observed_at": "2026-10-08T00:00:00Z"})),
         ]
         for expect, breakit in cases:
             with self.subTest(expect=expect):

@@ -4,7 +4,8 @@ Returns a list of errors; empty means the data is clean. Checks: every data
 file is listed in the manifest and every listed file exists with its sha256 and
 row count; LF, trailing newline, lines sorted by unique key, object keys in
 schema order; every record valid for its type; no HTML tag or entity left in
-any string; and references resolve (card_key, printing_key, product_key).
+any string, however nested; and every field the schema types as a reference
+resolves to a row of that type.
 """
 import hashlib
 import json
@@ -69,15 +70,37 @@ def check_data(root, schema):
             for e in v.iter_errors(rec):
                 errors.append(f"{path}:{i}: {e.message}")
             for field, val in rec.items():
-                if isinstance(val, str) and MARKUP.search(val):
-                    errors.append(f"{path}:{i}: markup in {field}: {MARKUP.search(val).group(0)!r}")
+                for text in strings(val):
+                    if MARKUP.search(text):
+                        errors.append(f"{path}:{i}: markup in {field}: {MARKUP.search(text).group(0)!r}")
             if k in keys[rtype]:
                 errors.append(f"{path}:{i}: key {k!r} repeated across files")
             keys[rtype].add(k)
             records.append((path, i, rtype, rec))
-    refs = {"card_key": "card", "printing_key": "printing", "product_key": "product"}
     for path, i, rtype, rec in records:
-        for field, target in refs.items():
+        for field, target in references(schema, rtype).items():
             if field in rec and rec[field] not in keys[target]:
                 errors.append(f"{path}:{i}: {field} {rec[field]} has no {target} row")
     return errors
+
+
+def strings(val):
+    """Every string in a field, however deeply it sits in lists or objects."""
+    if isinstance(val, str):
+        yield val
+    elif isinstance(val, list):
+        for v in val:
+            yield from strings(v)
+    elif isinstance(val, dict):
+        for v in val.values():
+            yield from strings(v)
+
+
+def references(schema, rtype):
+    """{field: target type} for every field whose schema is a $ref to #/$defs/{target}_key."""
+    out = {}
+    for field, spec in schema["$defs"][rtype]["properties"].items():
+        ref = spec.get("$ref", "")
+        if field != "key" and ref.startswith("#/$defs/") and ref.endswith("_key"):
+            out[field] = ref[len("#/$defs/"):-len("_key")]
+    return out
