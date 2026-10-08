@@ -3,9 +3,9 @@
 Returns a list of errors; empty means the data is clean. Checks: every manifest
 path is one the app sync accepts; every data file is listed in the manifest and
 every listed file exists with its sha256 and row count; LF, trailing newline,
-lines sorted by unique key, object keys in schema order; every record valid for its type; no HTML tag or entity left in
-any string, however nested; and every field the schema types as a reference
-resolves to a row of that type.
+lines sorted by unique key, object keys in schema order; every record valid for
+its type; no HTML tag or entity left in any string, however nested; and every
+field the schema types as a reference resolves to a row of that type.
 """
 import hashlib
 import json
