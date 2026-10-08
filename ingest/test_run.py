@@ -276,7 +276,7 @@ class PrintingFacts(unittest.TestCase):
             (d / f"{sid}.html").write_text(html, "utf-8")
             (d / "_fetch_log.json").write_text(json.dumps([{"site": site, "series_id": sid, "label": "fixture",
                                                              "status": 200, "fetched_at": T1}]))
-        run.run(self.tmp / "pages", self.repo, ["en", "jp"], now=lambda: float(next(self.clock)))
+        run.run(self.tmp / "pages", self.repo, list(self.PAGES), now=lambda: float(next(self.clock)))
 
     def tearDown(self):
         shutil.rmtree(self.tmp)
@@ -313,6 +313,47 @@ class PrintingFacts(unittest.TestCase):
         table = {k: v for k, v in model.ATTRIBUTES.items() if k != "？"}
         with mock.patch.object(model, "ATTRIBUTES", table), self.assertRaisesRegex(ValueError, "unknown attribute"):
             model.observation_fields("jp", next(b for b in run.parse_page(BI_JP) if b["image_id"] == "OP13-079"))
+
+
+class NoBasePrinting(PrintingFacts):
+    """card.block_icon when the facts site lists no base printing (alyssa, general 86859/86869)."""
+
+    PAGES = {"jp": ("550901", (Path(__file__).resolve().parent / "fixtures" / "no_base_jp.html").read_text("utf-8"))}
+
+    def cards(self):
+        return {c["number"]: c for c in self.rows("cards")}
+
+    def test_every_printing_agrees_so_the_value_carries(self):
+        # P-081: jp lists _p1, _p2 and _r1 and no base; all three print 3.
+        self.assertEqual((self.cards()["P-081"]["facts_site"], self.cards()["P-081"].get("block_icon")), ("jp", 3))
+
+    def test_printings_disagree_so_there_is_no_card_value(self):
+        # OP01-055 with its base left out: _p1 and _r1 print 1, _p2 prints 4.
+        # First-in-sibling-order would say 1, which is an arbitrary pick.
+        self.assertEqual(sorted(self.icon("jp", i) for i in ("OP01-055_p1", "OP01-055_p2", "OP01-055_r1")), [1, 1, 4])
+        self.assertNotIn("block_icon", self.cards()["OP01-055"])
+
+    # Inherited tests are about the en/jp fixture; they do not apply to this page set.
+    test_sites_disagree_per_printing_and_both_survive = None
+    test_card_block_icon_is_the_facts_site_base_number = None
+    test_question_mark_is_stored_half_width_from_both_widths = None
+    test_control_unmapped_full_width_question_mark_stops_the_run = None
+
+
+class ReplaySeed(Harness, unittest.TestCase):
+    def test_legacy_product_seeds_a_page_missing_from_state(self):
+        # codex PR 8 round 1 [P2]: a page absent from state/pages entirely must
+        # still take its legacy fetched_at, or the replay gets through.
+        self.fetch(FIX, T2)
+        self.go()
+        (self.repo / "state/pages/en.json").write_text("{}")
+        p = self.repo / "data/products/en.jsonl"
+        p.write_text(p.read_text().replace(f'"first_seen_at":"{T2}"', f'"first_seen_at":"{T2}","last_seen_at":"{T2}"'))
+        before = self.data()
+        self.fetch(without(FIX, "OP17-019"), T1)
+        with self.assertRaisesRegex(run.RunError, "older than the data"):
+            self.go()
+        self.assertEqual(self.data(), before)
 
 
 class Rekey(Harness, unittest.TestCase):

@@ -122,8 +122,13 @@ promos.
   per printing because parallels of one number differ, and per site because
   sites disagree on the same image id. Measured 2026-10-08: EB04-061_p2 prints X
   on en and 4 on the other three sites; OP01-016_p8 prints 1 on en and X on
-  asia-en, jp and tc. `card.block_icon` is a derivation: the number on the facts
-  site's base printing, for filtering by block. It is never `"X"`.
+  asia-en, jp and tc. `card.block_icon` is a derivation, for filtering by
+  block: the number on the facts site's base printing. When the facts site
+  lists no base printing, it is that site's value if every one of its
+  printings for the card agrees, and omitted otherwise, because a card-level
+  value picked from disagreeing printings would be arbitrary (P-081 and P-082
+  on jp, 2026-10-08: no base, every printing 3). It is never `"X"`, and it is
+  omitted when the printing it would come from shows none.
 - **`?` is an attribute value.** OP13-079 Imu prints `?` where an attribute goes:
   half-width on en and asia-en, full-width on jp and tc. Both are stored as
   half-width `"?"`, and the schema refuses the full-width form.

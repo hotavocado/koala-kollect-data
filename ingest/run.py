@@ -136,7 +136,7 @@ def guard(site_dir, entry, prev):
         return "zero_parse", []
     if len(blocks) != independent_count(html):
         return "count_mismatch", blocks
-    if prev and len(blocks) < DROP_FLOOR * prev["blocks"]:
+    if prev and "blocks" in prev and len(blocks) < DROP_FLOOR * prev["blocks"]:
         return "count_drop", blocks
     return None, blocks
 
@@ -311,12 +311,20 @@ def build_cards(store):
         first[o["card_key"]] = min(first.get(o["card_key"], o["first_seen_at"]), o["first_seen_at"])
         if "superseded_at" not in o:
             obs[o["card_key"]][o["site"]] = o
-    # card.block_icon is derived: the number printed on the facts site's base
-    # printing. Never "X", and omitted when that printing shows none.
-    base_icon = {}
+    # card.block_icon is derived (CONTRACT.md): the number printed on the facts
+    # site's base printing; with no base there, the value every one of that
+    # site's printings of the card agrees on. Never "X"; omitted when the base
+    # shows none or the printings disagree, because then no card-level value is honest.
+    on_site = defaultdict(list)
     for p in store.recs["printing"].values():
-        if p["variant"] == "base" and isinstance(p.get("block_icon"), int):
-            base_icon[(p["card_key"], p["site"])] = p["block_icon"]
+        on_site[(p["card_key"], p["site"])].append(p)
+    base_icon = {}
+    for k, ps in on_site.items():
+        base = [p for p in ps if p["variant"] == "base"]
+        values = {json.dumps(p.get("block_icon")) for p in (base or ps)}
+        v = json.loads(values.pop()) if len(values) == 1 else None
+        if isinstance(v, int):
+            base_icon[k] = v
     counts = defaultdict(int)
     for card_key, by_site in obs.items():
         facts_site = next(s for s in FACTS_ORDER if s in by_site)
@@ -421,10 +429,11 @@ def run(pageset, repo, sites=SITES, cn_rows=None, now=time.time):
         # Transitional: a page whose state predates fetched_at takes it from its
         # product's last_seen_at, the stamp the replay guard used to read, so
         # the guard has no gap while the field moves.
+        # A page with no state entry at all gets one holding only fetched_at.
         for pk, t in store.legacy_fetched_at.items():
             s, sid = pk.split(":", 1)
-            if s == site and "fetched_at" not in states[site].get(sid, {"fetched_at": None}):
-                states[site][sid]["fetched_at"] = t
+            if s == site:
+                states[site].setdefault(sid, {}).setdefault("fetched_at", t)
         t0 = now()
         counts, refusals, page_refusals = run_site(store, pageset / site, site, states[site])
         results[site] = {"counts": counts, "refusals": refusals, "page_refusals": page_refusals, "t0": t0, "t1": now()}
