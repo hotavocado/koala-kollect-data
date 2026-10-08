@@ -178,6 +178,20 @@ class NewSeries(Harness, unittest.TestCase):
         self.assertEqual(daily.parse_fake("jp:550999:A:B"), ("jp", "550999", "A:B"))
 
 
+class FetchLine(unittest.TestCase):
+    def test_counts_statuses_and_retries(self):
+        log = [{"series_id": "1", "status": 200},
+               {"series_id": "2", "status": 200, "attempt_errors": ["HTTPError: HTTP Error 429"]},
+               {"series_id": "3", "status": None, "error": "HTTPError: HTTP Error 403",
+                "attempt_errors": ["HTTPError: HTTP Error 403"] * 3}]
+        self.assertEqual(daily.fetch_line("en", log, 61.4),
+                         "fetch en: 3 pages, status {200: 2, failed: 1}, retried 1, 61s")
+
+    def test_a_clean_site(self):
+        self.assertEqual(daily.fetch_line("jp", [{"series_id": "1", "status": 200}] * 62, 120),
+                         "fetch jp: 62 pages, status {200: 62}, retried 0, 120s")
+
+
 class WorkflowOutputs(Harness, unittest.TestCase):
     """main() writes the two GITHUB_OUTPUT lines the commit and issue steps key on."""
 
