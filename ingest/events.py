@@ -55,7 +55,7 @@ _MAIN = re.compile(r"<main\b.*?</main>", re.S)
 # with "Included in". Removed before matching, kept in the distribution's name.
 _DECORATION = re.compile(r"\s*カードリスト\s*$|^\s*Included in\s+", re.I)
 # The game's own name, which pages and card lists add or drop freely.
-_BRAND = re.compile(r"one ?piece ?card ?game|one ?piece ?カードゲーム|one ?piece ?卡牌對戰|one ?piece ?卡片對戰")
+_BRAND = re.compile(r"one ?piece ?card ?game|one ?piece ?カードゲーム|one ?piece ?卡牌對戰|one ?piece ?卡片對戰", re.I)
 _PUNCT = re.compile(r"[\s\-‐–—_~〜・『』「」【】\[\]()（）!！?？.,、。:：'\"“”’]")
 
 
@@ -81,7 +81,7 @@ def bare(s):
     survives as | for the same reason as in norm."""
     s = re.sub(r"\n+", "|", s)
     s = re.sub(r"(?<=\d)\s+(?=\d)", "|", s)
-    s = _BRAND.sub("", s.replace("ONE PIECE", "one piece").replace("One Piece", "one piece"))
+    s = _BRAND.sub("", s)
     return re.sub(r"\s+", "", s)
 
 
