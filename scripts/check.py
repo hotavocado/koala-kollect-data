@@ -5,6 +5,7 @@ from jsonschema import Draft202012Validator
 
 sys.path.insert(0, str(Path(__file__).parent))
 from image_id import parse_image_id
+from data_check import check_data
 
 root = Path(__file__).resolve().parent.parent
 schema = json.loads((root / "schema/v1.schema.json").read_text())
@@ -61,6 +62,14 @@ for site, iid in [("en", "OP01-001_x1"), ("en", "op01-001"), ("cn", "OP01-001"),
         print("FAIL id accepted", site, iid)
     except ValueError:
         print("ok   id red", site, iid)
+
+# The data itself, when the ingest has written any: manifest, files, schema, references.
+data_errors = check_data(root, schema)
+for e in data_errors[:20]:
+    print("FAIL data", e)
+if (root / "manifest.json").exists():
+    print("ok   data " if not data_errors else f"FAIL data {len(data_errors)} errors", "manifest.json and every file it lists")
+bad += len(data_errors)
 
 print("RESULT", "GREEN" if bad == 0 else f"RED ({bad})")
 sys.exit(1 if bad else 0)

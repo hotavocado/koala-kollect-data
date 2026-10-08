@@ -1,0 +1,111 @@
+{
+ "schema_version": 1,
+ "generated_at": "2026-10-08T16:11:35Z",
+ "files": {
+  "data/card_observations/asia-en.jsonl": {
+   "type": "card_observation",
+   "rows": 2815,
+   "sha256": "647cbe47ac58e57655a23b5366044c85de7ac9170cc7f7d678aaf1142b6223a6"
+  },
+  "data/card_observations/en.jsonl": {
+   "type": "card_observation",
+   "rows": 2785,
+   "sha256": "37f209ac52cb5b51f858d49a970e1b943e8660bd2558047c3a315c083e34583f"
+  },
+  "data/card_observations/jp.jsonl": {
+   "type": "card_observation",
+   "rows": 2824,
+   "sha256": "1572d7f868974aad9d23b2d5545c478bf5d787117778eda3871acebf009fd9c8"
+  },
+  "data/card_observations/tc.jsonl": {
+   "type": "card_observation",
+   "rows": 2815,
+   "sha256": "5c6172fefda06bbed07fc5356b5fde8cfef2180863c187e835245e9d53e41a93"
+  },
+  "data/cards.jsonl": {
+   "type": "card",
+   "rows": 2824,
+   "sha256": "0b1210f7ac8edfeb16d9353f7c726c9cf2f31d76e468bfb862b885aaac9b2a34"
+  },
+  "data/printing_locators/asia-en.jsonl": {
+   "type": "printing_locator",
+   "rows": 4914,
+   "sha256": "34d498f77cf48f2e0e24d6d11c7d90ac0459effb2dd5ea0cec8d78070c443806"
+  },
+  "data/printing_locators/en.jsonl": {
+   "type": "printing_locator",
+   "rows": 4843,
+   "sha256": "0b18060883fcd80947a23c7ae3c050a260c40ca0d8744e858b24653ea8eeb4f7"
+  },
+  "data/printing_locators/jp.jsonl": {
+   "type": "printing_locator",
+   "rows": 4997,
+   "sha256": "70d49a4017edde651778b077bf7e6260703d39ac565167a02b361ee22938207c"
+  },
+  "data/printing_locators/tc.jsonl": {
+   "type": "printing_locator",
+   "rows": 4915,
+   "sha256": "c845b7da1b7cc49d34f3eecdc5d092791068038228ce423f5670316f2e1a7923"
+  },
+  "data/printing_products/asia-en.jsonl": {
+   "type": "printing_product",
+   "rows": 4915,
+   "sha256": "0c721eaa89ff9a124869ece6f4b26edb678f972072a79541e501454f9658f5c2"
+  },
+  "data/printing_products/en.jsonl": {
+   "type": "printing_product",
+   "rows": 4844,
+   "sha256": "0f7999f3a561605ac41c7af854f0c8c643f3ab7a068cff5fc0fc66840199623b"
+  },
+  "data/printing_products/jp.jsonl": {
+   "type": "printing_product",
+   "rows": 4997,
+   "sha256": "91116d0b87a45ca2ea272e9fee2a65ba3cba21f26739abefd1a649d29808726b"
+  },
+  "data/printing_products/tc.jsonl": {
+   "type": "printing_product",
+   "rows": 4915,
+   "sha256": "3ad26f683c66cd355d831a269fb36271bf3c6da322d95424102597be77bc5efd"
+  },
+  "data/printings/asia-en.jsonl": {
+   "type": "printing",
+   "rows": 4914,
+   "sha256": "b5960124da523a768232130eb8ae6eba628f6da3384942a61c23eaea37d26ef4"
+  },
+  "data/printings/en.jsonl": {
+   "type": "printing",
+   "rows": 4843,
+   "sha256": "d3f72a5069b5ea7ccb12094c59ee6116095447b0ddf10b628436e6f9cc18b022"
+  },
+  "data/printings/jp.jsonl": {
+   "type": "printing",
+   "rows": 4997,
+   "sha256": "666731c51e2c9c2c9d1ce3b7f145a24363997b9401430b5eb48225e5ce26291e"
+  },
+  "data/printings/tc.jsonl": {
+   "type": "printing",
+   "rows": 4915,
+   "sha256": "4d2e513a6853555d66ec255a7eef5806337521d8c3788f1f8b4120382bdd3e98"
+  },
+  "data/products/asia-en.jsonl": {
+   "type": "product",
+   "rows": 62,
+   "sha256": "f0cc41d7cb7eee2b441cc7590344a9f785ca0d76e7079fd135dd542bb927e6fd"
+  },
+  "data/products/en.jsonl": {
+   "type": "product",
+   "rows": 60,
+   "sha256": "02cd3cf0d62dd2344a9ee71a3792ed526f2e8eda24f958be8761eef0fe5f819f"
+  },
+  "data/products/jp.jsonl": {
+   "type": "product",
+   "rows": 62,
+   "sha256": "1e078c0bab8ecde67b7b1980aeec80ea113a77a65f039393601a4bad01beba59"
+  },
+  "data/products/tc.jsonl": {
+   "type": "product",
+   "rows": 62,
+   "sha256": "da1d01da6dd4564702a576fccf1ebe13c81639dbcb27677f2e4350e987a02704"
+  }
+ }
+}
