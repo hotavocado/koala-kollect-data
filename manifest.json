@@ -25,7 +25,7 @@
   "data/cards.jsonl": {
    "type": "card",
    "rows": 2824,
-   "sha256": "c106ea67e4c519461cd22968c1863ca5d6df46c3aa6b762617cac4d392066963"
+   "sha256": "d37c259f37e86b462a306a7aa362bc4b914aaaa91fb9c3e16dbc488c1e082157"
   },
   "data/printing_locators/asia-en.jsonl": {
    "type": "printing_locator",
