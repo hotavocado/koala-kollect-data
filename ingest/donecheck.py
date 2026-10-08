@@ -1,5 +1,9 @@
 """Step 2 done-check over a directory of fetched pages. Writes nothing.
 
+The series list comes from fetch.py's _fetch_log.json, never from the HTML files
+on disk: a series whose fetch failed has no page, and a page with no log entry
+is stale from an earlier run. Both fail, as does a missing or empty log.
+
 For every series page: the parser's block count must equal an independent count
 of card-image ids in the same HTML, and no image id may repeat within a page.
 Also prints per-site totals, category counts, and the fields the parser could
@@ -8,6 +12,7 @@ not find, so a layout change shows up as a number, not a silence.
 usage: python donecheck.py <pages_dir> [site ...]
 """
 import collections
+import json
 import sys
 from pathlib import Path
 
@@ -21,9 +26,34 @@ REQUIRED = ["number", "rarity", "category", "name", "image_src"]
 REPORTED = ["source_text"]
 
 
+def _logged_pages(site_dir, failures):
+    log_path = site_dir / "_fetch_log.json"
+    if not log_path.exists():
+        failures.append("no _fetch_log.json: a failed series cannot be told from a missing one")
+        return []
+    log = json.loads(log_path.read_text("utf-8"))
+    if not log:
+        failures.append("_fetch_log.json lists no series")
+    pages, logged = [], set()
+    for e in log:
+        sid = e["series_id"]
+        logged.add(sid)
+        page = site_dir / f"{sid}.html"
+        if e.get("status") != 200:
+            failures.append(f"{sid}: fetch failed ({e.get('error', e.get('status'))})")
+        elif not page.exists():
+            failures.append(f"{sid}: logged as fetched but no page on disk")
+        else:
+            pages.append(page)
+    for p in site_dir.glob("*.html"):
+        if not p.name.startswith("_") and p.stem not in logged:
+            failures.append(f"{p.stem}: page on disk with no entry in this run's log (stale)")
+    return sorted(pages)
+
+
 def check_site(site_dir):
-    pages = sorted(p for p in site_dir.glob("*.html") if not p.name.startswith("_"))
     failures, totals = [], collections.Counter()
+    pages = _logged_pages(site_dir, failures)
     ids_by_page, cats, missing = {}, collections.Counter(), collections.Counter()
     for p in pages:
         html = p.read_text("utf-8", "replace")

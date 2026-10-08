@@ -39,6 +39,7 @@ def fetch_site(site, out_dir, pause=1.5, attempts=3):
     log = []
     for series_id, label in options:
         entry = {"site": site, "series_id": series_id, "label": label}
+        errors = []
         for attempt in range(attempts):
             try:
                 status, body = _get(cardlist_url(site, series_id))
@@ -46,8 +47,15 @@ def fetch_site(site, out_dir, pause=1.5, attempts=3):
                 (out / f"{series_id}.html").write_bytes(body)
                 break
             except Exception as e:  # recorded, never swallowed
-                entry.update(status=None, error=f"{type(e).__name__}: {e}")
+                errors.append(f"{type(e).__name__}: {e}")
                 time.sleep(5 * (attempt + 1))
+        else:
+            # Only a fetch that never succeeded carries `error`; a stale page from
+            # an earlier run must not be read as this run's copy.
+            entry.update(status=None, error=errors[-1])
+            (out / f"{series_id}.html").unlink(missing_ok=True)
+        if errors:
+            entry["attempt_errors"] = errors
         entry["fetched_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
         log.append(entry)
         time.sleep(pause)
