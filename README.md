@@ -16,7 +16,9 @@ daily. Each product carries that site's release date, read from the site's own
 product index. `cn` printings come from the mainland-China card API, promo
 origins from each site's event pages, and DON cards from tcgcsv, TCGplayer's
 catalogue, because no official card list carries them (see CONTRACT.md, DON;
-their images link to TCGplayer). `state/` holds what the ingest needs between runs (each page's
+their images link to TCGplayer). Release Event stamped prints come from tcgcsv
+too, as printings on the set cards they stamp (CONTRACT.md, Release Event
+stamps). `state/` holds what the ingest needs between runs (each page's
 last clean count and hash, the series each product page links, the `cn` id
 snapshot, and `keepalive.txt`, the date of the last heartbeat commit that stops
 GitHub switching the daily schedule off after a quiet spell); the app does not

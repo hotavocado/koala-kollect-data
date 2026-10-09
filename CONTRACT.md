@@ -159,12 +159,19 @@ cards in 7 TCGplayer groups whose abbreviation ends ` RE` (OP10 24068, OP11
 24242, OP12 24406, OP14 24579, OP15 24638, OP16 24677, OP17 24775; OP18 RE
 24834 is empty). Pre-Release stamps are out of scope.
 
+- **Which groups.** Only the groups in `tcgcsv.RE_GROUPS` mint, by groupId,
+  so a group joins the data by a change there: today OP17 RE (24775) alone.
+  A stamp is a product in such a group with an `extendedData` Number; the
+  group's sealed pack has none and is not read. An admitted group missing
+  from `/groups`, holding no stamp, or with no price file stops the run.
+
 - **The card is the set card it stamps.** Each product's `extendedData`
   Number is one card of ours, and the printing hangs off that card. Its facts
   and observations stay on the official sites: a stamp writes no
   `card_observation` and never sets `facts_site` (the schema keeps a tcgcsv
-  observation DON-only). A Number that matches no card is refused and counted,
-  never minted.
+  observation DON-only). A Number that matches no card is refused, never
+  minted, and counted in `ingest_run.unmatched` and named by productId on the
+  run line.
 - **Locator.** Unchanged from DON: `tcgcsv:{productId}:{subType}`. All 554
   price Normal only, so every locator ends `:Normal`; `scripts/check.py`
   refuses a stamped printing on any other finish, or with no locator at all (a
@@ -178,19 +185,30 @@ cards in 7 TCGplayer groups whose abbreviation ends ` RE` (OP10 24068, OP11
   guess.
 - **Rows.** A stamped printing: `site` `tcgcsv`, `rarity` as TCGplayer prints
   it (C or UC so far; 553 of 554 agree with the en base printing, EB04-053
-  reads C against en R), `source_text` the TCGplayer product name verbatim,
+  reads C against en R). The rarity is kept verbatim; a stamp whose rarity
+  differs from its card's en base printing is counted in
+  `ingest_run.rarity_disagreements` and named on the run line. `source_text`
+  the TCGplayer product name verbatim,
   `block_icon` `null`. `image_url` follows the DON rule: TCGplayer's
   `{productId}_in_1000x1000.jpg`, omitted while the product's `imageCount` is
   0 and counted in the run's `no_image` (2026-10-09: OP16 RE, 75 of 75).
-- **No dates.** A stamped printing and its claim carry no date. tcgcsv is
-  never a date source (Release dates above), and that holds here too.
+- **No dates.** A stamped printing carries no date and its claim no
+  `starts_on` or `ends_on`. tcgcsv is never a date source (Release dates
+  above), and that holds here too. The claim's `observed_at` is not an event
+  date: it is when the group's products were fetched, the earliest kept, as
+  on every claim.
 - **One distribution per RE group.** `site` `tcgcsv`, `region` `en` (TCGplayer
   is North American), `kind` `event_pack` (the schema pins both), `name` the
   group's name verbatim ("The World's Strongest Warriors Release Event
-  Cards"). Its key is minted from `tcgcsv|{group name}`.
-- **One claim per stamped printing.** `source` `tcgcsv`, `source_url`
-  `https://tcgcsv.com/tcgplayer/68/{groupId}/products`, `quote` the group's
-  name verbatim, `confidence` `corroborated`.
+  Cards"), `source_url` the group's products listing below. Its key is
+  minted from `tcgcsv|{group name}`.
+- **At least one claim per stamped printing.** The walker writes one: `source`
+  `tcgcsv`, `source_url` `https://tcgcsv.com/tcgplayer/68/{groupId}/products`,
+  `quote` the group's name verbatim, `confidence` `corroborated`. The count is
+  a floor, not an exact number: several claims per printing are normal (Promo
+  origin). `scripts/check.py` refuses a stamped printing with no tcgcsv
+  claim, and a tcgcsv claim that is not a stamped printing's, not on a tcgcsv
+  distribution, not `corroborated`, or carrying `starts_on` or `ends_on`.
 - **`corroborated` here means a third-party catalogue's own grouping**
   (alyssa 88082): TCGplayer files the product under that event group, and we
   record that it did. It is not "two sources agree", and it is never
@@ -581,4 +599,7 @@ named in its `expect` field (or one of a list, where jsonschema versions spell
 the same error differently), refuses a key that appears on two lines of the
 valid examples (the sync upserts by key, so a repeat overwrites silently; the
 data files get the same check, within and across files), and runs the
-image-id parser cases. CI runs it on every push.
+image-id parser cases. Over the data it adds the cross-record checks the
+schema cannot express: no retired printing is also live, a stamped printing
+has a locator and every one ends `:Normal`, and the Release Event claim rules
+above. Each has red controls in `check.py`. CI runs it on every push.

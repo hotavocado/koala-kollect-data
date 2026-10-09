@@ -35,7 +35,8 @@ a normal day costs the list plus the new ids. A failed detail fails the run.
 
 DON cards come from tcgcsv, fetched into the page set as tcgcsv/
 (tcgcsv.fetch_pageset): the groups, every group's products, and prices for the
-groups that carry a DON. Any failed request fails the run, as for every other
+groups that carry a DON or are a Release Event group the run admits
+(tcgcsv.RE_GROUPS). Any failed request fails the run, as for every other
 source; tcgcsv has no removals, so the next day's run heals it.
 """
 import argparse
@@ -221,7 +222,8 @@ def fetch_all(pageset, sites, repo):
     t0 = time.monotonic()
     try:
         n = tcgcsv.fetch_pageset(Path(pageset) / "tcgcsv")
-        print(f"fetch tcgcsv: {n} groups, products and DON prices, {time.monotonic() - t0:.0f}s", flush=True)
+        print(f"fetch tcgcsv: {n} groups, products, DON and Release Event prices, {time.monotonic() - t0:.0f}s",
+              flush=True)
     except Exception as e:
         failures.append(f"tcgcsv: fetch failed: {type(e).__name__}: {e}")
         print(f"fetch tcgcsv: FAILED after {time.monotonic() - t0:.0f}s: {type(e).__name__}: {e}", flush=True)
@@ -289,7 +291,11 @@ def daily(pageset, repo, out, sites=SITES, dry_run=False, fake=None, fetcher=Non
         if result.get("tcgcsv_run"):
             summary["tcgcsv_run"] = dict(result["tcgcsv_run"]["run"],
                                          unpriced_ids=result["tcgcsv_run"]["counts"]["unpriced"],
-                                         no_image_ids=result["tcgcsv_run"]["counts"]["no_image"])
+                                         no_image_ids=result["tcgcsv_run"]["counts"]["no_image"],
+                                         dons=result["tcgcsv_run"]["counts"]["dons"],
+                                         stamps=result["tcgcsv_run"]["counts"]["stamps"],
+                                         unmatched_ids=result["tcgcsv_run"]["counts"]["unmatched"],
+                                         rarity_disagreement_ids=result["tcgcsv_run"]["counts"]["rarity_disagreements"])
     (out / "summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=1) + "\n", "utf-8")
     return (0 if not failures else 1), summary
 
@@ -321,9 +327,12 @@ def main(argv):
               f"duplicate ids {len(r['cn_duplicate_ids'])} {r['cn_duplicate_ids']}")
     if "tcgcsv_run" in s:
         r = s["tcgcsv_run"]
-        print(f"tcgcsv: DON products {r['blocks_parsed']}, added {r['added']}, changed {r['changed']}, "
-              f"refusals {r['refusals']}, unpriced (refused, no key) {r['unpriced']} {r['unpriced_ids']}, "
-              f"no image yet {r['no_image']} {r['no_image_ids']}")
+        print(f"tcgcsv: DON products {r['dons']}, Release Event stamps {r['stamps']}, added {r['added']}, "
+              f"changed {r['changed']}, refusals {r['refusals']}, "
+              f"unpriced (refused, no key) {r['unpriced']} {r['unpriced_ids']}, "
+              f"no image yet {r['no_image']} {r['no_image_ids']}, "
+              f"stamps on no card of ours (refused) {r['unmatched']} {r['unmatched_ids']}, "
+              f"stamp rarity differs from the en base {r['rarity_disagreements']} {r['rarity_disagreement_ids']}")
     if "cn" in s:
         print(f"cards: {s['cards']}  cn: {s['cn']}")
     if s["notice_title"]:

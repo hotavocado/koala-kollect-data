@@ -1,0 +1,336 @@
+{
+ "note": "Verbatim rows, tcgcsv category 68 fetched 2026-10-09T14:01:28Z (OP17 RE group 24775): Atmos OP17-002 C, Haruta OP17-009 UC, Ga Ha Ha Ha!! OP17-017 C (an Event), and the group's sealed 4th Anniversary Tournament Pack (no Number). cards and en_base are the matching rows of koala-kollect-data main 06b31c4.",
+ "group": {
+  "groupId": 24775,
+  "name": "The World's Strongest Warriors Release Event Cards",
+  "abbreviation": "OP17 RE",
+  "isSupplemental": false,
+  "publishedOn": "2026-08-21T00:00:00",
+  "modifiedOn": "2026-09-01T11:12:42.277",
+  "categoryId": 68
+ },
+ "products": [
+  {
+   "productId": 712666,
+   "name": "Atmos",
+   "cleanName": "Atmos",
+   "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/712666_200w.jpg",
+   "categoryId": 68,
+   "groupId": 24775,
+   "url": "https://www.tcgplayer.com/product/712666/one-piece-card-game-the-worlds-strongest-warriors-release-event-cards-atmos",
+   "modifiedOn": "2026-08-31T19:53:57.18",
+   "imageCount": 1,
+   "presaleInfo": {
+    "isPresale": false,
+    "releasedOn": null,
+    "note": null
+   },
+   "extendedData": [
+    {
+     "name": "Rarity",
+     "displayName": "Rarity",
+     "value": "C"
+    },
+    {
+     "name": "Number",
+     "displayName": "Number",
+     "value": "OP17-002"
+    },
+    {
+     "name": "Description",
+     "displayName": "Description",
+     "value": "[Opponent's Turn] This Character gains +3000 power."
+    },
+    {
+     "name": "Color",
+     "displayName": "Color",
+     "value": "Red"
+    },
+    {
+     "name": "CardType",
+     "displayName": "Card Type",
+     "value": "Character"
+    },
+    {
+     "name": "Cost",
+     "displayName": "Cost",
+     "value": "4"
+    },
+    {
+     "name": "Power",
+     "displayName": "Power",
+     "value": "6000"
+    },
+    {
+     "name": "Subtypes",
+     "displayName": "Subtype(s)",
+     "value": "Whitebeard Pirates"
+    },
+    {
+     "name": "Attribute",
+     "displayName": "Attribute",
+     "value": "Slash"
+    }
+   ]
+  },
+  {
+   "productId": 712669,
+   "name": "Haruta",
+   "cleanName": "Haruta",
+   "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/712669_200w.jpg",
+   "categoryId": 68,
+   "groupId": 24775,
+   "url": "https://www.tcgplayer.com/product/712669/one-piece-card-game-the-worlds-strongest-warriors-release-event-cards-haruta",
+   "modifiedOn": "2026-08-31T19:54:38.057",
+   "imageCount": 1,
+   "presaleInfo": {
+    "isPresale": false,
+    "releasedOn": null,
+    "note": null
+   },
+   "extendedData": [
+    {
+     "name": "Rarity",
+     "displayName": "Rarity",
+     "value": "UC"
+    },
+    {
+     "name": "Number",
+     "displayName": "Number",
+     "value": "OP17-009"
+    },
+    {
+     "name": "Description",
+     "displayName": "Description",
+     "value": "[Opponent's Turn] This Character gains +3000 power.<br><br>\r\n<br>[On Play] K.O. up to 1 of your opponent's Characters with 2000 base power or less."
+    },
+    {
+     "name": "Color",
+     "displayName": "Color",
+     "value": "Red"
+    },
+    {
+     "name": "CardType",
+     "displayName": "Card Type",
+     "value": "Character"
+    },
+    {
+     "name": "Cost",
+     "displayName": "Cost",
+     "value": "4"
+    },
+    {
+     "name": "Power",
+     "displayName": "Power",
+     "value": "5000"
+    },
+    {
+     "name": "Subtypes",
+     "displayName": "Subtype(s)",
+     "value": "Whitebeard Pirates"
+    },
+    {
+     "name": "Counterplus",
+     "displayName": "Counter+",
+     "value": "1000"
+    },
+    {
+     "name": "Attribute",
+     "displayName": "Attribute",
+     "value": "Slash"
+    }
+   ]
+  },
+  {
+   "productId": 712677,
+   "name": "Ga Ha Ha Ha!!",
+   "cleanName": "Ga Ha Ha Ha",
+   "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/712677_200w.jpg",
+   "categoryId": 68,
+   "groupId": 24775,
+   "url": "https://www.tcgplayer.com/product/712677/one-piece-card-game-the-worlds-strongest-warriors-release-event-cards-ga-ha-ha-ha",
+   "modifiedOn": "2026-08-31T19:56:38.187",
+   "imageCount": 1,
+   "presaleInfo": {
+    "isPresale": false,
+    "releasedOn": null,
+    "note": null
+   },
+   "extendedData": [
+    {
+     "name": "Rarity",
+     "displayName": "Rarity",
+     "value": "C"
+    },
+    {
+     "name": "Number",
+     "displayName": "Number",
+     "value": "OP17-017"
+    },
+    {
+     "name": "Description",
+     "displayName": "Description",
+     "value": "[Counter] Up to 1 of your Leader with a type including \"Whitebeard Pirates\" or up to 1 of your Characters with a type including \"Whitebeard Pirates\" gains +2000 power during this battle. Then, give up to 1 of your opponent's Leader or Characters 2000 power during this turn."
+    },
+    {
+     "name": "Color",
+     "displayName": "Color",
+     "value": "Red"
+    },
+    {
+     "name": "CardType",
+     "displayName": "Card Type",
+     "value": "Event"
+    },
+    {
+     "name": "Cost",
+     "displayName": "Cost",
+     "value": "1"
+    },
+    {
+     "name": "Subtypes",
+     "displayName": "Subtype(s)",
+     "value": "The Four Emperors;Whitebeard Pirates"
+    }
+   ]
+  },
+  {
+   "productId": 712741,
+   "name": "The World's Strongest Warriors - 4th Anniversary Tournament Pack",
+   "cleanName": "The Worlds Strongest Warriors 4th Anniversary Tournament Pack",
+   "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/712741_200w.jpg",
+   "categoryId": 68,
+   "groupId": 24775,
+   "url": "https://www.tcgplayer.com/product/712741/one-piece-card-game-the-worlds-strongest-warriors-release-event-cards-the-worlds-strongest-warriors-4th-anniversary-tournament-pack",
+   "modifiedOn": "2026-08-21T13:53:13.323",
+   "imageCount": 1,
+   "presaleInfo": {
+    "isPresale": false,
+    "releasedOn": null,
+    "note": null
+   },
+   "extendedData": []
+  }
+ ],
+ "prices": [
+  {
+   "productId": 712666,
+   "lowPrice": 0.2,
+   "midPrice": 1.31,
+   "highPrice": 5.0,
+   "marketPrice": 0.71,
+   "directLowPrice": null,
+   "subTypeName": "Normal"
+  },
+  {
+   "productId": 712669,
+   "lowPrice": 3.25,
+   "midPrice": 3.75,
+   "highPrice": 8.0,
+   "marketPrice": 3.93,
+   "directLowPrice": null,
+   "subTypeName": "Normal"
+  },
+  {
+   "productId": 712677,
+   "lowPrice": 5.89,
+   "midPrice": 7.26,
+   "highPrice": 14.99,
+   "marketPrice": 7.3,
+   "directLowPrice": null,
+   "subTypeName": "Normal"
+  },
+  {
+   "productId": 712741,
+   "lowPrice": 5.0,
+   "midPrice": 7.0,
+   "highPrice": 35.0,
+   "marketPrice": 6.28,
+   "directLowPrice": null,
+   "subTypeName": "Normal"
+  }
+ ],
+ "cards": [
+  {
+   "key": "card_4rynesmg2h5t",
+   "number": "OP17-002",
+   "category": "character",
+   "colors": [
+    "red"
+   ],
+   "cost": 4,
+   "power": 6000,
+   "attributes": [
+    "slash"
+   ],
+   "block_icon": 5,
+   "facts_site": "jp",
+   "first_seen_at": "2026-10-08T15:56:45Z"
+  },
+  {
+   "key": "card_p26jygx56i31",
+   "number": "OP17-009",
+   "category": "character",
+   "colors": [
+    "red"
+   ],
+   "cost": 4,
+   "power": 5000,
+   "counter": 1000,
+   "attributes": [
+    "slash"
+   ],
+   "block_icon": 5,
+   "facts_site": "jp",
+   "first_seen_at": "2026-10-08T15:56:45Z"
+  },
+  {
+   "key": "card_tkrztjr8g77h",
+   "number": "OP17-017",
+   "category": "event",
+   "colors": [
+    "red"
+   ],
+   "cost": 1,
+   "attributes": [],
+   "block_icon": 5,
+   "facts_site": "jp",
+   "first_seen_at": "2026-10-08T15:56:45Z"
+  }
+ ],
+ "en_base": [
+  {
+   "key": "prt_7f8wr90mkfbm",
+   "card_key": "card_tkrztjr8g77h",
+   "site": "en",
+   "rarity": "C",
+   "variant": "base",
+   "image_url": "https://en.onepiece-cardgame.com/images/cardlist/card/OP17-017.png",
+   "source_text": "BOOSTER PACK -THE WORLD’S STRONGEST WARRIORS- [OP-17]",
+   "block_icon": 5,
+   "first_seen_at": "2026-10-08T15:56:45Z"
+  },
+  {
+   "key": "prt_tn8lwp59h6kb",
+   "card_key": "card_4rynesmg2h5t",
+   "site": "en",
+   "rarity": "C",
+   "variant": "base",
+   "image_url": "https://en.onepiece-cardgame.com/images/cardlist/card/OP17-002.png",
+   "source_text": "BOOSTER PACK -THE WORLD’S STRONGEST WARRIORS- [OP-17]",
+   "block_icon": 5,
+   "first_seen_at": "2026-10-08T15:56:45Z"
+  },
+  {
+   "key": "prt_xty7lh5pbn0z",
+   "card_key": "card_p26jygx56i31",
+   "site": "en",
+   "rarity": "UC",
+   "variant": "base",
+   "image_url": "https://en.onepiece-cardgame.com/images/cardlist/card/OP17-009.png",
+   "source_text": "BOOSTER PACK -THE WORLD’S STRONGEST WARRIORS- [OP-17]",
+   "block_icon": 5,
+   "first_seen_at": "2026-10-08T15:56:45Z"
+  }
+ ]
+}

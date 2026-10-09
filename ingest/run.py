@@ -738,11 +738,14 @@ def run_tcgcsv(store, tcg_dir, state):
     finish and so no key: it is refused, counted, and mints when a price row
     appears (upper 87490). A product TCGplayer has no image for (imageCount 0)
     gets no image_url, is counted in no_image, and gains one the day the count
-    turns positive (upper 87556).
+    turns positive (upper 87556). The Release Event stamps in tcgcsv.RE_GROUPS
+    are printings on existing set cards, with one distribution per group and a
+    claim per printing (CONTRACT.md, Release Event stamps).
     """
     try:
         t, groups, prods, prices, times = tcgcsv.read_pageset(tcg_dir)
         specs, unpriced, don_count = tcgcsv.plan(groups, prods, prices)
+        stamps, stamp_unpriced, stamp_count = tcgcsv.plan_stamps(groups, prods, prices)
     except ValueError as ex:
         raise RunError(f"tcgcsv: {ex}") from ex
     # Stale guard, as on cn: an older page set replayed over newer data. Equal is a re-run.
@@ -751,9 +754,11 @@ def run_tcgcsv(store, tcg_dir, state):
         raise RunError(f"tcgcsv groups fetched {t}, older than the data ({last}); nothing written")
     counts = defaultdict(int)
     counts["pages_fetched"] = len(prods) + len(prices)
-    counts["blocks_parsed"] = don_count
-    counts["unpriced"] = sorted(unpriced)
-    counts["no_image"] = sorted({sp["product_id"] for sp in specs if not sp["has_image"]})
+    counts["blocks_parsed"] = don_count + stamp_count
+    counts["dons"], counts["stamps"] = don_count, stamp_count
+    counts["unpriced"] = sorted(unpriced + stamp_unpriced)
+    counts["no_image"] = sorted({sp["product_id"] for sp in [*specs, *stamps] if not sp["has_image"]})
+    counts["unmatched"], counts["rarity_disagreements"] = [], []
     refusals = {a: 0 for a in ARMS}
     if not don_count:
         refusals["zero_parse"] += 1
@@ -797,6 +802,42 @@ def run_tcgcsv(store, tcg_dir, state):
         if card_key not in names:
             normal = next(p for p in prods[sp["group_id"]] if p["productId"] == sp["card_product_id"])
             names[card_key] = (normal["name"], times[sp["group_id"]])
+
+    # Release Event stamps (CONTRACT.md): a printing on the set card its Number
+    # names, never a card of its own and never an observation. A Number that is
+    # no card of ours is refused and counted. The rarity is TCGplayer's,
+    # verbatim; where it differs from the card's en base printing it is counted.
+    en_rarity = defaultdict(set)
+    for p in store.recs["printing"].values():
+        if p["site"] == "en" and p["variant"] == "base":
+            en_rarity[p["card_key"]].add(p["rarity"])
+    for st in stamps:
+        card_key = store.card_by_number.get(st["number"])
+        if card_key is None:
+            counts["unmatched"].append(st["product_id"])
+            continue
+        if en_rarity.get(card_key) and st["rarity"] not in en_rarity[card_key]:
+            counts["rarity_disagreements"].append(st["product_id"])
+        dt = times[st["group_id"]]
+        loc_key = f"tcgcsv:{st['product_id']}:{st['sub_type']}"
+        prt = store.printing_key(loc_key)
+        printing = {"key": prt, "card_key": card_key, "site": "tcgcsv", "rarity": st["rarity"],
+                    "variant": st["variant"], "source_text": st["name"], "block_icon": None}
+        if st["has_image"]:
+            printing["image_url"] = tcgcsv.image_url(st["product_id"])
+        store.upsert("printing", printing, dt, counts)
+        store.upsert("printing_locator", {"key": loc_key, "printing_key": prt, "site": "tcgcsv",
+                                          "image_id": f"{st['product_id']}:{st['sub_type']}"}, dt, counts)
+        # One distribution per RE group, and the group's own listing as the claim.
+        # No starts_on or ends_on: tcgcsv is never a date source.
+        dist = model.mint("dist", f"tcgcsv|{st['group_name']}")
+        url = f"{tcgcsv.BASE}/{st['group_id']}/products"
+        put(store, "distribution", {"key": dist, "site": "tcgcsv", "region": "en", "kind": "event_pack",
+                                    "name": st["group_name"], "source_url": url}, counts)
+        put(store, "printing_distribution", {
+            "key": claim_key(prt, dist, "tcgcsv", url), "printing_key": prt, "distribution_key": dist,
+            "source": "tcgcsv", "source_url": url, "quote": st["group_name"], "confidence": "corroborated",
+            "observed_at": dt}, counts)
 
     # One observation per card: the normal product's name as TCGplayer lists it
     # (alyssa 87523). A rename supersedes it, the same as an erratum.
@@ -965,6 +1006,8 @@ def run(pageset, repo, sites=SITES, now=time.time):
         if site == "tcgcsv":
             run_rec["unpriced"] = len(c["unpriced"])
             run_rec["no_image"] = len(c["no_image"])
+            run_rec["unmatched"] = len(c["unmatched"])
+            run_rec["rarity_disagreements"] = len(c["rarity_disagreements"])
         errs = list(Draft202012Validator({"$schema": SCHEMA["$schema"], "$defs": SCHEMA["$defs"],
                                           "$ref": "#/$defs/ingest_run"}).iter_errors(run_rec))
         if errs:
@@ -1008,11 +1051,16 @@ def cn_line(r):
 
 def tcgcsv_line(r):
     run_rec = r["run"]
-    ids, bare = r["counts"]["unpriced"], r["counts"]["no_image"]
-    return (f"tcgcsv: product and price files read {run_rec['pages_fetched']}, DON products {run_rec['blocks_parsed']}, "
+    c = r["counts"]
+
+    def named(ids):
+        return f"{len(ids)}{' [' + ', '.join(map(str, ids)) + ']' if ids else ''}"
+    return (f"tcgcsv: product and price files read {run_rec['pages_fetched']}, DON products {c['dons']}, "
+            f"Release Event stamps {c['stamps']}, "
             f"added {run_rec['added']}, changed {run_rec['changed']}, refusals {run_rec['refusals']}, "
-            f"unpriced (refused, no key) {len(ids)}{' [' + ', '.join(map(str, ids)) + ']' if ids else ''}, "
-            f"no image yet {len(bare)}{' [' + ', '.join(map(str, bare)) + ']' if bare else ''}")
+            f"unpriced (refused, no key) {named(c['unpriced'])}, no image yet {named(c['no_image'])}, "
+            f"stamps on no card of ours (refused) {named(c['unmatched'])}, "
+            f"stamp rarity differs from the en base {named(c['rarity_disagreements'])}")
 
 
 def main(argv):

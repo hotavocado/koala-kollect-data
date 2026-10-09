@@ -1039,6 +1039,16 @@
               "required": [
                 "no_image"
               ]
+            },
+            {
+              "required": [
+                "unmatched"
+              ]
+            },
+            {
+              "required": [
+                "rarity_disagreements"
+              ]
             }
           ]
         }
@@ -1137,12 +1147,22 @@
           }
         },
         "unpriced": {
-          "description": "tcgcsv only. DON products with no price row, so no finish and no key: refused, never minted, and minted on the first run that sees a price row (upper 87490). The run line names them by productId.",
+          "description": "tcgcsv only. DON products and Release Event stamps with no price row, so no finish and no key: refused, never minted, and minted on the first run that sees a price row (upper 87490). The run line names them by productId.",
           "type": "integer",
           "minimum": 0
         },
         "no_image": {
-          "description": "tcgcsv only. DON products written this run with no image on TCGplayer (imageCount 0), so their printings carry no image_url yet. The run line names them by productId.",
+          "description": "tcgcsv only. DON products and Release Event stamps written this run with no image on TCGplayer (imageCount 0), so their printings carry no image_url yet. The run line names them by productId.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "unmatched": {
+          "description": "tcgcsv only. Release Event stamps whose Number is no card of ours: refused, never minted (CONTRACT.md, Release Event stamps). The run line names them by productId. Absent on runs before the stamps walker.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "rarity_disagreements": {
+          "description": "tcgcsv only. Release Event stamps written this run whose TCGplayer rarity differs from their card's en base printing. The stamp keeps TCGplayer's rarity verbatim; this counts where it differs. Absent on runs before the stamps walker.",
           "type": "integer",
           "minimum": 0
         },
