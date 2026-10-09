@@ -41,6 +41,12 @@ RARITY = {
     "超稀有（SR）": "SR", "SR": "SR",
     "隐藏稀有（SEC）": "SEC", "隐藏稀有（sec）": "SEC", "SEC": "SEC",
     "推广卡（P）": "P", "宣传（P）": "P", "P": "P",
+    "TR": "TR",  # treasure rare, as the Bandai sites print it (18 printings, 2026-10-08)
+}
+# Single rows where cn typed something else into the rarity field, keyed by cn
+# id and checked against the Bandai sites, the same way as CATEGORY_BY_ID.
+RARITY_BY_ID = {
+    5962: "C",  # ST29-012_01: rarity field reads 角色; every Bandai printing of ST29-012 is C, cn sibling 5961 reads C
 }
 CATEGORY = {"领袖": "leader", "角色": "character", "事件": "event", "舞台": "stage"}
 # Single rows where cn typed something else into the category field, keyed by
@@ -48,10 +54,26 @@ CATEGORY = {"领袖": "leader", "角色": "character", "事件": "event", "舞�
 # fuzzy match, so a new slip still stops the run.
 CATEGORY_BY_ID = {
     2932: "character",  # EB01-003P: category field reads 稀有（R）; jp EB01-003 is a character
+    # Prize promos whose category field holds the art style, 画师原创 (artist
+    # original) or 漫画 (manga), not a card type. The label is not kept: these
+    # rows are parallel by their image token already (upper 87424).
+    4056: "character",  # OP04-112 画师原创
+    4057: "character",  # OP07-119 漫画
+    4063: "character",  # OP03-116 画师原创
+    4064: "character",  # OP05-086 画师原创
+    4065: "character",  # OP07-109 漫画
 }
 CN_COLORS = {"红": "red", "绿": "green", "蓝": "blue", "紫": "purple", "黑": "black", "黄": "yellow"}
-ATTRIBUTES = {"斩": "slash", "打": "strike", "射": "ranged", "特": "special", "知": "wisdom"}
+# Leaders whose colour field reads 双色 ("two colours") and names neither,
+# keyed by cn id and checked against the Bandai sites.
+COLORS_BY_ID = {
+    6603: ["black", "yellow"],  # OP16-080_01
+    6778: ["red", "black"],     # OP13-004_02
+}
+# ？ is printed in place of an attribute (OP13-079 Imu); stored half-width, as on jp and tc.
+ATTRIBUTES = {"斩": "slash", "打": "strike", "射": "ranged", "特": "special", "知": "wisdom", "？": "?"}
 NO_VALUE = {None, "", "-"}
+POWER_NONE = {"0", "０"}
 
 # Product kind from the product name's leading word (47 products, 2026-10-08).
 # Longest prefix first: 特别补充包 and 豪华补充包 also start with 补充包's characters.
@@ -149,7 +171,9 @@ def source_text(info):
     return info.get("cardOfferType") or ""
 
 
-def rarity(raw):
+def rarity(raw, cn_id=None):
+    if cn_id in RARITY_BY_ID:
+        return RARITY_BY_ID[cn_id]
     if raw not in RARITY:
         raise ValueError(f"unknown cn rarity {raw!r}")
     return RARITY[raw]
@@ -200,10 +224,10 @@ def _num(raw, what):
 
 
 def counter(raw):
-    """cn prints a counter as 1000 or as 反击+1000 ("counter +1000")."""
+    """cn prints a counter as 1000 or as 反击+1000 ("counter +1000"), the plus half- or full-width."""
     if raw in NO_VALUE:
         return None
-    return _int(str(raw).removeprefix("反击+"), "counter")
+    return _int(re.sub(r"^反击[+＋]", "", str(raw)), "counter")
 
 
 def observation_fields(info):
@@ -218,15 +242,27 @@ def observation_fields(info):
         cat = CATEGORY[info["cardType"]]
     else:
         raise ValueError(f"unknown cn category {info.get('cardType')!r}")
+    # Two colours are joined by "/" or by 、 (OP14-041, id 5814: 蓝、黄).
+    if info.get("id") in COLORS_BY_ID:
+        colors = list(COLORS_BY_ID[info["id"]])
+    else:
+        colors = _split(re.split(r"[/、]", info.get("cardColor") or ""), CN_COLORS, "colour")
     rec = {"name": (info.get("cardName") or "").replace(MARKER, "").strip(), "category": cat,
-           "colors": _split((info.get("cardColor") or "").split("/"), CN_COLORS, "colour")}
+           "colors": colors}
     rec["life" if cat == "leader" else "cost"] = _num(info.get("cardLife"), "life/cost")
-    rec["power"] = _num(info.get("cardPower"), "power")
+    # cn prints 0 (or ０) where every Bandai site that has the card carries no
+    # power (152 cards, 252 details; 0 details read 0 on a card whose jp record
+    # has power, and no Bandai site ever records power 0), so it is cn's
+    # spelling of no power, not a zero (upper 87441/87442).
+    rec["power"] = None if info.get("cardPower") in POWER_NONE else _num(info.get("cardPower"), "power")
     rec["counter"] = counter(info.get("cardAttack"))
     # Events and stages have no attribute (0 of 459 on the four Bandai sites,
     # 2026-10-08), and cn's field on them is filler: "-", or the colour again
     # (OP02-067, id 1925: ["蓝"]). Read it on leaders and characters only.
+    # Two attributes come as two elements, or as one joined by "/" (EB02-035,
+    # id 4411: ["打/知"]).
     raw_attrs = (info.get("cardAttribute") or []) if cat in ("leader", "character") else []
+    raw_attrs = [a for part in raw_attrs for a in (part.split("/") if isinstance(part, str) else [part])]
     rec["attributes"] = _split(raw_attrs, ATTRIBUTES, "attribute")
     # Types are split on "/", and on "," where cn typed one (6 of the first 742
     # details: 纯毛族,和之国/赤鞘九人男). A space is part of a name (GERMA 66).

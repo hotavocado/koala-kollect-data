@@ -586,7 +586,7 @@ def run_cn(store, cn_dir, state):
                 variant = cnmodel.variant(token, img, marker)
                 source_text = cnmodel.source_text(info)
                 printing = {"key": prt, "card_key": store.card_key(base), "site": "cn",
-                            "rarity": cnmodel.rarity(info.get("cardRarity")), "variant": variant,
+                            "rarity": cnmodel.rarity(info.get("cardRarity"), r["id"]), "variant": variant,
                             "image_url": url, "source_text": source_text,
                             "block_icon": cnmodel.block_icon(info.get("subscript"))}
             except ValueError as ex:

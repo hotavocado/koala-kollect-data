@@ -328,14 +328,29 @@ key built from the site and the number would make them one printing; a test
 runs the pair through a run and a re-run and asserts both survive.
 
 **Facts.** Rarity maps cn's labels to the Bandai codes (推广卡（P）, 宣传（P）
-and a bare P are all `P`; 罕见（U） is `UC`; 隐藏稀有 is `SEC` in either case).
-`cardLife` is life on a leader and cost on everything else; `cardAttack` is
-the counter (`1000` or `反击+1000`). The attribute field is read on leaders and
-characters only, because on events and stages cn fills it with `-` or the
-colour again (OP02-067, id 1925). Types split on `/`, and on `,` where cn typed
-one. One row typed its rarity into the category field (EB01-003P, id 2932);
-it is excused by id, checked against jp, and never by a lenient match, so a new
-slip still stops the run. `subscript` is the block icon.
+and a bare P are all `P`; 罕见（U） is `UC`; 隐藏稀有 is `SEC` in either case;
+`TR` stays `TR`, as the Bandai sites print it). `cardLife` is life on a leader
+and cost on everything else; `cardAttack` is the counter (`1000`, or `反击+1000`
+with the plus half- or full-width). Two colours are joined by `/` or by `、`.
+The attribute field is read on leaders and characters only, because on events
+and stages cn fills it with `-` or the colour again (OP02-067, id 1925); two
+attributes come as two elements or as one joined by `/` (`打/知`), and `？`
+is stored as `?`, as on jp and tc. Types split on `/`, and on `,` where cn
+typed one. cn prints a power of `0` (or `０`) where no Bandai site that has the
+card carries a power: 152 cards and 252 details on 2026-10-09, none of them on
+a card whose jp record has a power, and no Bandai site records a power of 0.
+So `0` is cn's spelling of no power and is omitted, not written as zero (upper
+87441). Numbers read any Unicode decimal digit (`１０００` is 1000); a digit
+`int()` cannot read is refused.
+
+A few rows typed something else into a field, and each is excused by its cn
+id, checked against the card on the Bandai sites, never by a lenient match, so
+a new slip still stops the run: a rarity in the category field (EB01-003P, id
+2932); the art style (`cardCartograph`, 画师原创 or 漫画) in the category field
+on five prize promos (ids 4056, 4057, 4063, 4064, 4065), all characters; 双色
+("two colours") naming neither colour on two leaders (ids 6603, 6778); and the
+category 角色 in the rarity field (ST29-012, id 5962, `C`). `subscript` is the
+block icon.
 
 **Source text.** `source_text` is the detail's `type` when it names something
 (the promo pack: 特别宣传包Vol.2), and the product name otherwise. On some
