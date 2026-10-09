@@ -15,9 +15,12 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
+import cn
 import daily
+import fetch
 import products
 import run
+import tcgcsv
 from test_run import FIX, SID, T1, T2, without
 
 LABEL = "BOOSTER PACK -THE WORLD’S STRONGEST WARRIORS- [OP-17]"
@@ -326,6 +329,44 @@ class WorkflowOutputs(Harness, unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertTrue(out.endswith("new_series=true\n"), out)
         self.assertIn("title: New series on the official card list: FAKE SET [XX-99]", printed)
+
+
+class Don(Harness, unittest.TestCase):
+    """The tcgcsv step inside the daily run: its changes count, a failed fetch fails the day."""
+
+    def fetcher(self, pageset, sites, repo=None):
+        out = super().fetcher(pageset, sites, repo)
+        import test_tcgcsv
+        g, p, pr = test_tcgcsv.fixture()
+        d = Path(pageset) / "tcgcsv"
+        for gid, rows in p.items():
+            tcgcsv._write(d / "products" / f"{gid}.json", {"fetched_at": self.t, "products": rows})
+        for gid, rows in pr.items():
+            tcgcsv._write(d / "prices" / f"{gid}.json", {"fetched_at": self.t, "prices": rows})
+        tcgcsv._write(d / "_groups.json", {"fetched_at": self.t, "groups": g})
+        return out
+
+    def test_don_lands_and_names_the_unpriced(self):
+        code, s = self.go()
+        self.assertEqual((code, s["changed"]), (0, True), s["failures"])
+        self.assertEqual(s["tcgcsv_run"]["unpriced"], 2)
+        self.assertEqual(s["tcgcsv_run"]["unpriced_ids"], [561656, 619595])
+        self.assertTrue((self.repo / "data" / "printings" / "tcgcsv.jsonl").exists())
+
+    def test_no_change_day(self):
+        self.go()
+        self.t = T2
+        code, s = self.go()
+        self.assertEqual((code, s["changed"]), (0, False), s["failures"])
+        self.assertEqual((s["tcgcsv_run"]["added"], s["tcgcsv_run"]["changed"]), (0, 0))
+
+    def test_a_failed_tcgcsv_fetch_fails_the_day(self):
+        with mock.patch.object(fetch, "fetch_site", side_effect=AssertionError("no Bandai site in this control")), \
+                mock.patch.object(cn, "fetch_pageset", return_value=[]), \
+                mock.patch.object(tcgcsv, "fetch_pageset", side_effect=RuntimeError("503")), \
+                contextlib.redirect_stdout(io.StringIO()):
+            failures = daily.fetch_all(self.pages, [], self.repo)
+        self.assertEqual(failures, ["tcgcsv: fetch failed: RuntimeError: 503"])
 
 
 if __name__ == "__main__":

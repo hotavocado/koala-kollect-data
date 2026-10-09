@@ -1,0 +1,485 @@
+{
+ "groups": [
+  {
+   "groupId": 17659,
+   "name": "ST-01: Starter Deck 1 Straw Hat Crew (Super Pre-Release Edition)",
+   "abbreviation": "ST-01 PRE",
+   "isSupplemental": false,
+   "publishedOn": "2022-09-30T00:00:00",
+   "modifiedOn": "2026-10-08T15:49:40.697",
+   "categoryId": 68
+  },
+  {
+   "groupId": 17675,
+   "name": "One Piece Promotion Cards",
+   "abbreviation": "OP-PR",
+   "isSupplemental": false,
+   "publishedOn": "2022-09-30T00:00:00",
+   "modifiedOn": "2026-10-07T11:39:13.607",
+   "categoryId": 68
+  },
+  {
+   "groupId": 23496,
+   "name": "Premium Booster -The Best-",
+   "abbreviation": "PRB-01",
+   "isSupplemental": false,
+   "publishedOn": "2024-11-08T00:00:00",
+   "modifiedOn": "2026-02-06T14:23:33.453",
+   "categoryId": 68
+  },
+  {
+   "groupId": 24664,
+   "name": "The Time of Battle",
+   "abbreviation": "OP16",
+   "isSupplemental": false,
+   "publishedOn": "2026-06-12T00:00:00",
+   "modifiedOn": "2026-08-12T15:26:22.413",
+   "categoryId": 68
+  }
+ ],
+ "products": {
+  "17659": [
+   {
+    "productId": 434340,
+    "name": "DON!! Card",
+    "cleanName": "DON Card",
+    "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/434340_200w.jpg",
+    "categoryId": 68,
+    "groupId": 17659,
+    "url": "https://www.tcgplayer.com/product/434340/one-piece-card-game-st-01-starter-deck-1-straw-hat-crew-super-pre-release-edition-don-card",
+    "modifiedOn": "2022-10-13T19:38:10.043",
+    "imageCount": 1,
+    "presaleInfo": {
+     "isPresale": false,
+     "releasedOn": null,
+     "note": null
+    },
+    "extendedData": [
+     {
+      "name": "Rarity",
+      "displayName": "Rarity",
+      "value": "DON!!"
+     },
+     {
+      "name": "Description",
+      "displayName": "Description",
+      "value": "Your Turn +1000"
+     },
+     {
+      "name": "CardType",
+      "displayName": "Card Type",
+      "value": "DON!!"
+     }
+    ]
+   }
+  ],
+  "17675": [
+   {
+    "productId": 482236,
+    "name": "DON!! Card (Gold)",
+    "cleanName": "DON Card Gold",
+    "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/482236_200w.jpg",
+    "categoryId": 68,
+    "groupId": 17675,
+    "url": "https://www.tcgplayer.com/product/482236/one-piece-card-game-one-piece-promotion-cards-don-card-gold",
+    "modifiedOn": "2023-04-17T13:25:04.79",
+    "imageCount": 1,
+    "presaleInfo": {
+     "isPresale": false,
+     "releasedOn": null,
+     "note": null
+    },
+    "extendedData": [
+     {
+      "name": "Rarity",
+      "displayName": "Rarity",
+      "value": "PR"
+     },
+     {
+      "name": "Description",
+      "displayName": "Description",
+      "value": "Your Turn +1000"
+     },
+     {
+      "name": "CardType",
+      "displayName": "Card Type",
+      "value": "DON!!"
+     }
+    ]
+   },
+   {
+    "productId": 482237,
+    "name": "DON!! Card (Red)",
+    "cleanName": "DON Card Red",
+    "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/482237_200w.jpg",
+    "categoryId": 68,
+    "groupId": 17675,
+    "url": "https://www.tcgplayer.com/product/482237/one-piece-card-game-one-piece-promotion-cards-don-card-red",
+    "modifiedOn": "2023-04-18T12:37:13.177",
+    "imageCount": 1,
+    "presaleInfo": {
+     "isPresale": false,
+     "releasedOn": null,
+     "note": null
+    },
+    "extendedData": [
+     {
+      "name": "Rarity",
+      "displayName": "Rarity",
+      "value": "PR"
+     },
+     {
+      "name": "Description",
+      "displayName": "Description",
+      "value": "Your Turn +1000"
+     },
+     {
+      "name": "CardType",
+      "displayName": "Card Type",
+      "value": "DON!!"
+     }
+    ]
+   },
+   {
+    "productId": 561656,
+    "name": "DON!! Card (Monkey.D.Luffy) (2023 World Championship Finals)",
+    "cleanName": "DON Card MonkeyDLuffy 2023 World Championship Finals",
+    "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/561656_200w.jpg",
+    "categoryId": 68,
+    "groupId": 17675,
+    "url": "https://www.tcgplayer.com/product/561656/one-piece-card-game-one-piece-promotion-cards-don-card-monkeydluffy-2023-world-championship-finals",
+    "modifiedOn": "2024-07-30T19:40:16.563",
+    "imageCount": 1,
+    "presaleInfo": {
+     "isPresale": false,
+     "releasedOn": null,
+     "note": null
+    },
+    "extendedData": [
+     {
+      "name": "Rarity",
+      "displayName": "Rarity",
+      "value": "PR"
+     },
+     {
+      "name": "CardType",
+      "displayName": "Card Type",
+      "value": "DON!!"
+     }
+    ]
+   },
+   {
+    "productId": 619595,
+    "name": "DON!! Card (Championship 2024 World Final)",
+    "cleanName": "DON Card Championship 2024 World Final",
+    "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/619595_200w.jpg",
+    "categoryId": 68,
+    "groupId": 17675,
+    "url": "https://www.tcgplayer.com/product/619595/one-piece-card-game-one-piece-promotion-cards-don-card-championship-2024-world-final",
+    "modifiedOn": "2025-03-17T18:58:20.43",
+    "imageCount": 1,
+    "presaleInfo": {
+     "isPresale": false,
+     "releasedOn": null,
+     "note": null
+    },
+    "extendedData": [
+     {
+      "name": "Rarity",
+      "displayName": "Rarity",
+      "value": "DON!!"
+     },
+     {
+      "name": "Description",
+      "displayName": "Description",
+      "value": "Your Turn +1000"
+     },
+     {
+      "name": "CardType",
+      "displayName": "Card Type",
+      "value": "DON!!"
+     }
+    ]
+   },
+   {
+    "productId": 683969,
+    "name": "DON!! Card (Netflix Tony Tony.Chopper)",
+    "cleanName": "DON Card Netflix Tony TonyChopper",
+    "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/683969_200w.jpg",
+    "categoryId": 68,
+    "groupId": 17675,
+    "url": "https://www.tcgplayer.com/product/683969/one-piece-card-game-one-piece-promotion-cards-don-card-netflix-tony-tonychopper",
+    "modifiedOn": "2026-03-31T13:12:00.15",
+    "imageCount": 1,
+    "presaleInfo": {
+     "isPresale": false,
+     "releasedOn": null,
+     "note": null
+    },
+    "extendedData": [
+     {
+      "name": "Rarity",
+      "displayName": "Rarity",
+      "value": "PR"
+     },
+     {
+      "name": "Description",
+      "displayName": "Description",
+      "value": "Your Turn +1000"
+     },
+     {
+      "name": "CardType",
+      "displayName": "Card Type",
+      "value": "DON!!"
+     }
+    ]
+   }
+  ],
+  "23496": [
+   {
+    "productId": 586178,
+    "name": "Monkey.D.Luffy (OP01-024) (Alternate Art)",
+    "cleanName": "MonkeyDLuffy OP01 024 Alternate Art",
+    "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/586178_200w.jpg",
+    "categoryId": 68,
+    "groupId": 23496,
+    "url": "https://www.tcgplayer.com/product/586178/one-piece-card-game-premium-booster-the-best-monkeydluffy-op01-024-alternate-art",
+    "modifiedOn": "2024-11-17T15:23:21.553",
+    "imageCount": 1,
+    "presaleInfo": {
+     "isPresale": false,
+     "releasedOn": null,
+     "note": null
+    },
+    "extendedData": [
+     {
+      "name": "Rarity",
+      "displayName": "Rarity",
+      "value": "SR"
+     },
+     {
+      "name": "Number",
+      "displayName": "Number",
+      "value": "OP01-024"
+     },
+     {
+      "name": "Description",
+      "displayName": "Description",
+      "value": "[DON!! x2] This Character cannot be K.O.'d in battle by \"Strike\" attribute Characters.\r\n<br>\r\n<br>\r\n<br>\r\n[Activate:Main] [Once Per Turn] Give this Character up to 2 rested DON!! cards."
+     },
+     {
+      "name": "Color",
+      "displayName": "Color",
+      "value": "Red"
+     },
+     {
+      "name": "CardType",
+      "displayName": "Card Type",
+      "value": "Character"
+     },
+     {
+      "name": "Cost",
+      "displayName": "Cost",
+      "value": "2"
+     },
+     {
+      "name": "Power",
+      "displayName": "Power",
+      "value": "3000"
+     },
+     {
+      "name": "Subtypes",
+      "displayName": "Subtype(s)",
+      "value": "Straw Hat Crew;Supernovas"
+     },
+     {
+      "name": "Counterplus",
+      "displayName": "Counter+",
+      "value": "1000"
+     },
+     {
+      "name": "Attribute",
+      "displayName": "Attribute",
+      "value": "Strike"
+     }
+    ]
+   },
+   {
+    "productId": 586181,
+    "name": "DON!! Card (Uta) (Gold)",
+    "cleanName": "DON Card Uta Gold",
+    "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/586181_200w.jpg",
+    "categoryId": 68,
+    "groupId": 23496,
+    "url": "https://www.tcgplayer.com/product/586181/one-piece-card-game-premium-booster-the-best-don-card-uta-gold",
+    "modifiedOn": "2024-11-12T20:57:31.537",
+    "imageCount": 1,
+    "presaleInfo": {
+     "isPresale": false,
+     "releasedOn": null,
+     "note": null
+    },
+    "extendedData": [
+     {
+      "name": "Rarity",
+      "displayName": "Rarity",
+      "value": "DON!!"
+     },
+     {
+      "name": "Description",
+      "displayName": "Description",
+      "value": "Your Turn +1000"
+     },
+     {
+      "name": "CardType",
+      "displayName": "Card Type",
+      "value": "DON!!"
+     }
+    ]
+   },
+   {
+    "productId": 593826,
+    "name": "DON!! Card (Uta)",
+    "cleanName": "DON Card Uta",
+    "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/593826_200w.jpg",
+    "categoryId": 68,
+    "groupId": 23496,
+    "url": "https://www.tcgplayer.com/product/593826/one-piece-card-game-premium-booster-the-best-don-card-uta",
+    "modifiedOn": "2024-11-12T19:46:17.813",
+    "imageCount": 1,
+    "presaleInfo": {
+     "isPresale": false,
+     "releasedOn": null,
+     "note": null
+    },
+    "extendedData": [
+     {
+      "name": "Rarity",
+      "displayName": "Rarity",
+      "value": "DON!!"
+     },
+     {
+      "name": "Description",
+      "displayName": "Description",
+      "value": "Your Turn +1000"
+     },
+     {
+      "name": "CardType",
+      "displayName": "Card Type",
+      "value": "DON!!"
+     }
+    ]
+   }
+  ],
+  "24664": [
+   {
+    "productId": 701593,
+    "name": "Special DON!! Card Pack DP-11",
+    "cleanName": "Special DON Card Pack DP 11",
+    "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/701593_200w.jpg",
+    "categoryId": 68,
+    "groupId": 24664,
+    "url": "https://www.tcgplayer.com/product/701593/one-piece-card-game-the-time-of-battle-special-don-card-pack-dp-11",
+    "modifiedOn": "2026-06-20T13:23:01.533",
+    "imageCount": 1,
+    "presaleInfo": {
+     "isPresale": false,
+     "releasedOn": null,
+     "note": null
+    },
+    "extendedData": []
+   }
+  ]
+ },
+ "prices": {
+  "17659": [
+   {
+    "productId": 434340,
+    "lowPrice": 1.62,
+    "midPrice": 3.23,
+    "highPrice": 15.99,
+    "marketPrice": 2.97,
+    "directLowPrice": null,
+    "subTypeName": "Normal"
+   }
+  ],
+  "17675": [
+   {
+    "productId": 482236,
+    "lowPrice": 5.06,
+    "midPrice": 7.25,
+    "highPrice": 50.0,
+    "marketPrice": 7.12,
+    "directLowPrice": null,
+    "subTypeName": "Foil"
+   },
+   {
+    "productId": 482237,
+    "lowPrice": 37.33,
+    "midPrice": 54.69,
+    "highPrice": 375.98,
+    "marketPrice": 59.12,
+    "directLowPrice": null,
+    "subTypeName": "Foil"
+   },
+   {
+    "productId": 683969,
+    "lowPrice": 24.89,
+    "midPrice": 29.99,
+    "highPrice": 65.0,
+    "marketPrice": 26.54,
+    "directLowPrice": null,
+    "subTypeName": "Normal"
+   }
+  ],
+  "23496": [
+   {
+    "productId": 586178,
+    "lowPrice": 45.0,
+    "midPrice": 64.57,
+    "highPrice": 500.0,
+    "marketPrice": 64.57,
+    "directLowPrice": null,
+    "subTypeName": "Foil"
+   },
+   {
+    "productId": 586181,
+    "lowPrice": 167.49,
+    "midPrice": 193.38,
+    "highPrice": 208.95,
+    "marketPrice": 165.7,
+    "directLowPrice": null,
+    "subTypeName": "Foil"
+   },
+   {
+    "productId": 593826,
+    "lowPrice": 1.44,
+    "midPrice": 2.47,
+    "highPrice": 25.0,
+    "marketPrice": 1.96,
+    "directLowPrice": null,
+    "subTypeName": "Normal"
+   },
+   {
+    "productId": 593826,
+    "lowPrice": 7.99,
+    "midPrice": 14.78,
+    "highPrice": 29.99,
+    "marketPrice": 8.79,
+    "directLowPrice": null,
+    "subTypeName": "Foil"
+   }
+  ],
+  "24664": [
+   {
+    "productId": 701593,
+    "lowPrice": 4.75,
+    "midPrice": 6.17,
+    "highPrice": 12.5,
+    "marketPrice": 5.85,
+    "directLowPrice": null,
+    "subTypeName": "Normal"
+   }
+  ]
+ }
+}
