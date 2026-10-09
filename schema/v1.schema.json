@@ -834,6 +834,10 @@
           "region": {
             "description": "TCGplayer is a North American catalogue (CONTRACT, Release dates), so a tcgcsv distribution is region en.",
             "const": "en"
+          },
+          "kind": {
+            "description": "A tcgcsv distribution is one TCGplayer Release Event group, so it is an event_pack (codex, PR 17). Pre-Release groups are out of scope; admitting them is a change here.",
+            "const": "event_pack"
           }
         }
       }

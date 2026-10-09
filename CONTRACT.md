@@ -166,7 +166,9 @@ cards in 7 TCGplayer groups whose abbreviation ends ` RE` (OP10 24068, OP11
   observation DON-only). A Number that matches no card is refused and counted,
   never minted.
 - **Locator.** Unchanged from DON: `tcgcsv:{productId}:{subType}`. All 554
-  price Normal only, so every locator ends `:Normal`.
+  price Normal only, so every locator ends `:Normal`; `scripts/check.py`
+  refuses a stamped printing on any other finish (a cross-record check, since
+  a locator does not carry its printing's variant).
 - **Variant `stamped`.** A stamp's printing is `stamped` and nothing else, and
   `stamped` is tcgcsv-only: the schema refuses it on every official site's
   printing, and refuses it on a DON. A tcgcsv printing is therefore a DON
@@ -183,7 +185,7 @@ cards in 7 TCGplayer groups whose abbreviation ends ` RE` (OP10 24068, OP11
 - **No dates.** A stamped printing and its claim carry no date. tcgcsv is
   never a date source (Release dates above), and that holds here too.
 - **One distribution per RE group.** `site` `tcgcsv`, `region` `en` (TCGplayer
-  is North American; the schema pins it), `kind` `event_pack`, `name` the
+  is North American), `kind` `event_pack` (the schema pins both), `name` the
   group's name verbatim ("The World's Strongest Warriors Release Event
   Cards"). Its key is minted from `tcgcsv|{group name}`.
 - **One claim per stamped printing.** `source` `tcgcsv`, `source_url`

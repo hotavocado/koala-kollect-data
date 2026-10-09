@@ -5,8 +5,8 @@ path is one the app sync accepts; every data file is listed in the manifest and
 every listed file exists with its sha256 and row count; LF, trailing newline,
 lines sorted by unique key, object keys in schema order; every record valid for
 its type; no HTML tag or entity left in any string, however nested; every
-field the schema types as a reference resolves to a row of that type; and no
-retired printing is also a live one.
+field the schema types as a reference resolves to a row of that type; no
+retired printing is also a live one; and a stamped printing's locator is Normal.
 """
 import hashlib
 import json
@@ -90,6 +90,8 @@ def check_data(root, schema):
             if field in rec and rec[field] not in keys[target]:
                 errors.append(f"{path}:{i}: {field} {rec[field]} has no {target} row")
     errors += retired_errors(keys["printing"], [rec for _, _, rtype, rec in records if rtype == "retired_printing"])
+    errors += stamped_finish_errors([rec for _, _, rtype, rec in records if rtype == "printing"],
+                                    [rec for _, _, rtype, rec in records if rtype == "printing_locator"])
     return errors
 
 
@@ -106,6 +108,19 @@ def retired_errors(printing_keys, retired):
         if rec.get("printing_key") in printing_keys:
             out.append(f"retired_printing {rec.get('printing_key')}: also a live printing")
     return out
+
+
+def stamped_finish_errors(printings, locators):
+    """A stamped printing's locator ends :Normal.
+
+    Every Release Event stamp prices Normal only (554 of 554, 2026-10-09) and a
+    stamp priced Foil stops the walker (CONTRACT, Release Event stamps). The
+    schema cannot see this, because a locator does not carry its printing's
+    variant (codex, PR 17).
+    """
+    stamped = {rec["key"] for rec in printings if rec.get("variant") == "stamped"}
+    return [f"printing_locator {rec.get('key')}: stamped printing {rec['printing_key']} on a finish other than Normal"
+            for rec in locators if rec.get("printing_key") in stamped and not rec.get("image_id", "").endswith(":Normal")]
 
 
 def strings(val):

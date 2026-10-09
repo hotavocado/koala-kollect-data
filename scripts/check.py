@@ -5,7 +5,7 @@ from jsonschema import Draft202012Validator
 
 sys.path.insert(0, str(Path(__file__).parent))
 from image_id import parse_image_id
-from data_check import check_data, retired_errors
+from data_check import check_data, retired_errors, stamped_finish_errors
 from tcgcsv_check import check as tcgcsv_check
 
 root = Path(__file__).resolve().parent.parent
@@ -104,6 +104,16 @@ for why, live, rec in [
     else:
         bad += 1
         print("FAIL control passed:", why)
+
+# Control: a stamped printing on a Foil locator, and its Normal twin passing.
+stamp = [{"key": "prt_op17002stamp", "variant": "stamped"}]
+foil = [{"key": "tcgcsv:712666:Foil", "printing_key": "prt_op17002stamp", "image_id": "712666:Foil"}]
+normal = [{"key": "tcgcsv:712666:Normal", "printing_key": "prt_op17002stamp", "image_id": "712666:Normal"}]
+if stamped_finish_errors(stamp, foil) and not stamped_finish_errors(stamp, normal):
+    print("ok   red   a stamped printing on a Foil locator")
+else:
+    bad += 1
+    print("FAIL control: a stamped printing on a Foil locator")
 
 # The data itself, when the ingest has written any: manifest, files, schema, references.
 data_errors = check_data(root, schema)
