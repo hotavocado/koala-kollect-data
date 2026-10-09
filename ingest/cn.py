@@ -12,6 +12,7 @@ time is unmeasured; the ingest snapshots it and diffs later runs.
 import json
 import time
 import urllib.request
+from pathlib import Path
 
 BASE = "https://webadmin.windoent.com/front/op-public"
 UA = "Mozilla/5.0 (compatible; koala-kollect-ingest/0.1; +https://github.com/hotavocado/koala-kollect-data)"
@@ -52,3 +53,41 @@ def products():
 
 def card_types():
     return _get("cardType/cardtype/cachelist")["list"]
+
+
+def _utc():
+    return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+
+
+def _write(path, obj):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(".tmp")
+    tmp.write_text(json.dumps(obj, ensure_ascii=False), "utf-8")
+    tmp.replace(path)
+
+
+def fetch_pageset(cn_dir, known_ids, pause=1.0):
+    """Write the cn page set: the list, the products and a detail for every listed id not in known_ids.
+
+    cn_dir/_list.json      {"fetched_at", "rows"}
+    cn_dir/_products.json  {"fetched_at", "products"}
+    cn_dir/detail/{id}.json {"fetched_at", "info"}
+    A detail already on disk is kept, so a re-run after a failure fetches only
+    what is missing. Returns the failures; any one fails the daily run.
+    """
+    cn_dir = Path(cn_dir)
+    t = _utc()
+    rows = list_all(pause=pause)
+    _write(cn_dir / "_list.json", {"fetched_at": t, "rows": rows})
+    _write(cn_dir / "_products.json", {"fetched_at": _utc(), "products": products()})
+    failures = []
+    for r in rows:
+        out = cn_dir / "detail" / f"{r['id']}.json"
+        if r["id"] in known_ids or out.exists():
+            continue
+        try:
+            _write(out, {"fetched_at": _utc(), "info": detail(r["id"])})
+        except Exception as e:  # noqa: BLE001  one failed id is one failure, the rest still fetch
+            failures.append(f"cn: detail {r['id']} failed: {type(e).__name__}: {e}")
+        time.sleep(pause)
+    return failures

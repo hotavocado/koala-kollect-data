@@ -29,6 +29,24 @@ def index(*options):
     return f'<select name="series"><option value="">ALL</option>{opts}</select>'
 
 
+CN_PRODUCT = {"id": 68, "name": "补充包 冒险的黎明【OPC-01】"}
+
+
+def cn_pageset(d, rows, t):
+    """cn.fetch_pageset-shaped output: the list, one product, and a detail for every row."""
+    (d / "detail").mkdir(parents=True, exist_ok=True)
+    full = [{"id": i, "cardImg": f"https://source.windoent.com/OnePiecePc/Picture/1{num}.png",
+             "cardOfferType": CN_PRODUCT["name"], "cardNumber": num} for i, num in rows]
+    (d / "_list.json").write_text(json.dumps({"fetched_at": t, "rows": full}, ensure_ascii=False), "utf-8")
+    (d / "_products.json").write_text(json.dumps({"fetched_at": t, "products": [CN_PRODUCT]}, ensure_ascii=False), "utf-8")
+    for i, num in rows:
+        info = {"id": i, "cardNumber": num, "cardName": "罗罗诺亚·佐罗", "cardType": "领袖", "cardRarity": "领袖（L）",
+                "cardOfferType": CN_PRODUCT["name"], "cardLife": "5", "cardAttribute": ["斩"], "cardColor": "红",
+                "cardPower": "5000", "cardAttack": "-", "cardFeatures": "超新星/草帽一伙", "cardTextDesc": "-",
+                "cardTrigger": None, "subscript": 1}
+        (d / "detail" / f"{i}.json").write_text(json.dumps({"fetched_at": t, "info": info}, ensure_ascii=False), "utf-8")
+
+
 class Harness:
     def setUp(self):
         self.tmp = Path(tempfile.mkdtemp())
@@ -37,7 +55,7 @@ class Harness:
         self.clock = itertools.count(1_791_331_200)
         self.page, self.t, self.status = FIX, T1, 200
         self.sid, self.options = SID, [(SID, LABEL)]
-        self.cn_rows, self.fetch_failures = None, []
+        self.cn_rows, self.cn_t, self.fetch_failures = None, None, []
         self.with_products = True
 
     def tearDown(self):
@@ -65,11 +83,12 @@ class Harness:
             (out / "pages" / products.page_file(href)).write_text(f'<a href="../../cardlist/?series={self.sid}">', "utf-8")
             (out / "_log.json").write_text(json.dumps({"site": "en", "index": [{"page": 1, "status": 200, "fetched_at": self.t}],
                                                       "pages": [{"href": href, "status": 200, "fetched_at": self.t}]}))
-        return list(self.fetch_failures) + ([f"en:{self.sid} fetch failed: HTTPError: 503"] if self.status != 200 else []), \
-            self.cn_rows
+        if self.cn_rows is not None:
+            cn_pageset(Path(pageset) / "cn", self.cn_rows, self.cn_t or self.t)
+        return list(self.fetch_failures) + ([f"en:{self.sid} fetch failed: HTTPError: 503"] if self.status != 200 else [])
 
-    def runner(self, pageset, repo, sites, cn_rows):
-        return run.run(pageset, repo, sites, cn_rows, now=lambda: float(next(self.clock)))
+    def runner(self, pageset, repo, sites):
+        return run.run(pageset, repo, sites, now=lambda: float(next(self.clock)))
 
     def go(self, **kw):
         kw.setdefault("runner", self.runner)
@@ -105,12 +124,29 @@ class CommitPredicate(Harness, unittest.TestCase):
         code, s = self.go()
         self.assertEqual((code, s["changed"], s["sites"]["en"]["removed"]), (0, True, 1))
 
-    def test_control_a_cn_snapshot_move_alone_is_a_change(self):
-        self.cn_rows = [{"id": 1, "cardNumber": "OP01-001"}]
+    def test_control_a_new_cn_id_is_a_change(self):
+        self.cn_rows = [(1, "OP01-001")]
         self.go()
-        self.cn_rows, self.t = [{"id": 1, "cardNumber": "OP01-001"}, {"id": 2, "cardNumber": "OP01-002"}], T2
+        self.cn_rows, self.t = [(1, "OP01-001"), (2, "OP01-001P")], T2
         code, s = self.go()
-        self.assertEqual((code, s["changed"], s["cn"]["added"]), (0, True, 1))
+        self.assertEqual((code, s["changed"], s["cn"]["added"], s["cn_run"]["added"] > 0), (0, True, 1, True))
+
+    def test_a_cn_day_with_no_new_id_does_not_commit(self):
+        self.cn_rows = [(1, "OP01-001")]
+        self.go()
+        self.t = T2
+        code, s = self.go()
+        self.assertEqual((code, s["changed"]), (0, False))
+
+    def test_an_older_cn_list_stops_the_run(self):
+        # The stale guard: a cn list fetched before the committed one is a replay.
+        # Only cn goes back; en stays current, so its own replay guard cannot be what fires.
+        self.cn_rows, self.t = [(1, "OP01-001")], T2
+        self.go()
+        self.cn_t = T1
+        code, s = self.go()
+        self.assertEqual((code, s["ok"]), (1, False))
+        self.assertTrue(any("cn list fetched" in f and "older than the data" in f for f in s["failures"]), s["failures"])
 
 
 class FailsLoudly(Harness, unittest.TestCase):
@@ -251,8 +287,8 @@ class WorkflowOutputs(Harness, unittest.TestCase):
         gh_out = self.tmp / "gh_output"
         argv = ["daily.py", str(self.pages), str(self.repo), "en", "--out", str(self.out), *extra]
         real_run = run.run  # captured before the patch: the stand-in calls the real one with a fixed clock
-        stand_in = lambda pageset, repo, sites, cn_rows: real_run(  # noqa: E731
-            pageset, repo, sites, cn_rows, now=lambda: float(next(self.clock)))
+        stand_in = lambda pageset, repo, sites: real_run(  # noqa: E731
+            pageset, repo, sites, now=lambda: float(next(self.clock)))
         with mock.patch.object(daily, "fetch_all", self.fetcher), \
                 mock.patch.object(run, "run", stand_in), \
                 mock.patch.dict(os.environ, {"GITHUB_OUTPUT": str(gh_out)}), \

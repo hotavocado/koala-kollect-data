@@ -1,6 +1,6 @@
 """Step 3: identity, upsert, ingest_run and the removal guard. Writes the data repo.
 
-usage: python run.py <pageset_dir> <data_repo> [site ...] [--cn-list FILE]
+usage: python run.py <pageset_dir> <data_repo> [site ...]
 
 <pageset_dir> is fetch.py's output: {site}/_index.html, {site}/{series_id}.html
 and {site}/_fetch_log.json. Every timestamp written under data/ is a page's own
@@ -24,6 +24,8 @@ Rules (CONTRACT.md):
 - Each promo printing's distribution mints from its card-list source_text, with
   an authoritative claim; the event and topic pages ({site}/events/_log.json)
   add one claim per printing, distribution and page (CONTRACT.md, Promo origin).
+- cn comes from cn/ in the page set when it is there (cn.fetch_pageset): the
+  list, the products and a detail per id the store lacks (run_cn, CONTRACT.md cn).
 """
 import argparse
 import hashlib
@@ -36,6 +38,7 @@ from pathlib import Path
 
 from jsonschema import Draft202012Validator
 
+import cnmodel
 import events
 import model
 import products
@@ -44,7 +47,7 @@ from bandai import independent_count, parse_page
 ROOT = Path(__file__).resolve().parent.parent
 SCHEMA = json.loads((ROOT / "schema/v1.schema.json").read_text("utf-8"))
 SITES = ["en", "asia-en", "jp", "tc"]
-REGION = {"en": "en", "asia-en": "asia", "jp": "jp", "tc": "asia"}
+REGION = {"en": "en", "asia-en": "asia", "jp": "jp", "tc": "asia", "cn": "cn"}
 FACTS_ORDER = ["jp", "en", "asia-en", "tc", "cn"]
 ARMS = ["http_error", "zero_parse", "count_drop", "count_mismatch"]
 DROP_FLOOR = 0.9
@@ -317,6 +320,7 @@ def link_site(store, site, counts):
     """
     by_name = defaultdict(list)
     prods = store.recs["product"]
+    cn_ids = {r["printing_key"]: r["image_id"] for r in store.recs["printing_locator"].values() if r["site"] == "cn"}
     for pp in sorted(store.recs["printing_product"].values(), key=lambda r: r["key"]):
         prod = prods.get(pp["product_key"])
         if "removed_at" in pp or prod is None or prod["site"] != site or prod["kind"] != "promo_bucket":
@@ -329,8 +333,10 @@ def link_site(store, site, counts):
         name = events.core(text)
         put(store, "distribution", {"key": dist, "site": site, "region": REGION[site],
                                     "kind": events.kind_of(name), "name": name}, counts)
-        rec = {"key": claim_key(prt["key"], dist, "official_cardlist", prod["product_url"]), "printing_key": prt["key"],
-               "distribution_key": dist, "source": "official_cardlist", "source_url": prod["product_url"],
+        # cn has no card-list page per product; its card list is the detail call.
+        url = prod.get("product_url") or cnmodel.DETAIL_URL.format(cn_ids[prt["key"]])
+        rec = {"key": claim_key(prt["key"], dist, "official_cardlist", url), "printing_key": prt["key"],
+               "distribution_key": dist, "source": "official_cardlist", "source_url": url,
                "quote": text, "confidence": "authoritative", "observed_at": pp["first_seen_at"]}
         put(store, "printing_distribution", with_dates(rec, events.name_dates(text)), counts)
         if prt["key"] not in by_name[text]:
@@ -510,6 +516,154 @@ def validate(store):
         raise RunError(f"{len(errors)} records fail the schema, first: {errors[:3]}")
 
 
+def run_cn(store, cn_dir, state):
+    """Apply the cn page set to the store. Returns this run's cn counts.
+
+    cn_dir is cn.fetch_pageset's output. state is state/cn.json, updated in
+    place. The list is complete or absent (cn.list_all refuses a short one), so
+    an id that leaves it stamps removed_at on its listing, unless the list fell
+    more than 10% below the last committed one (count_drop): then nothing is
+    removed. A listed id with no detail and no printing yet is refused
+    (http_error) and comes in on a later run. A detail is read only for ids the
+    store lacks, so cn errata show only on a full re-read (CONTRACT.md, cn).
+    """
+    lst = json.loads((cn_dir / "_list.json").read_text("utf-8"))
+    prods = json.loads((cn_dir / "_products.json").read_text("utf-8"))
+    t = lst["fetched_at"]
+    # Stale guard: an older list replayed over newer data would stamp removals
+    # and listings from the past. Equal is a re-run.
+    last = state.get("list_fetched_at")
+    if last and t < last:
+        raise RunError(f"cn list fetched {t}, older than the data ({last}); nothing written")
+    rows = lst["rows"]
+    counts = defaultdict(int)
+    refusals = {a: 0 for a in ARMS}
+    if not rows:
+        refusals["zero_parse"] += 1
+        return counts, refusals, {"rows": 0}
+    if len({r["id"] for r in rows}) != len(rows):
+        raise RunError(f"cn list: {len(rows)} rows but {len({r['id'] for r in rows})} unique ids")
+    drop = bool(state.get("rows")) and len(rows) < DROP_FLOOR * state["rows"]
+    if drop:
+        refusals["count_drop"] += 1
+    by_name = {}
+    new_products = []
+    for p in prods["products"]:
+        key = f"cn:{p['id']}"
+        rec = {"key": key, "site": "cn", **cnmodel.product_fields(p)}
+        before = counts["added"]
+        store.upsert("product", rec, prods["fetched_at"], counts)
+        if counts["added"] > before:
+            new_products.append(key)
+        if p["name"] in by_name:
+            raise RunError(f"cn: two products named {p['name']!r}")
+        by_name[p["name"]] = key
+
+    seen, details = set(), {}
+    for r in sorted(rows, key=lambda r: r["id"]):
+        counts["blocks_parsed"] += 1
+        loc_key = f"cn:{r['id']}"
+        product_key = by_name.get(r["cardOfferType"])
+        if product_key is None:
+            raise RunError(f"{loc_key}: list names product {r['cardOfferType']!r}, which cn's product list does not carry")
+        try:
+            base, token = cnmodel.split_number(r["cardNumber"])
+        except ValueError as ex:
+            raise RunError(f"{loc_key}: {ex}") from ex
+        prt = store.printing_key(loc_key)
+        dpath = cn_dir / "detail" / f"{r['id']}.json"
+        if dpath.exists():
+            d = json.loads(dpath.read_text("utf-8"))
+            info, dt = d["info"], d["fetched_at"]
+            counts["pages_fetched"] += 1
+            try:
+                dbase, _ = cnmodel.split_number(info.get("cardNumber"))
+                if dbase != base:
+                    raise ValueError(f"detail number {info.get('cardNumber')!r} != list number {r['cardNumber']!r}")
+                url = model.image_url("cn", r["cardImg"], r["cardImg"])
+                img = cnmodel.image_token(url, base)
+                marker = cnmodel.has_marker(info.get("cardName"))
+                variant = cnmodel.variant(token, img, marker)
+                source_text = cnmodel.source_text(info)
+                printing = {"key": prt, "card_key": store.card_key(base), "site": "cn",
+                            "rarity": cnmodel.rarity(info.get("cardRarity"), r["id"]), "variant": variant,
+                            "image_url": url, "source_text": source_text,
+                            "block_icon": cnmodel.block_icon(info.get("subscript"))}
+            except ValueError as ex:
+                raise RunError(f"{loc_key}: {ex}") from ex
+            if token:
+                printing["number_token"] = token
+            if img:
+                printing["image_token"] = img
+            if not cnmodel.known_token(token):
+                counts["unknown_tokens"] += 1
+            if cnmodel.disagree(token, img, marker):
+                counts["variant_disagreements"] += 1
+            if source_text == "":
+                counts["blocks_without_source_text"] += 1
+            store.upsert("printing", printing, dt, counts)
+            store.upsert("printing_locator", {"key": loc_key, "printing_key": prt, "site": "cn", "image_id": str(r["id"])},
+                         dt, counts)
+            details[prt] = (base, info, dt)
+        elif prt not in store.recs["printing"]:
+            refusals["http_error"] += 1
+            continue
+        listing = f"{prt}@{product_key}"
+        seen.add(listing)
+        store.upsert("printing_product", {"key": listing, "printing_key": prt, "product_key": product_key}, t, counts)
+    if not drop:
+        for key, rec in store.recs["printing_product"].items():
+            if rec["product_key"].startswith("cn:") and key not in seen and "removed_at" not in rec:
+                rec["removed_at"] = t
+                counts["removed"] += 1
+
+    # One observation per number, from its preferred printing over every cn
+    # printing the store knows: if that printing's detail is not in this run,
+    # the current observation stands (reading a sibling would look like an erratum).
+    cn_by_card = defaultdict(list)
+    for k, p in store.recs["printing"].items():
+        if p["site"] == "cn":
+            cn_by_card[p["card_key"]].append(k)
+    cn_id = {r["printing_key"]: int(r["image_id"]) for r in store.recs["printing_locator"].values() if r["site"] == "cn"}
+
+    def preference(k):
+        # base before parallel, then the lowest numeric id
+        return (store.recs["printing"][k]["variant"] != "base", cn_id[k])
+    current = {o["card_key"]: o for o in store.recs["card_observation"].values()
+               if o["site"] == "cn" and "superseded_at" not in o}
+    for card_key, prts in sorted(cn_by_card.items()):
+        best = min(prts, key=preference)
+        if best not in details:
+            continue
+        _, info, dt = details[best]
+        try:
+            fields = cnmodel.observation_fields(info)
+        except ValueError as ex:
+            raise RunError(f"cn:{cn_id[best]}: {ex}") from ex
+        h = model.observation_hash(fields)
+        cur = current.get(card_key)
+        if cur and cur["observation_hash"] == h:
+            continue
+        key = f"{card_key}:cn:{h}"
+        if cur:
+            cur["superseded_at"] = dt
+            counts["changed"] += 1
+        prior = store.recs["card_observation"].get(key)
+        if prior:
+            prior.pop("superseded_at", None)
+            counts["changed"] += 1
+        else:
+            store.recs["card_observation"][key] = ordered("card_observation", {
+                "key": key, "card_key": card_key, "site": "cn", "lang": model.LANG["cn"],
+                "observation_hash": h, **fields, "first_seen_at": dt})
+            counts["added"] += 1
+    state["list_fetched_at"] = t
+    if not drop:
+        state["rows"] = len(rows)
+    counts["new_products"] = new_products
+    return counts, refusals, {"rows": len(rows)}
+
+
 def snapshot_cn(repo, rows):
     """Both cn ids (numeric id and printed cardNumber), sorted, diffed against the last snapshot."""
     path = Path(repo) / "state" / "cn_ids.jsonl"
@@ -524,7 +678,7 @@ def snapshot_cn(repo, rows):
     return {path: body}, diff
 
 
-def render(store, states, repo, product_states=None, event_states=None):
+def render(store, states, repo, product_states=None, event_states=None, cn_state=None):
     """Every file this run owns, as {path: text}. Nothing is written yet."""
     repo = Path(repo)
     out = {}
@@ -544,6 +698,8 @@ def render(store, states, repo, product_states=None, event_states=None):
         out[repo / "state" / "product_pages" / f"{site}.json"] = json.dumps(st, ensure_ascii=False, sort_keys=True, indent=1) + "\n"
     for site, st in (event_states or {}).items():
         out[repo / "state" / "event_pages" / f"{site}.json"] = json.dumps(st, ensure_ascii=False, sort_keys=True, indent=1) + "\n"
+    if cn_state is not None:
+        out[repo / "state" / "cn.json"] = json.dumps(cn_state, sort_keys=True, indent=1) + "\n"
     return out
 
 
@@ -575,7 +731,7 @@ def write(files):
         os.replace(tmp, path)
 
 
-def run(pageset, repo, sites=SITES, cn_rows=None, now=time.time):
+def run(pageset, repo, sites=SITES, now=time.time):
     pageset, repo = Path(pageset), Path(repo)
     store = Store(repo)
     # The committed data must already meet the schema. A row the schema refuses
@@ -605,16 +761,27 @@ def run(pageset, repo, sites=SITES, cn_rows=None, now=time.time):
             origin = events_site(store, site, pageset / site, event_states[site], by_name, counts)
         results[site] = {"counts": counts, "refusals": refusals, "page_refusals": page_refusals, "dates": dates,
                          "distributions": len(by_name), "origin": origin, "t0": t0, "t1": now()}
+    cn_dir, cn_state, cn_result, cn_rows = pageset / "cn", None, None, None
+    if (cn_dir / "_list.json").exists():
+        sp = repo / "state" / "cn.json"
+        cn_state = json.loads(sp.read_text("utf-8")) if sp.exists() else {}
+        t0 = now()
+        counts, refusals, _ = run_cn(store, cn_dir, cn_state)
+        by_name = link_site(store, "cn", counts)
+        cn_result = {"counts": counts, "refusals": refusals, "page_refusals": {}, "distributions": len(by_name),
+                     "t0": t0, "t1": now()}
+        cn_rows = json.loads((cn_dir / "_list.json").read_text("utf-8"))["rows"]
     card_counts = build_cards(store)
     validate(store)
-    files = render(store, states, repo, product_states, event_states)
+    files = render(store, states, repo, product_states, event_states, cn_state)
     cn_diff = None
     if cn_rows is not None:
         cn_files, cn_diff = snapshot_cn(repo, cn_rows)
         files.update(cn_files)
     files[repo / "manifest.json"] = manifest(files, repo)
     stamp = time.strftime("%Y%m%dT%H%M%SZ", time.gmtime(started))
-    for site, r in results.items():
+    runs = dict(results, **({"cn": cn_result} if cn_result else {}))
+    for site, r in runs.items():
         c = r["counts"]
         run_rec = {"run_id": f"{stamp}-{site}", "site": site, "started_at": utc(r["t0"]), "finished_at": utc(r["t1"]),
                    "pages_fetched": c["pages_fetched"], "pages_unchanged": c["pages_unchanged"],
@@ -622,6 +789,8 @@ def run(pageset, repo, sites=SITES, cn_rows=None, now=time.time):
                    "added": c["added"], "changed": c["changed"], "removed": c["removed"], "refusals": r["refusals"]}
         if c["new_products"]:
             run_rec["new_products"] = c["new_products"]
+        if site == "cn":
+            run_rec["variant_disagreements"] = c["variant_disagreements"]
         errs = list(Draft202012Validator({"$schema": SCHEMA["$schema"], "$defs": SCHEMA["$defs"],
                                           "$ref": "#/$defs/ingest_run"}).iter_errors(run_rec))
         if errs:
@@ -634,7 +803,7 @@ def run(pageset, repo, sites=SITES, cn_rows=None, now=time.time):
             raise RunError(f"{rp.relative_to(repo)} already exists (a run started in the same second); nothing written")
         files[rp] = json.dumps(ordered("ingest_run", run_rec), ensure_ascii=False, indent=1) + "\n"
     write(files)
-    return {"sites": results, "cards": dict(card_counts), "cn": cn_diff}
+    return {"sites": results, "cards": dict(card_counts), "cn": cn_diff, "cn_run": cn_result}
 
 
 def date_line(d):
@@ -653,16 +822,22 @@ def origin_line(dists, o):
             f"(inferred, for review {o['inferred']}, of them card-block contradictions {o['contradictions']})")
 
 
+def cn_line(r):
+    run_rec = r["run"]
+    return (f"cn: details read {run_rec['pages_fetched']}, rows {run_rec['blocks_parsed']}, "
+            f"added {run_rec['added']}, changed {run_rec['changed']}, removed {run_rec['removed']}, "
+            f"refusals {run_rec['refusals']}, variant signals disagree on {run_rec['variant_disagreements']}, "
+            f"unknown number tokens {r['counts']['unknown_tokens']}, distributions {r['distributions']}")
+
+
 def main(argv):
     ap = argparse.ArgumentParser()
     ap.add_argument("pageset")
     ap.add_argument("repo")
     ap.add_argument("sites", nargs="*", default=SITES)
-    ap.add_argument("--cn-list", help="cn list rows (cn.list_all output) as a JSON file")
     a = ap.parse_args(argv[1:])
-    cn_rows = json.loads(Path(a.cn_list).read_text("utf-8")) if a.cn_list else None
     try:
-        res = run(a.pageset, a.repo, a.sites, cn_rows)
+        res = run(a.pageset, a.repo, a.sites)
     except RunError as ex:
         print(f"RUN STOPPED, nothing written: {ex}")
         return 1
@@ -676,6 +851,8 @@ def main(argv):
             print(f"  REFUSED {site}:{sid} {arm}")
         print(f"  {date_line(r['dates'])}")
         print(f"  {origin_line(r['distributions'], r['origin'])}")
+    if res["cn_run"]:
+        print(cn_line(res["cn_run"]))
     print(f"cards: {res['cards']}")
     if res["cn"]:
         print(f"cn snapshot: {res['cn']}")

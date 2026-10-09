@@ -158,6 +158,7 @@
 {"key":"card_21i210i5s14q","number":"OP02-103","category":"character","colors":["black"],"cost":2,"power":3000,"counter":2000,"attributes":["wisdom"],"block_icon":1,"facts_site":"jp","first_seen_at":"2026-10-08T15:57:47Z"}
 {"key":"card_22fayqls2ngu","number":"EB04-061","category":"character","colors":["yellow"],"cost":10,"power":12000,"attributes":["strike"],"block_icon":4,"facts_site":"jp","first_seen_at":"2026-10-08T15:56:52Z"}
 {"key":"card_22k40biea0xi","number":"OP06-024","category":"character","colors":["green"],"cost":5,"power":6000,"counter":1000,"attributes":["slash"],"block_icon":2,"facts_site":"jp","first_seen_at":"2026-10-08T15:57:32Z"}
+{"key":"card_23knamsrxy66","number":"P-126","category":"character","colors":["red"],"cost":4,"power":6000,"attributes":["strike"],"block_icon":5,"facts_site":"cn","first_seen_at":"2026-10-09T00:25:10Z"}
 {"key":"card_23oakegzjj4s","number":"EB04-025","category":"character","colors":["blue"],"cost":7,"power":4000,"counter":1000,"attributes":["slash"],"block_icon":4,"facts_site":"jp","first_seen_at":"2026-10-08T15:56:56Z"}
 {"key":"card_23pgrnzpm1zp","number":"OP07-068","category":"character","colors":["purple"],"cost":5,"power":6000,"counter":1000,"attributes":["strike"],"block_icon":2,"facts_site":"jp","first_seen_at":"2026-10-08T15:57:29Z"}
 {"key":"card_24l9t33rr4zw","number":"ST19-001","category":"character","colors":["black"],"cost":6,"power":8000,"attributes":["special"],"block_icon":3,"facts_site":"jp","first_seen_at":"2026-10-08T15:58:42Z"}
@@ -190,6 +191,7 @@
 {"key":"card_2dyrxqq9mo7z","number":"OP16-007","category":"character","colors":["red"],"cost":7,"power":8000,"attributes":["strike"],"block_icon":5,"facts_site":"jp","first_seen_at":"2026-10-08T15:56:48Z"}
 {"key":"card_2e7xjqajatyj","number":"OP11-009","category":"character","colors":["red"],"cost":3,"power":4000,"counter":1000,"attributes":["strike"],"block_icon":3,"facts_site":"jp","first_seen_at":"2026-10-08T15:57:09Z"}
 {"key":"card_2else6y1j86r","number":"EB03-044","category":"character","colors":["black"],"cost":3,"power":4000,"counter":1000,"attributes":["special"],"block_icon":4,"facts_site":"jp","first_seen_at":"2026-10-08T15:56:36Z"}
+{"key":"card_2eptnyn2e3sl","number":"P-128","category":"character","colors":["red"],"cost":5,"power":6000,"counter":1000,"attributes":["strike"],"block_icon":5,"facts_site":"cn","first_seen_at":"2026-10-09T00:25:13Z"}
 {"key":"card_2esnh1mvy7rt","number":"OP09-034","category":"character","colors":["green"],"cost":1,"power":2000,"counter":2000,"attributes":["special"],"block_icon":3,"facts_site":"jp","first_seen_at":"2026-10-08T15:57:19Z"}
 {"key":"card_2f3e12hiulle","number":"P-089","category":"character","colors":["yellow"],"cost":5,"power":7000,"counter":1000,"attributes":["strike"],"block_icon":3,"facts_site":"jp","first_seen_at":"2026-10-08T15:59:37Z"}
 {"key":"card_2f5h9zzn5ov0","number":"OP01-037","category":"character","colors":["green"],"cost":2,"power":3000,"counter":1000,"attributes":["slash"],"block_icon":1,"facts_site":"jp","first_seen_at":"2026-10-08T15:57:53Z"}
@@ -282,6 +284,7 @@
 {"key":"card_3iejj5d4v3ii","number":"OP15-030","category":"character","colors":["green"],"cost":5,"power":6000,"counter":2000,"attributes":["slash"],"block_icon":4,"facts_site":"jp","first_seen_at":"2026-10-08T15:56:52Z"}
 {"key":"card_3jlkxe55hlki","number":"EB04-042","category":"character","colors":["black"],"cost":1,"power":2000,"counter":2000,"attributes":["strike"],"block_icon":4,"facts_site":"jp","first_seen_at":"2026-10-08T15:56:52Z"}
 {"key":"card_3jwucz4s1sii","number":"OP07-106","category":"character","colors":["yellow"],"cost":4,"power":6000,"attributes":["special"],"block_icon":2,"facts_site":"jp","first_seen_at":"2026-10-08T15:57:29Z"}
+{"key":"card_3k6ggm1mckuv","number":"P-123","category":"character","colors":["red"],"cost":10,"power":12000,"counter":1000,"attributes":["special"],"block_icon":5,"facts_site":"cn","first_seen_at":"2026-10-09T00:25:04Z"}
 {"key":"card_3k6wmp59wiwl","number":"OP01-011","category":"character","colors":["red"],"cost":2,"power":3000,"counter":2000,"attributes":["wisdom"],"block_icon":1,"facts_site":"jp","first_seen_at":"2026-10-08T15:57:53Z"}
 {"key":"card_3kh8sumn6nmk","number":"OP05-058","category":"event","colors":["blue"],"cost":8,"attributes":[],"block_icon":2,"facts_site":"jp","first_seen_at":"2026-10-08T15:57:36Z"}
 {"key":"card_3l1vmz05j4o8","number":"OP12-113","category":"character","colors":["yellow"],"cost":5,"power":6000,"counter":1000,"attributes":["slash"],"block_icon":3,"facts_site":"jp","first_seen_at":"2026-10-08T15:57:03Z"}
@@ -432,6 +435,7 @@
 {"key":"card_5m3nxmnz80c8","number":"OP09-062","category":"leader","colors":["purple","yellow"],"life":4,"power":5000,"attributes":["strike"],"block_icon":3,"facts_site":"jp","first_seen_at":"2026-10-08T15:57:19Z"}
 {"key":"card_5mmjw72pmzdt","number":"OP11-010","category":"character","colors":["red"],"cost":5,"power":6000,"attributes":["ranged"],"block_icon":3,"facts_site":"jp","first_seen_at":"2026-10-08T15:57:09Z"}
 {"key":"card_5oa1n2i87s0p","number":"ST32-002","category":"character","colors":["green"],"cost":5,"power":6000,"counter":1000,"attributes":["slash"],"block_icon":5,"facts_site":"jp","first_seen_at":"2026-10-08T15:58:06Z"}
+{"key":"card_5ohf5in163yr","number":"P-134","category":"event","colors":["red"],"cost":1,"attributes":[],"block_icon":5,"facts_site":"cn","first_seen_at":"2026-10-09T00:25:24Z"}
 {"key":"card_5p2ayp1m3511","number":"OP04-107","category":"character","colors":["yellow"],"cost":6,"power":8000,"counter":1000,"attributes":["special"],"block_icon":1,"facts_site":"jp","first_seen_at":"2026-10-08T15:57:40Z"}
 {"key":"card_5pi6rmvnu77w","number":"ST05-017","category":"event","colors":["purple"],"cost":2,"attributes":[],"block_icon":1,"facts_site":"jp","first_seen_at":"2026-10-08T15:59:20Z"}
 {"key":"card_5pkiottmokzj","number":"EB03-027","category":"character","colors":["blue"],"cost":6,"power":7000,"counter":1000,"attributes":["wisdom"],"block_icon":4,"facts_site":"jp","first_seen_at":"2026-10-08T15:56:36Z"}
@@ -586,6 +590,7 @@
 {"key":"card_7edkz265v3k6","number":"OP14-034","category":"character","colors":["green"],"cost":3,"power":3000,"counter":1000,"attributes":["strike"],"block_icon":4,"facts_site":"jp","first_seen_at":"2026-10-08T15:56:56Z"}
 {"key":"card_7ersmvqjton7","number":"EB03-003","category":"character","colors":["red"],"cost":5,"power":7000,"attributes":["special"],"block_icon":4,"facts_site":"jp","first_seen_at":"2026-10-08T15:56:36Z"}
 {"key":"card_7fb1iqeyxzqh","number":"OP16-044","category":"character","colors":["blue"],"cost":2,"power":2000,"counter":1000,"attributes":["special"],"block_icon":5,"facts_site":"jp","first_seen_at":"2026-10-08T15:56:48Z"}
+{"key":"card_7fvtxlrv9xai","number":"P-125","category":"character","colors":["red"],"cost":4,"power":6000,"counter":1000,"attributes":["strike"],"block_icon":5,"facts_site":"cn","first_seen_at":"2026-10-09T00:25:08Z"}
 {"key":"card_7gsqhib9ab38","number":"OP04-108","category":"character","colors":["yellow"],"cost":3,"power":4000,"counter":1000,"attributes":["slash"],"block_icon":1,"facts_site":"jp","first_seen_at":"2026-10-08T15:57:40Z"}
 {"key":"card_7habcmx9jhz0","number":"OP10-104","category":"character","colors":["yellow"],"cost":4,"power":5000,"counter":1000,"attributes":["special"],"block_icon":3,"facts_site":"jp","first_seen_at":"2026-10-08T15:57:13Z"}
 {"key":"card_7heup66k6fej","number":"OP06-012","category":"character","colors":["red"],"cost":5,"power":6000,"counter":1000,"attributes":["strike"],"block_icon":2,"facts_site":"jp","first_seen_at":"2026-10-08T15:57:32Z"}
@@ -889,6 +894,7 @@
 {"key":"card_bb8hmz6aykzf","number":"OP13-103","category":"character","colors":["yellow"],"cost":4,"power":6000,"counter":1000,"attributes":["wisdom"],"block_icon":4,"facts_site":"jp","first_seen_at":"2026-10-08T15:56:59Z"}
 {"key":"card_bbo4p1uu0haz","number":"OP05-095","category":"event","colors":["black"],"cost":2,"attributes":[],"block_icon":2,"facts_site":"jp","first_seen_at":"2026-10-08T15:57:36Z"}
 {"key":"card_bbx8lxtd2a6z","number":"OP15-017","category":"character","colors":["red"],"cost":5,"power":6000,"counter":1000,"attributes":["slash"],"block_icon":4,"facts_site":"jp","first_seen_at":"2026-10-08T15:56:52Z"}
+{"key":"card_bc5fyexip1ae","number":"P-127","category":"character","colors":["red"],"cost":6,"power":7000,"counter":2000,"attributes":["slash"],"block_icon":5,"facts_site":"cn","first_seen_at":"2026-10-09T00:25:11Z"}
 {"key":"card_bdivzmmyyuzs","number":"OP17-091","category":"character","colors":["black"],"cost":2,"power":2000,"counter":1000,"attributes":["slash"],"block_icon":5,"facts_site":"jp","first_seen_at":"2026-10-08T15:56:45Z"}
 {"key":"card_bds6uf6w3lam","number":"OP10-056","category":"character","colors":["blue"],"cost":2,"counter":1000,"attributes":["special"],"block_icon":3,"facts_site":"jp","first_seen_at":"2026-10-08T15:57:13Z"}
 {"key":"card_beyvdzv66sa7","number":"OP12-015","category":"character","colors":["red"],"cost":4,"power":4000,"counter":1000,"attributes":["strike"],"block_icon":3,"facts_site":"jp","first_seen_at":"2026-10-08T15:57:03Z"}
@@ -953,6 +959,7 @@
 {"key":"card_bzb47lvrl2mz","number":"OP17-004","category":"character","colors":["red"],"cost":3,"power":2000,"counter":2000,"attributes":["slash"],"block_icon":5,"facts_site":"jp","first_seen_at":"2026-10-08T15:56:45Z"}
 {"key":"card_c192vf48le77","number":"OP16-081","category":"character","colors":["black"],"cost":2,"counter":2000,"attributes":["special"],"block_icon":5,"facts_site":"jp","first_seen_at":"2026-10-08T15:56:48Z"}
 {"key":"card_c1ergent966x","number":"OP05-011","category":"character","colors":["red"],"cost":2,"power":2000,"counter":1000,"attributes":["strike"],"block_icon":2,"facts_site":"jp","first_seen_at":"2026-10-08T15:57:36Z"}
+{"key":"card_c1f2yowme4i6","number":"P-131","category":"character","colors":["red"],"cost":5,"power":6000,"counter":2000,"attributes":["special"],"block_icon":5,"facts_site":"cn","first_seen_at":"2026-10-09T00:25:19Z"}
 {"key":"card_c20ow6vvfw2k","number":"ST13-016","category":"character","colors":["yellow"],"cost":5,"power":4000,"counter":2000,"attributes":["strike"],"block_icon":2,"facts_site":"jp","first_seen_at":"2026-10-08T15:58:59Z"}
 {"key":"card_c24jv918bexb","number":"OP03-109","category":"character","colors":["yellow"],"cost":2,"power":3000,"attributes":["wisdom"],"block_icon":1,"facts_site":"jp","first_seen_at":"2026-10-08T15:57:44Z"}
 {"key":"card_c326lk6ianxa","number":"OP12-052","category":"character","colors":["blue"],"cost":4,"power":6000,"counter":1000,"attributes":["strike"],"block_icon":3,"facts_site":"jp","first_seen_at":"2026-10-08T15:57:03Z"}
@@ -1131,6 +1138,7 @@
 {"key":"card_ebzfpvu2j4nb","number":"OP08-026","category":"character","colors":["green"],"cost":2,"power":3000,"counter":1000,"attributes":["slash"],"block_icon":2,"facts_site":"jp","first_seen_at":"2026-10-08T15:57:25Z"}
 {"key":"card_ec0apzdrpg4z","number":"OP09-110","category":"character","colors":["yellow"],"cost":2,"power":2000,"counter":1000,"attributes":["strike"],"block_icon":3,"facts_site":"jp","first_seen_at":"2026-10-08T15:57:19Z"}
 {"key":"card_eck3ko7liz15","number":"OP02-022","category":"event","colors":["red"],"cost":1,"attributes":[],"block_icon":1,"facts_site":"jp","first_seen_at":"2026-10-08T15:57:47Z"}
+{"key":"card_eco8znsqwjgl","number":"P-124","category":"character","colors":["red"],"cost":3,"power":5000,"counter":1000,"attributes":["slash"],"block_icon":5,"facts_site":"cn","first_seen_at":"2026-10-09T00:25:06Z"}
 {"key":"card_ecvtsgyxsniu","number":"ST34-005","category":"character","colors":["purple"],"cost":3,"power":4000,"counter":2000,"attributes":["strike"],"block_icon":5,"facts_site":"jp","first_seen_at":"2026-10-08T15:58:01Z"}
 {"key":"card_ed8ia7uubrdt","number":"P-007","category":"character","colors":["red"],"cost":4,"power":5000,"counter":1000,"attributes":["strike"],"block_icon":1,"facts_site":"jp","first_seen_at":"2026-10-08T15:59:37Z"}
 {"key":"card_edkcdn29kn3k","number":"OP15-033","category":"character","colors":["green"],"cost":4,"power":5000,"counter":1000,"attributes":["strike"],"block_icon":4,"facts_site":"jp","first_seen_at":"2026-10-08T15:56:52Z"}
@@ -1276,6 +1284,7 @@
 {"key":"card_g5vijphkc1af","number":"OP13-084","category":"character","colors":["black"],"cost":7,"power":5000,"counter":2000,"attributes":["special"],"block_icon":4,"facts_site":"jp","first_seen_at":"2026-10-08T15:56:59Z"}
 {"key":"card_g6p31pltizik","number":"OP12-043","category":"character","colors":["blue"],"cost":6,"power":8000,"attributes":["special"],"block_icon":3,"facts_site":"jp","first_seen_at":"2026-10-08T15:57:03Z"}
 {"key":"card_g87b8cy4sdj2","number":"ST02-012","category":"character","colors":["green"],"cost":1,"power":3000,"counter":1000,"attributes":["strike"],"block_icon":1,"facts_site":"jp","first_seen_at":"2026-10-08T15:59:28Z"}
+{"key":"card_g89rygvy2ehj","number":"P-130","category":"character","colors":["red"],"cost":1,"power":2000,"counter":1000,"attributes":["strike"],"block_icon":5,"facts_site":"cn","first_seen_at":"2026-10-09T00:25:17Z"}
 {"key":"card_g8a3x66gl14f","number":"OP13-088","category":"character","colors":["black"],"cost":5,"power":6000,"counter":2000,"attributes":["wisdom"],"block_icon":4,"facts_site":"jp","first_seen_at":"2026-10-08T15:56:59Z"}
 {"key":"card_g8mm3mus30wi","number":"OP10-059","category":"event","colors":["blue"],"cost":1,"attributes":[],"block_icon":3,"facts_site":"jp","first_seen_at":"2026-10-08T15:57:13Z"}
 {"key":"card_g99b97xtzbzw","number":"P-120","category":"character","colors":["yellow"],"cost":6,"power":6000,"counter":2000,"attributes":["strike"],"block_icon":4,"facts_site":"jp","first_seen_at":"2026-10-08T16:08:20Z"}
@@ -1930,6 +1939,7 @@
 {"key":"card_o7q2d6o9jbr9","number":"ST30-009","category":"character","colors":["red"],"cost":1,"power":2000,"counter":1000,"attributes":["strike"],"block_icon":5,"facts_site":"jp","first_seen_at":"2026-10-08T15:58:12Z"}
 {"key":"card_o8f3mazj2mh1","number":"OP05-098","category":"leader","colors":["yellow"],"life":4,"power":5000,"attributes":["special"],"block_icon":2,"facts_site":"jp","first_seen_at":"2026-10-08T15:57:36Z"}
 {"key":"card_o8gotku3ri8q","number":"OP14-039","category":"stage","colors":["green"],"cost":1,"attributes":[],"block_icon":4,"facts_site":"jp","first_seen_at":"2026-10-08T15:56:56Z"}
+{"key":"card_o912m0dgp3w0","number":"P-132","category":"character","colors":["red"],"cost":4,"power":6000,"attributes":["strike"],"block_icon":5,"facts_site":"cn","first_seen_at":"2026-10-09T00:25:20Z"}
 {"key":"card_o99dxc1uet2m","number":"EB02-013","category":"character","colors":["green"],"cost":1,"counter":2000,"attributes":["special"],"block_icon":3,"facts_site":"jp","first_seen_at":"2026-10-08T15:56:39Z"}
 {"key":"card_o9rmqhagzbnx","number":"ST22-013","category":"character","colors":["blue"],"cost":5,"power":7000,"counter":1000,"attributes":["strike"],"block_icon":3,"facts_site":"jp","first_seen_at":"2026-10-08T15:58:34Z"}
 {"key":"card_oa5m9z83jbas","number":"OP14-097","category":"event","colors":["black"],"cost":1,"attributes":[],"block_icon":4,"facts_site":"jp","first_seen_at":"2026-10-08T15:56:56Z"}
@@ -2250,6 +2260,7 @@
 {"key":"card_shd26n6toazw","number":"OP06-101","category":"character","colors":["yellow"],"cost":2,"power":3000,"counter":1000,"attributes":["special"],"block_icon":2,"facts_site":"jp","first_seen_at":"2026-10-08T15:57:32Z"}
 {"key":"card_she1x584w8rq","number":"OP11-024","category":"character","colors":["green"],"cost":4,"power":5000,"counter":1000,"attributes":["slash"],"block_icon":3,"facts_site":"jp","first_seen_at":"2026-10-08T15:57:09Z"}
 {"key":"card_shwsq4co7w7n","number":"OP16-015","category":"character","colors":["red"],"cost":4,"power":6000,"attributes":["strike"],"block_icon":5,"facts_site":"jp","first_seen_at":"2026-10-08T15:56:48Z"}
+{"key":"card_si7hcqfan7to","number":"P-122","category":"leader","colors":["red"],"life":5,"power":5000,"attributes":["strike"],"block_icon":5,"facts_site":"cn","first_seen_at":"2026-10-09T00:25:02Z"}
 {"key":"card_sigc95rivm04","number":"ST01-007","category":"character","colors":["red"],"cost":1,"power":1000,"counter":1000,"attributes":["special"],"block_icon":1,"facts_site":"jp","first_seen_at":"2026-10-08T15:59:31Z"}
 {"key":"card_sih0yaal3edg","number":"OP04-065","category":"character","colors":["purple"],"cost":2,"power":3000,"counter":1000,"attributes":["wisdom"],"block_icon":1,"facts_site":"jp","first_seen_at":"2026-10-08T15:57:40Z"}
 {"key":"card_sitcc57wjnf8","number":"EB02-030","category":"event","colors":["blue"],"cost":2,"attributes":[],"block_icon":3,"facts_site":"jp","first_seen_at":"2026-10-08T15:56:39Z"}
@@ -2434,6 +2445,7 @@
 {"key":"card_ut84fksyjos0","number":"OP05-072","category":"character","colors":["purple"],"cost":4,"power":6000,"attributes":["slash"],"block_icon":2,"facts_site":"jp","first_seen_at":"2026-10-08T15:57:36Z"}
 {"key":"card_utjszf0nrb5z","number":"OP04-062","category":"character","colors":["purple"],"cost":5,"power":7000,"counter":1000,"attributes":["strike"],"block_icon":1,"facts_site":"jp","first_seen_at":"2026-10-08T15:57:40Z"}
 {"key":"card_utlrxb69o0dg","number":"OP16-061","category":"character","colors":["purple"],"cost":5,"power":7000,"counter":1000,"attributes":["ranged"],"block_icon":5,"facts_site":"jp","first_seen_at":"2026-10-08T15:56:48Z"}
+{"key":"card_utq4eojjxmtx","number":"P-133","category":"character","colors":["red"],"cost":4,"power":5000,"counter":1000,"attributes":["strike"],"block_icon":5,"facts_site":"cn","first_seen_at":"2026-10-09T00:25:22Z"}
 {"key":"card_uun3r05v4tb7","number":"OP03-013","category":"character","colors":["red"],"cost":5,"power":6000,"counter":1000,"attributes":["special"],"block_icon":1,"facts_site":"jp","first_seen_at":"2026-10-08T15:57:44Z"}
 {"key":"card_uvpoo8vdz9lu","number":"OP17-026","category":"character","colors":["green"],"cost":1,"power":2000,"counter":2000,"attributes":["slash"],"block_icon":5,"facts_site":"jp","first_seen_at":"2026-10-08T15:56:45Z"}
 {"key":"card_uw5xy5jlv8pb","number":"OP17-028","category":"character","colors":["green"],"cost":4,"power":3000,"counter":1000,"attributes":["strike"],"block_icon":5,"facts_site":"jp","first_seen_at":"2026-10-08T15:56:45Z"}
@@ -2628,6 +2640,7 @@
 {"key":"card_x9ubzy14p308","number":"OP15-075","category":"event","colors":["purple"],"attributes":[],"block_icon":4,"facts_site":"jp","first_seen_at":"2026-10-08T15:56:52Z"}
 {"key":"card_xa7gb3xjw18z","number":"OP08-085","category":"character","colors":["black"],"cost":5,"power":6000,"attributes":["strike"],"block_icon":2,"facts_site":"jp","first_seen_at":"2026-10-08T15:57:25Z"}
 {"key":"card_xay54znuum3p","number":"OP01-046","category":"character","colors":["green"],"cost":5,"power":7000,"attributes":["slash"],"block_icon":1,"facts_site":"jp","first_seen_at":"2026-10-08T15:57:53Z"}
+{"key":"card_xb9pv4rjq2rc","number":"P-129","category":"character","colors":["red"],"cost":1,"counter":2000,"attributes":["wisdom"],"block_icon":5,"facts_site":"cn","first_seen_at":"2026-10-09T00:25:15Z"}
 {"key":"card_xbevxdqrg6mb","number":"ST28-003","category":"character","colors":["yellow"],"cost":4,"power":5000,"counter":2000,"attributes":["slash"],"block_icon":3,"facts_site":"jp","first_seen_at":"2026-10-08T15:58:18Z"}
 {"key":"card_xcgwlm8dn0fw","number":"OP05-086","category":"character","colors":["black"],"cost":1,"power":1000,"counter":1000,"attributes":["wisdom"],"block_icon":2,"facts_site":"jp","first_seen_at":"2026-10-08T15:57:36Z"}
 {"key":"card_xcx9g6r34e6n","number":"OP05-034","category":"character","colors":["green"],"cost":1,"power":1000,"counter":1000,"attributes":["special"],"block_icon":2,"facts_site":"jp","first_seen_at":"2026-10-08T15:57:36Z"}

@@ -20,6 +20,7 @@ data/printing_links.jsonl             printing_link
 runs/{YYYY}/{MM}/{run_id}.json        ingest_run (audit only, not synced)
 state/pages/{site}.json               last clean block count, hash and fetched_at per page (ingest only, not synced)
 state/cn_ids.jsonl                    cn id snapshot, numeric id and cardNumber (ingest only, not synced)
+state/cn.json                         cn list fetch time and row count of the last committed run (ingest only, not synced)
 state/product_pages/{site}.json       series each product page links, and the product index fetch time (ingest only, not synced)
 state/event_pages/{site}.json         event and topic pages already read, and the event list fetch time (ingest only, not synced)
 state/keepalive.txt                   date of the last heartbeat commit, written only after 30 quiet days (ingest only, not synced)
@@ -263,6 +264,108 @@ printings only when it names one (a magazine's on-sale date, a month, a period).
 The same run put 139 claims in review (en 103 from 17 distinct page/list name
 pairs, jp 36 from 4, asia-en and tc none) and found no card-block contradictions.
 
+## cn
+
+cn is not a Bandai site. Its card list is a JSON API (Windo), one row per
+printing keyed by a numeric id, and the card facts sit behind a per-id detail
+call. Every vocabulary below was measured on the 2026-10-08 list (4,927 rows,
+47 products) and its details; a value outside it stops the run, as on the
+Bandai sites, except where a rule below says to keep it.
+
+**Page set.** `cn.fetch_pageset` writes `cn/_list.json` (the whole list, with
+`fetched_at`), `cn/_products.json`, and `cn/detail/{id}.json` (`{fetched_at,
+info}`) for every listed id that has no printing yet. A detail is read only
+for a new id, so **an erratum on cn shows only on a full re-read**, which is a
+deliberate run, not the daily one.
+
+**Identity.** A cn printing's locator is `cn:{id}`, and its key is minted from
+that locator, so two cn ids never share a printing. A product is
+`cn:{product id}`, its `code` is the last 【...】 group in the name, and its
+`kind` comes from the name's leading word (补充包 booster, 特别补充包 extra,
+豪华补充包 premium, 基本卡组 / 进阶卡组 / 究极进阶卡组 starter), with two named
+buckets: 宣传卡 is `promo_bucket` and 限定商品收录卡牌 is `limited`. The product
+list's `displayId` is not read: it is null on most products and its meaning is
+unknown (P-084's points at the id of OP14-057).
+
+**The number field is the base number.** cn appends its own token to the
+printed number, either `_NN` (P-084_01, 389 rows) or inline (P, CP, -NN, SP,
+LP, P-R, P-SR: 75 rows). The token moves out of the number, so the card is the
+base number's card and cn mints no card of its own from a suffix (alyssa
+87274). Read raw, the 75 inline rows name 75 numbers no card carries; split,
+they name none, and a test pins that. The token is kept verbatim on the
+printing as `number_token`. A token outside the measured shapes is still split
+off and kept, and the run counts it (`unknown_tokens`), so a new cn spelling
+never mints a card.
+
+**Variant** (alyssa 87295). Three signals are read, and any one present makes
+the printing a `parallel`; none makes it `base`:
+
+- the number token;
+- the image token: what the image file name carries after the base number
+  (`1705891765183OP06-050P.png` gives `P`), kept as `image_token`. A file
+  named by a bare hash says nothing, so the image is unread, not a no.
+  Windo's re-upload marks are not art and are removed before the token is
+  read: `(N)`, URL-encoded as `%28N%29` and sometimes stacked, with a `-N`
+  directly in front of it (`-1(1)`, OP13-077), and a trailing `_D` (alyssa
+  87340, 87354). A bare `-N` is not a mark and stays: `-NN` is a real inline
+  cn token (OP06-050-03). On 2026-10-08, 18 rows were the only cn id for their
+  number while jp listed that number base only, and every one wore such a
+  mark. `image_token` keeps the raw token, marks included, so a later
+  re-rule costs nothing. Lowercase `_d` is kept as an art mark (23 rows, none
+  with that pattern);
+- the name marker （异画） ("alt art"), which is dropped from the card name.
+
+cn never emits `reprint`, and the schema refuses it there: `_NN` is a parallel
+on one card and a reprint on another (P-084_01 is jp P-084_p1, OP12-026_02 is
+jp OP12-026_r1), and nothing on cn tells them apart. jp stays the variant
+authority, through `printing_links`. A run counts the printings whose signals
+did not all agree in `ingest_run.variant_disagreements`.
+
+The case that fixes the key: ids 2763 and 2764 are both OP06-050, with the same
+name, rarity and number. Only 2764's image file says `P`. They are two
+printings, base and parallel, because the printing key comes from `cn:{id}`. A
+key built from the site and the number would make them one printing; a test
+runs the pair through a run and a re-run and asserts both survive.
+
+**Facts.** Rarity maps cn's labels to the Bandai codes (推广卡（P）, 宣传（P）
+and a bare P are all `P`; 罕见（U） is `UC`; 隐藏稀有 is `SEC` in either case;
+`TR` stays `TR`, as the Bandai sites print it). `cardLife` is life on a leader
+and cost on everything else; `cardAttack` is the counter (`1000`, or `反击+1000`
+with the plus half- or full-width). Two colours are joined by `/` or by `、`.
+The attribute field is read on leaders and characters only, because on events
+and stages cn fills it with `-` or the colour again (OP02-067, id 1925); two
+attributes come as two elements or as one joined by `/` (`打/知`), and `？`
+is stored as `?`, as on jp and tc. Types split on `/`, and on `,` where cn
+typed one. cn prints a power of `0` (or `０`) where no Bandai site that has the
+card carries a power: 152 cards and 252 details on 2026-10-09, none of them on
+a card whose jp record has a power, and no Bandai site records a power of 0.
+So `0` is cn's spelling of no power and is omitted, not written as zero (upper
+87441). Numbers read any Unicode decimal digit (`１０００` is 1000); a digit
+`int()` cannot read is refused.
+
+A few rows typed something else into a field, and each is excused by its cn
+id, checked against the card on the Bandai sites, never by a lenient match, so
+a new slip still stops the run: a rarity in the category field (EB01-003P, id
+2932); the art style (`cardCartograph`, 画师原创 or 漫画) in the category field
+on five prize promos (ids 4056, 4057, 4063, 4064, 4065), all characters; 双色
+("two colours") naming neither colour on two leaders (ids 6603, 6778); and the
+category 角色 in the rarity field (ST29-012, id 5962, `C`). `subscript` is the
+block icon.
+
+**Source text.** `source_text` is the detail's `type` when it names something
+(the promo pack: 特别宣传包Vol.2), and the product name otherwise. On some
+booster rows `type` is a bare number (OP02-067: `2`), which names nothing, so
+it is not used.
+
+**Stale guard and removals.** `state/cn.json` holds the committed list's
+`fetched_at` and row count. A list fetched before it is a replay and stops the
+run with nothing written; an equal one is a re-run. The list is complete or
+absent (`cn.list_all` refuses a short or doubled one), so an id that leaves it
+stamps `removed_at` on its listing, unless the list fell more than 10% below
+the last committed one (`count_drop`), when nothing is removed. A listed id
+with no detail and no printing yet is refused (`http_error`) and comes in on a
+later run.
+
 ## Transition (2026-10-08)
 
 The schema accepted both shapes while the ingest moved over, so that CI stayed
@@ -311,4 +414,8 @@ either.
 
 `python scripts/check.py` validates the examples against the schema. It also
 confirms that each control in `examples/invalid.jsonl` fails with the error
-named in its `expect` field, and runs the image-id parser cases. CI runs it on every push.
+named in its `expect` field (or one of a list, where jsonschema versions spell
+the same error differently), refuses a key that appears on two lines of the
+valid examples (the sync upserts by key, so a repeat overwrites silently; the
+data files get the same check, within and across files), and runs the
+image-id parser cases. CI runs it on every push.
