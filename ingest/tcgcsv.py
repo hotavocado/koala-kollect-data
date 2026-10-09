@@ -16,6 +16,9 @@ What is measured (2026-10-09, 87 groups, 7,717 products):
   carry both (69 do). They are two physical cards (alyssa 87481), so the locator
   always carries it: tcgcsv:{productId}:{subType}.
 - No DON carries a Number.
+- imageCount is TCGplayer's own count of a product's images. Where it is 0 the
+  CDN answers 403 (3 of 240, exactly those 3), so such a printing carries no
+  image_url until it turns positive (upper 87556, alyssa 87559).
 """
 import json
 import re
@@ -123,8 +126,8 @@ def plan(groups, products, prices):
 
     groups is the /groups list; products and prices map groupId to their lists.
     Each printing is a dict: product_id, sub_type, variant, name, card_product_id
-    (the normal product whose card it is), design (that card's don_design) and
-    group_id. unpriced is the DON products with no price row: they have no
+    (the normal product whose card it is), design (that card's don_design),
+    group_id and has_image (TCGplayer's imageCount above 0). unpriced is the DON products with no price row: they have no
     finish and so no key, and never reach variant() (upper 87490). They mint
     the day a price row appears.
     """
@@ -159,7 +162,8 @@ def plan(groups, products, prices):
                 out.append({"product_id": p["productId"], "sub_type": sub,
                             "variant": variant(partner is not None, sub), "name": p["name"],
                             "card_product_id": card_product["productId"],
-                            "design": design(g["abbreviation"], card_product["name"]), "group_id": gid})
+                            "design": design(g["abbreviation"], card_product["name"]), "group_id": gid,
+                            "has_image": bool(p.get("imageCount"))})
     return out, unpriced, don_count
 
 

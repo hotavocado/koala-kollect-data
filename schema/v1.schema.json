@@ -351,7 +351,6 @@
         "site",
         "rarity",
         "variant",
-        "image_url",
         "source_text",
         "block_icon",
         "first_seen_at"
@@ -387,7 +386,7 @@
           "description": "DON (tcgcsv) printings use normal, foil and gold only: normal and foil are the two finishes of a normal DON product (TCGplayer's Normal and Foil price rows, two physical cards, alyssa 87481), gold is the gold DON product's printing, and gold is always foil."
         },
         "image_url": {
-          "description": "Absolute URL with no query string or fragment: the official site's, or TCGplayer's image for a tcgcsv DON printing. Bandai appends a site-wide deploy stamp (?260929) that changes on every redeploy; keeping it would make every printing differ on every run. Linked, never re-hosted.",
+          "description": "Absolute URL with no query string or fragment: the official site's, or TCGplayer's image for a tcgcsv DON printing. Required on every official site's printing. Omitted on a tcgcsv printing whose product TCGplayer has no image for (imageCount 0, where its CDN answers 403), until it has one (upper 87556). Bandai appends a site-wide deploy stamp (?260929) that changes on every redeploy; keeping it would make every printing differ on every run. Linked, never re-hosted.",
           "type": "string",
           "pattern": "^https://[^?#]+$"
         },
@@ -425,6 +424,25 @@
         }
       },
       "allOf": [
+        {
+          "if": {
+            "required": [
+              "site"
+            ],
+            "properties": {
+              "site": {
+                "not": {
+                  "const": "tcgcsv"
+                }
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "image_url"
+            ]
+          }
+        },
         {
           "if": {
             "required": [
@@ -884,13 +902,23 @@
       },
       "then": {
         "required": [
-          "unpriced"
+          "unpriced",
+          "no_image"
         ]
       },
       "else": {
         "not": {
-          "required": [
-            "unpriced"
+          "anyOf": [
+            {
+              "required": [
+                "unpriced"
+              ]
+            },
+            {
+              "required": [
+                "no_image"
+              ]
+            }
           ]
         }
       },
@@ -989,6 +1017,11 @@
         },
         "unpriced": {
           "description": "tcgcsv only. DON products with no price row, so no finish and no key: refused, never minted, and minted on the first run that sees a price row (upper 87490). The run line names them by productId.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "no_image": {
+          "description": "tcgcsv only. DON products written this run with no image on TCGplayer (imageCount 0), so their printings carry no image_url yet. The run line names them by productId.",
           "type": "integer",
           "minimum": 0
         },

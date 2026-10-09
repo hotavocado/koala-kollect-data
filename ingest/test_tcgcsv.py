@@ -171,6 +171,7 @@ class Run(unittest.TestCase):
         self.assertEqual(r["run"]["site"], "tcgcsv")
         self.assertEqual(r["run"]["blocks_parsed"], 8)
         self.assertEqual(r["run"]["unpriced"], 2)
+        self.assertEqual(r["run"]["no_image"], 0)
         self.assertEqual(r["counts"]["unpriced"], UNPRICED)
         locs = self.rows("printing_locators")
         self.assertEqual(sorted(locs), ["tcgcsv:434340:Normal", "tcgcsv:482236:Foil", "tcgcsv:482237:Foil",
@@ -269,6 +270,27 @@ class Run(unittest.TestCase):
         self.assertEqual({k: v["printing_key"] for k, v in before.items()},
                          {k: v["printing_key"] for k, v in after.items() if k in before})
         self.assertEqual(set(after) - set(before), {"tcgcsv:482237:Normal"})
+
+    def test_no_image_on_tcgcsv_means_no_image_url_until_it_has_one(self):
+        # 677570/677571/719824 on 2026-10-09: imageCount 0 and the CDN answers 403 (upper 87556).
+        g, p, pr = fixture()
+        for x in p[23496]:
+            if x["productId"] == 586181:
+                x["imageCount"] = 0
+        self.pageset(T1, g, p, pr)
+        r = self.go()["tcgcsv_run"]
+        self.assertEqual((r["run"]["no_image"], r["counts"]["no_image"]), (1, [586181]))
+        gold = self.rows("printings")[self.rows("printing_locators")["tcgcsv:586181:Foil"]["printing_key"]]
+        self.assertNotIn("image_url", gold)
+        others = [x for k, x in self.rows("printings").items() if k != gold["key"]]
+        self.assertEqual(len(others), 6)
+        self.assertTrue(all("image_url" in x for x in others))
+        # The day TCGplayer has the image, the printing gains its URL: one changed row.
+        self.pageset(T2)
+        r = self.go()["tcgcsv_run"]
+        self.assertEqual((r["run"]["no_image"], r["run"]["added"], r["run"]["changed"]), (0, 0, 1))
+        gold = self.rows("printings")[self.rows("printing_locators")["tcgcsv:586181:Foil"]["printing_key"]]
+        self.assertEqual(gold["image_url"], "https://tcgplayer-cdn.tcgplayer.com/product/586181_in_1000x1000.jpg")
 
     def test_bandai_cards_untouched_by_a_tcgcsv_only_run(self):
         self.pageset(T1)

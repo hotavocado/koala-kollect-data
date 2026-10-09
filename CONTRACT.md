@@ -122,6 +122,15 @@ groups and 7,717 products; a value outside these vocabularies stops the run.
 - **Rows.** A DON printing: `site` `tcgcsv`, `rarity` `DON`, `source_text` the
   TCGplayer product name verbatim (the gold's own name on a gold printing),
   `image_url` TCGplayer's `{productId}_in_1000x1000.jpg`, `block_icon` `null`.
+- **image_url is omitted while TCGplayer has no image** (upper 87556, alyssa
+  87571). A product's `imageCount` is TCGplayer's own count of its images;
+  where it is 0 the CDN answers 403 (2026-10-09: 3 of 240, 677570, 677571 and
+  719824, and exactly those 3). Such a printing carries no `image_url`, the
+  run counts it in `no_image` and names it, and the first run that sees a
+  positive count writes the URL. This is why the field is split by site: a
+  new DON listing sits at `imageCount` 0 for a while, so a required URL would
+  be wrong by construction, not only for three rows. Every official site's
+  printing still requires one.
   A DON card's observation (alyssa 87523): `site` `tcgcsv`, `lang` `en`, `name`
   the normal product's name verbatim, `category` `don`, no colours, attributes
   or types, and its `facts_site` is `tcgcsv`. tcgcsv has no product rows and no
@@ -162,7 +171,7 @@ groups and 7,717 products; a value outside these vocabularies stops the run.
   `source_text` is the empty string and the run counts it in
   `blocks_without_source_text`. A jump in that count means a broken parser.
 - **Images are linked, never hosted.** `image_url` is the absolute official URL
-  with no query string. Bandai's card images carry a site-wide deploy stamp
+  (TCGplayer's for a DON printing) with no query string. Bandai's card images carry a site-wide deploy stamp
   (`?260929`) that changes on every redeploy; keeping it would turn each
   redeploy into a change to every printing.
 - `printing_links` are reviewed; the ingest may propose them only with

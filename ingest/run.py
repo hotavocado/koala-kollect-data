@@ -682,7 +682,9 @@ def run_tcgcsv(store, tcg_dir, state):
     TCGplayer rename never mints a second card. tcgcsv has no product rows and
     no listings, so nothing is ever removed here. A DON with no price row has no
     finish and so no key: it is refused, counted, and mints when a price row
-    appears (upper 87490).
+    appears (upper 87490). A product TCGplayer has no image for (imageCount 0)
+    gets no image_url, is counted in no_image, and gains one the day the count
+    turns positive (upper 87556).
     """
     try:
         t, groups, prods, prices, times = tcgcsv.read_pageset(tcg_dir)
@@ -697,6 +699,7 @@ def run_tcgcsv(store, tcg_dir, state):
     counts["pages_fetched"] = len(prods) + len(prices)
     counts["blocks_parsed"] = don_count
     counts["unpriced"] = sorted(unpriced)
+    counts["no_image"] = sorted({sp["product_id"] for sp in specs if not sp["has_image"]})
     refusals = {a: 0 for a in ARMS}
     if not don_count:
         refusals["zero_parse"] += 1
@@ -724,9 +727,11 @@ def run_tcgcsv(store, tcg_dir, state):
             names[card_key] = (sp["name"], dt)
         loc_key = f"tcgcsv:{sp['product_id']}:{sp['sub_type']}"
         prt = store.printing_key(loc_key)
-        store.upsert("printing", {"key": prt, "card_key": card_key, "site": "tcgcsv", "rarity": "DON",
-                                  "variant": sp["variant"], "image_url": tcgcsv.image_url(sp["product_id"]),
-                                  "source_text": sp["name"], "block_icon": None}, dt, counts)
+        printing = {"key": prt, "card_key": card_key, "site": "tcgcsv", "rarity": "DON", "variant": sp["variant"],
+                    "source_text": sp["name"], "block_icon": None}
+        if sp["has_image"]:
+            printing["image_url"] = tcgcsv.image_url(sp["product_id"])
+        store.upsert("printing", printing, dt, counts)
         store.upsert("printing_locator", {"key": loc_key, "printing_key": prt, "site": "tcgcsv",
                                           "image_id": f"{sp['product_id']}:{sp['sub_type']}"}, dt, counts)
     # A gold whose normal is unpriced still names its card from the normal product.
@@ -901,6 +906,7 @@ def run(pageset, repo, sites=SITES, now=time.time):
             run_rec["variant_disagreements"] = c["variant_disagreements"]
         if site == "tcgcsv":
             run_rec["unpriced"] = len(c["unpriced"])
+            run_rec["no_image"] = len(c["no_image"])
         errs = list(Draft202012Validator({"$schema": SCHEMA["$schema"], "$defs": SCHEMA["$defs"],
                                           "$ref": "#/$defs/ingest_run"}).iter_errors(run_rec))
         if errs:
@@ -942,10 +948,11 @@ def cn_line(r):
 
 def tcgcsv_line(r):
     run_rec = r["run"]
-    ids = r["counts"]["unpriced"]
+    ids, bare = r["counts"]["unpriced"], r["counts"]["no_image"]
     return (f"tcgcsv: groups and price files read {run_rec['pages_fetched']}, DON products {run_rec['blocks_parsed']}, "
             f"added {run_rec['added']}, changed {run_rec['changed']}, refusals {run_rec['refusals']}, "
-            f"unpriced (refused, no key) {len(ids)}{' [' + ', '.join(map(str, ids)) + ']' if ids else ''}")
+            f"unpriced (refused, no key) {len(ids)}{' [' + ', '.join(map(str, ids)) + ']' if ids else ''}, "
+            f"no image yet {len(bare)}{' [' + ', '.join(map(str, bare)) + ']' if bare else ''}")
 
 
 def main(argv):

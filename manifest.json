@@ -1,6 +1,6 @@
 {
  "schema_version": 1,
- "generated_at": "2026-10-09T01:15:25Z",
+ "generated_at": "2026-10-09T00:31:48Z",
  "files": {
   "data/card_observations/asia-en.jsonl": {
    "type": "card_observation",
@@ -27,15 +27,10 @@
    "rows": 2815,
    "sha256": "028f95650ad68d57d9817a79db6703f562e068c83fe567e1da35484bbc101018"
   },
-  "data/card_observations/tcgcsv.jsonl": {
-   "type": "card_observation",
-   "rows": 165,
-   "sha256": "9c3e2b74625664ec1f1b4eb5ae8dade2f2eb5a464b2cc83df40a5457587b1ee9"
-  },
   "data/cards.jsonl": {
    "type": "card",
-   "rows": 3002,
-   "sha256": "e77e2a710312d0cdb4163abbac4868e319f66866c14c2ae1c70cc8fba237932d"
+   "rows": 2837,
+   "sha256": "2b53f8b34df25869a1a68d216f57c508e832d481aa66e747f4069b1f4967b26a"
   },
   "data/distributions.jsonl": {
    "type": "distribution",
@@ -71,11 +66,6 @@
    "type": "printing_locator",
    "rows": 4915,
    "sha256": "709bd52398fb8883b58215e552c122c6dcbefda703d8442211bafe1efec31d66"
-  },
-  "data/printing_locators/tcgcsv.jsonl": {
-   "type": "printing_locator",
-   "rows": 307,
-   "sha256": "5cd63c3350f1e176290bd7291901f94231fcaa3830db42ce5df0e8e8288b5508"
   },
   "data/printing_products/asia-en.jsonl": {
    "type": "printing_product",
@@ -126,11 +116,6 @@
    "type": "printing",
    "rows": 4915,
    "sha256": "98a3691139db7077e1dc3271a3556173024c9d00b603cbc77d81b150c13d6a78"
-  },
-  "data/printings/tcgcsv.jsonl": {
-   "type": "printing",
-   "rows": 307,
-   "sha256": "29d962d05ca48f8efd4e153c71a517aab09570aff97b1d1fbcd728fa37c845aa"
   },
   "data/products/asia-en.jsonl": {
    "type": "product",

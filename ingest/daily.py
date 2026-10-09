@@ -288,7 +288,8 @@ def daily(pageset, repo, out, sites=SITES, dry_run=False, fake=None, fetcher=Non
             summary["cn_run"] = result["cn_run"]["run"]
         if result.get("tcgcsv_run"):
             summary["tcgcsv_run"] = dict(result["tcgcsv_run"]["run"],
-                                         unpriced_ids=result["tcgcsv_run"]["counts"]["unpriced"])
+                                         unpriced_ids=result["tcgcsv_run"]["counts"]["unpriced"],
+                                         no_image_ids=result["tcgcsv_run"]["counts"]["no_image"])
     (out / "summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=1) + "\n", "utf-8")
     return (0 if not failures else 1), summary
 
@@ -320,7 +321,8 @@ def main(argv):
     if "tcgcsv_run" in s:
         r = s["tcgcsv_run"]
         print(f"tcgcsv: DON products {r['blocks_parsed']}, added {r['added']}, changed {r['changed']}, "
-              f"refusals {r['refusals']}, unpriced (refused, no key) {r['unpriced']} {r['unpriced_ids']}")
+              f"refusals {r['refusals']}, unpriced (refused, no key) {r['unpriced']} {r['unpriced_ids']}, "
+              f"no image yet {r['no_image']} {r['no_image_ids']}")
     if "cn" in s:
         print(f"cards: {s['cards']}  cn: {s['cn']}")
     if s["notice_title"]:
