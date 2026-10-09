@@ -879,7 +879,7 @@ def manifest(files, repo):
                         "sha256": hashlib.sha256(text.encode()).hexdigest()}
         for ln in text.splitlines():
             r = json.loads(ln)
-            for k in ("first_seen_at", "removed_at", "superseded_at", "observed_at"):
+            for k in ("first_seen_at", "removed_at", "superseded_at", "observed_at", "retired_at"):
                 if k in r:
                     newest = max(newest, r[k])
     return json.dumps({"schema_version": 1, "generated_at": newest, "files": entries},

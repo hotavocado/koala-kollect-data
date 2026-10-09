@@ -140,6 +140,16 @@ class Duplicates(unittest.TestCase):
             "retired_at": T1, "source_ids": ["cn:4648", "cn:4647"]}
 
 
+class Manifest(unittest.TestCase):
+    def test_generated_at_counts_retired_at(self):
+        # A retirement is the newest change in the data when it lands, so the
+        # manifest has to say so (codex, PR 16).
+        repo = Path("/r")
+        files = {repo / "data/printings/cn.jsonl": json.dumps({"key": "prt_000000000001", "first_seen_at": T1}) + "\n",
+                 repo / "data/retired_printings.jsonl": json.dumps({"key": "prt_000000000009", "retired_at": T2}) + "\n"}
+        self.assertEqual(json.loads(run.manifest(files, repo))["generated_at"], T2)
+
+
 class TwinFetch(unittest.TestCase):
     """A new id whose list row equals a held id's: fetch the held id's detail too, so run_cn can compare."""
 
