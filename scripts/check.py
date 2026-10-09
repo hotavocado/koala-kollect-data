@@ -55,11 +55,15 @@ for line in (root / "examples/invalid.jsonl").read_text().splitlines():
     errs = list(validator(row["type"]).iter_errors(row["record"]))
     # A control proves something only if it fails for its OWN reason, so each
     # names the error it must produce (any error alone would pass a broken rule).
+    # A list names one error in each spelling jsonschema has used for it (CI
+    # installs the latest: minLength 1 reads "is too short" on 4.10, "should be
+    # non-empty" on 4.26).
     msgs = [e.message for e in errs]
+    expects = row["expect"] if isinstance(row["expect"], list) else [row["expect"]]
     if not errs:
         bad += 1
         print("FAIL control passed:", row["why"])
-    elif not any(row["expect"] in m for m in msgs):
+    elif not any(x in m for x in expects for m in msgs):
         bad += 1
         print("FAIL control red for the wrong reason:", row["why"], "->", msgs)
     else:
