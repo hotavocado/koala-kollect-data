@@ -31,7 +31,9 @@ state/keepalive.txt                   date of the last heartbeat commit, written
 `site` is one of `en`, `asia-en`, `jp`, `tc`, `cn`. These are sites, not
 languages: `en` and `asia-en` are both English and list different products and
 promos. DON rows add a sixth, `tcgcsv`, for printings, locators, observations
-and runs only (see DON).
+and runs, and Release Event stamps add it for printings, locators,
+distributions and runs (see DON and Release Event stamps). It is never a
+product site.
 
 ## File format
 
@@ -67,13 +69,15 @@ and runs only (see DON).
 - `image_id` is site-local. Bandai sites use the base number plus an optional `_pN`
   or `_rN` suffix; cn uses the API's numeric id. Suffixes do not line up across
   sites, so the same art in two languages is a `printing_link`, never a shared
-  printing. tcgcsv (DON printings only) uses `{productId}:{Normal|Foil}`. Per site, image ids were measured stable (55 EN and 48 JP weekly
+  printing. tcgcsv uses `{productId}:{Normal|Foil}`. Per site, image ids were measured stable (55 EN and 48 JP weekly
   snapshots, Wayback 2023-2026 on the EN promo page). **cn is an assumption, not
   yet measured:** nothing has covered the stability of the API's numeric id, and
   the cn list also carries its own suffixed `cardNumber` (`P-084_01`: two digits,
   no p or r). The ingest snapshots both, and later runs diff them.
-- DON: see DON below. tcgcsv is a printing, locator, observation and run site
-  for DON only, never a product site.
+- DON and Release Event stamps: see their sections below. tcgcsv is a
+  printing, locator, claim and run site for DON and Release Event stamps, a
+  distribution site for Release Event stamps, an observation site for DON
+  only, and never a product site.
 
 ## DON
 
@@ -143,6 +147,54 @@ groups and 7,717 products; a value outside these vocabularies stops the run.
   `fetched_at`; an older page set stops the run with nothing written, an equal
   one is a re-run. The page set is complete or absent: any failed request fails
   the daily run, as for every other source.
+
+## Release Event stamps
+
+Release Event cards are copies of a set's own cards with a Release Event stamp,
+handed out at that set's release events. Mike, dm-alyssa 88048: they are their
+own printings. No official card list carries them (Bandai's en "OPxx Release
+Event" distributions hold the event's prize promo only, not the stamped set
+cards), so they mint from tcgcsv, as DON do. Measured 2026-10-09: 554 stamped
+cards in 7 TCGplayer groups whose abbreviation ends ` RE` (OP10 24068, OP11
+24242, OP12 24406, OP14 24579, OP15 24638, OP16 24677, OP17 24775; OP18 RE
+24834 is empty). Pre-Release stamps are out of scope.
+
+- **The card is the set card it stamps.** Each product's `extendedData`
+  Number is one card of ours, and the printing hangs off that card. Its facts
+  and observations stay on the official sites: a stamp writes no
+  `card_observation` and never sets `facts_site` (the schema keeps a tcgcsv
+  observation DON-only). A Number that matches no card is refused and counted,
+  never minted.
+- **Locator.** Unchanged from DON: `tcgcsv:{productId}:{subType}`. All 554
+  price Normal only, so every locator ends `:Normal`.
+- **Variant `stamped`.** A stamp's printing is `stamped` and nothing else, and
+  `stamped` is tcgcsv-only: the schema refuses it on every official site's
+  printing, and refuses it on a DON. A tcgcsv printing is therefore a DON
+  (rarity `DON`, variant `normal`, `foil` or `gold`) or a stamp (variant
+  `stamped`, any other rarity). A stamped product priced Foil stops the run:
+  a second finish would be a second physical card, and that is a ruling, not a
+  guess.
+- **Rows.** A stamped printing: `site` `tcgcsv`, `rarity` as TCGplayer prints
+  it (C or UC so far; 553 of 554 agree with the en base printing, EB04-053
+  reads C against en R), `source_text` the TCGplayer product name verbatim,
+  `block_icon` `null`. `image_url` follows the DON rule: TCGplayer's
+  `{productId}_in_1000x1000.jpg`, omitted while the product's `imageCount` is
+  0 and counted in the run's `no_image` (2026-10-09: OP16 RE, 75 of 75).
+- **No dates.** A stamped printing and its claim carry no date. tcgcsv is
+  never a date source (Release dates above), and that holds here too.
+- **One distribution per RE group.** `site` `tcgcsv`, `region` `en` (TCGplayer
+  is North American; the schema pins it), `kind` `event_pack`, `name` the
+  group's name verbatim ("The World's Strongest Warriors Release Event
+  Cards"). Its key is minted from `tcgcsv|{group name}`.
+- **One claim per stamped printing.** `source` `tcgcsv`, `source_url`
+  `https://tcgcsv.com/tcgplayer/68/{groupId}/products`, `quote` the group's
+  name verbatim, `confidence` `corroborated`.
+- **`corroborated` here means a third-party catalogue's own grouping**
+  (alyssa 88082): TCGplayer files the product under that event group, and we
+  record that it did. It is not "two sources agree", and it is never
+  `authoritative`, which is kept for Bandai's own pages.
+- **No product rows.** tcgcsv is never a product site, so a stamped printing
+  has no `printing_product`, as with DON.
 
 ## Write rules
 
