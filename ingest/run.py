@@ -17,7 +17,9 @@ Rules (CONTRACT.md):
 - A clean page stamps removed_at on its own listings that it no longer shows.
 - A block with a blank required field, or a value outside a measured vocabulary,
   stops the whole run before anything is written.
-- DON cards are not written here (Mike 86520: they mint from tcgcsv).
+- DON cards mint from tcgcsv/ in the page set when it is there (Mike 86520;
+  run_tcgcsv, CONTRACT.md DON): one card per normal DON product, one printing
+  per product and finish, keyed tcgcsv:{productId}:{subType}.
 - A product's release_date comes from its site's product index (products.py),
   only where the page set carries one ({site}/products/_log.json). A date is
   sticky: a run sets or moves it and never clears it.
@@ -42,13 +44,14 @@ import cnmodel
 import events
 import model
 import products
+import tcgcsv
 from bandai import independent_count, parse_page
 
 ROOT = Path(__file__).resolve().parent.parent
 SCHEMA = json.loads((ROOT / "schema/v1.schema.json").read_text("utf-8"))
 SITES = ["en", "asia-en", "jp", "tc"]
 REGION = {"en": "en", "asia-en": "asia", "jp": "jp", "tc": "asia", "cn": "cn"}
-FACTS_ORDER = ["jp", "en", "asia-en", "tc", "cn"]
+FACTS_ORDER = ["jp", "en", "asia-en", "tc", "cn", "tcgcsv"]
 ARMS = ["http_error", "zero_parse", "count_drop", "count_mismatch"]
 DROP_FLOOR = 0.9
 REQUIRED = ["number", "rarity", "category", "name", "image_src"]
@@ -96,6 +99,7 @@ class Store:
             self.recs[rtype].update(read_jsonl(self.repo / "data" / f"{d}.jsonl"))
         self.card_by_number = {c["number"]: k for k, c in self.recs["card"].items() if "number" in c}
         self.number_by_card = {k: n for n, k in self.card_by_number.items()}
+        self.design_by_card = {k: c["don_design"] for k, c in self.recs["card"].items() if "don_design" in c}
 
     def card_key(self, number):
         key = self.card_by_number.get(number) or model.mint("card", number)
@@ -489,8 +493,12 @@ def build_cards(store):
         facts_site = next(s for s in FACTS_ORDER if s in by_site)
         o = by_site[facts_site]
         old = store.recs["card"].get(card_key)
-        rec = {"key": card_key, "number": store.number_by_card[card_key], "facts_site": facts_site,
+        rec = {"key": card_key, "facts_site": facts_site,
                "first_seen_at": old["first_seen_at"] if old else first[card_key]}
+        if card_key in store.number_by_card:
+            rec["number"] = store.number_by_card[card_key]
+        else:
+            rec["don_design"] = store.design_by_card[card_key]
         for k in ("category", "colors", "cost", "life", "power", "counter", "attributes"):
             if k in o:
                 rec[k] = o[k]
@@ -664,6 +672,105 @@ def run_cn(store, cn_dir, state):
     return counts, refusals, {"rows": len(rows)}
 
 
+def run_tcgcsv(store, tcg_dir, state):
+    """Apply the tcgcsv page set: DON cards, their observations and printings. Returns this run's counts.
+
+    tcg_dir is tcgcsv.fetch_pageset's output; state is state/tcgcsv.json,
+    updated in place. A card is one normal DON product (alyssa 87481), reached
+    first through that product's existing locators, then through its
+    don_design, and minted from the don_design only when neither matches, so a
+    TCGplayer rename never mints a second card. tcgcsv has no product rows and
+    no listings, so nothing is ever removed here. A DON with no price row has no
+    finish and so no key: it is refused, counted, and mints when a price row
+    appears (upper 87490). A product TCGplayer has no image for (imageCount 0)
+    gets no image_url, is counted in no_image, and gains one the day the count
+    turns positive (upper 87556).
+    """
+    try:
+        t, groups, prods, prices, times = tcgcsv.read_pageset(tcg_dir)
+        specs, unpriced, don_count = tcgcsv.plan(groups, prods, prices)
+    except ValueError as ex:
+        raise RunError(f"tcgcsv: {ex}") from ex
+    # Stale guard, as on cn: an older page set replayed over newer data. Equal is a re-run.
+    last = state.get("groups_fetched_at")
+    if last and t < last:
+        raise RunError(f"tcgcsv groups fetched {t}, older than the data ({last}); nothing written")
+    counts = defaultdict(int)
+    counts["pages_fetched"] = len(prods) + len(prices)
+    counts["blocks_parsed"] = don_count
+    counts["unpriced"] = sorted(unpriced)
+    counts["no_image"] = sorted({sp["product_id"] for sp in specs if not sp["has_image"]})
+    refusals = {a: 0 for a in ARMS}
+    if not don_count:
+        refusals["zero_parse"] += 1
+        return counts, refusals
+
+    card_of_product = {}
+    for loc in store.recs["printing_locator"].values():
+        if loc["site"] == "tcgcsv":
+            pid = int(loc["image_id"].split(":")[0])
+            card_of_product[pid] = store.recs["printing"][loc["printing_key"]]["card_key"]
+    card_of_design = {d: k for k, d in store.design_by_card.items()}
+    product_of_card, names = {}, {}
+    for sp in specs:
+        cp = sp["card_product_id"]
+        # The normal's locators first; then this product's own, since a gold whose
+        # normal is unpriced is the only locator its card has (codex, PR 15).
+        card_key = (card_of_product.get(cp) or card_of_product.get(sp["product_id"])
+                    or card_of_design.get(sp["design"]) or model.mint("card", sp["design"]))
+        if product_of_card.setdefault(card_key, cp) != cp:
+            raise RunError(f"tcgcsv: products {product_of_card[card_key]} and {cp} resolve to one card "
+                           f"({card_key}, {sp['design']}); one normal product is one card")
+        card_of_product.setdefault(cp, card_key)
+        # don_design is set once, at mint, and never rewritten.
+        store.design_by_card.setdefault(card_key, sp["design"])
+        card_of_design.setdefault(store.design_by_card[card_key], card_key)
+        dt = times[sp["group_id"]]
+        if sp["product_id"] == cp:
+            names[card_key] = (sp["name"], dt)
+        loc_key = f"tcgcsv:{sp['product_id']}:{sp['sub_type']}"
+        prt = store.printing_key(loc_key)
+        printing = {"key": prt, "card_key": card_key, "site": "tcgcsv", "rarity": "DON", "variant": sp["variant"],
+                    "source_text": sp["name"], "block_icon": None}
+        if sp["has_image"]:
+            printing["image_url"] = tcgcsv.image_url(sp["product_id"])
+        store.upsert("printing", printing, dt, counts)
+        store.upsert("printing_locator", {"key": loc_key, "printing_key": prt, "site": "tcgcsv",
+                                          "image_id": f"{sp['product_id']}:{sp['sub_type']}"}, dt, counts)
+    # A gold whose normal is unpriced still names its card from the normal product.
+    for sp in specs:
+        card_key = card_of_product[sp["card_product_id"]]
+        if card_key not in names:
+            normal = next(p for p in prods[sp["group_id"]] if p["productId"] == sp["card_product_id"])
+            names[card_key] = (normal["name"], times[sp["group_id"]])
+
+    # One observation per card: the normal product's name as TCGplayer lists it
+    # (alyssa 87523). A rename supersedes it, the same as an erratum.
+    current = {o["card_key"]: o for o in store.recs["card_observation"].values()
+               if o["site"] == "tcgcsv" and "superseded_at" not in o}
+    for card_key, (name, dt) in sorted(names.items()):
+        fields = {"name": name, "category": "don", "colors": [], "attributes": [], "types": []}
+        h = model.observation_hash(fields)
+        cur = current.get(card_key)
+        if cur and cur["observation_hash"] == h:
+            continue
+        key = f"{card_key}:tcgcsv:{h}"
+        if cur:
+            cur["superseded_at"] = dt
+            counts["changed"] += 1
+        prior = store.recs["card_observation"].get(key)
+        if prior:
+            prior.pop("superseded_at", None)
+            counts["changed"] += 1
+        else:
+            store.recs["card_observation"][key] = ordered("card_observation", {
+                "key": key, "card_key": card_key, "site": "tcgcsv", "lang": "en",
+                "observation_hash": h, **fields, "first_seen_at": dt})
+            counts["added"] += 1
+    state["groups_fetched_at"] = t
+    return counts, refusals
+
+
 def snapshot_cn(repo, rows):
     """Both cn ids (numeric id and printed cardNumber), sorted, diffed against the last snapshot."""
     path = Path(repo) / "state" / "cn_ids.jsonl"
@@ -678,7 +785,7 @@ def snapshot_cn(repo, rows):
     return {path: body}, diff
 
 
-def render(store, states, repo, product_states=None, event_states=None, cn_state=None):
+def render(store, states, repo, product_states=None, event_states=None, cn_state=None, tcg_state=None):
     """Every file this run owns, as {path: text}. Nothing is written yet."""
     repo = Path(repo)
     out = {}
@@ -700,6 +807,8 @@ def render(store, states, repo, product_states=None, event_states=None, cn_state
         out[repo / "state" / "event_pages" / f"{site}.json"] = json.dumps(st, ensure_ascii=False, sort_keys=True, indent=1) + "\n"
     if cn_state is not None:
         out[repo / "state" / "cn.json"] = json.dumps(cn_state, sort_keys=True, indent=1) + "\n"
+    if tcg_state is not None:
+        out[repo / "state" / "tcgcsv.json"] = json.dumps(tcg_state, sort_keys=True, indent=1) + "\n"
     return out
 
 
@@ -771,16 +880,23 @@ def run(pageset, repo, sites=SITES, now=time.time):
         cn_result = {"counts": counts, "refusals": refusals, "page_refusals": {}, "distributions": len(by_name),
                      "t0": t0, "t1": now()}
         cn_rows = json.loads((cn_dir / "_list.json").read_text("utf-8"))["rows"]
+    tcg_dir, tcg_state, tcg_result = pageset / "tcgcsv", None, None
+    if (tcg_dir / "_groups.json").exists():
+        sp = repo / "state" / "tcgcsv.json"
+        tcg_state = json.loads(sp.read_text("utf-8")) if sp.exists() else {}
+        t0 = now()
+        counts, refusals = run_tcgcsv(store, tcg_dir, tcg_state)
+        tcg_result = {"counts": counts, "refusals": refusals, "page_refusals": {}, "t0": t0, "t1": now()}
     card_counts = build_cards(store)
     validate(store)
-    files = render(store, states, repo, product_states, event_states, cn_state)
+    files = render(store, states, repo, product_states, event_states, cn_state, tcg_state)
     cn_diff = None
     if cn_rows is not None:
         cn_files, cn_diff = snapshot_cn(repo, cn_rows)
         files.update(cn_files)
     files[repo / "manifest.json"] = manifest(files, repo)
     stamp = time.strftime("%Y%m%dT%H%M%SZ", time.gmtime(started))
-    runs = dict(results, **({"cn": cn_result} if cn_result else {}))
+    runs = dict(results, **({"cn": cn_result} if cn_result else {}), **({"tcgcsv": tcg_result} if tcg_result else {}))
     for site, r in runs.items():
         c = r["counts"]
         run_rec = {"run_id": f"{stamp}-{site}", "site": site, "started_at": utc(r["t0"]), "finished_at": utc(r["t1"]),
@@ -791,6 +907,9 @@ def run(pageset, repo, sites=SITES, now=time.time):
             run_rec["new_products"] = c["new_products"]
         if site == "cn":
             run_rec["variant_disagreements"] = c["variant_disagreements"]
+        if site == "tcgcsv":
+            run_rec["unpriced"] = len(c["unpriced"])
+            run_rec["no_image"] = len(c["no_image"])
         errs = list(Draft202012Validator({"$schema": SCHEMA["$schema"], "$defs": SCHEMA["$defs"],
                                           "$ref": "#/$defs/ingest_run"}).iter_errors(run_rec))
         if errs:
@@ -803,7 +922,7 @@ def run(pageset, repo, sites=SITES, now=time.time):
             raise RunError(f"{rp.relative_to(repo)} already exists (a run started in the same second); nothing written")
         files[rp] = json.dumps(ordered("ingest_run", run_rec), ensure_ascii=False, indent=1) + "\n"
     write(files)
-    return {"sites": results, "cards": dict(card_counts), "cn": cn_diff, "cn_run": cn_result}
+    return {"sites": results, "cards": dict(card_counts), "cn": cn_diff, "cn_run": cn_result, "tcgcsv_run": tcg_result}
 
 
 def date_line(d):
@@ -830,6 +949,15 @@ def cn_line(r):
             f"unknown number tokens {r['counts']['unknown_tokens']}, distributions {r['distributions']}")
 
 
+def tcgcsv_line(r):
+    run_rec = r["run"]
+    ids, bare = r["counts"]["unpriced"], r["counts"]["no_image"]
+    return (f"tcgcsv: product and price files read {run_rec['pages_fetched']}, DON products {run_rec['blocks_parsed']}, "
+            f"added {run_rec['added']}, changed {run_rec['changed']}, refusals {run_rec['refusals']}, "
+            f"unpriced (refused, no key) {len(ids)}{' [' + ', '.join(map(str, ids)) + ']' if ids else ''}, "
+            f"no image yet {len(bare)}{' [' + ', '.join(map(str, bare)) + ']' if bare else ''}")
+
+
 def main(argv):
     ap = argparse.ArgumentParser()
     ap.add_argument("pageset")
@@ -853,6 +981,8 @@ def main(argv):
         print(f"  {origin_line(r['distributions'], r['origin'])}")
     if res["cn_run"]:
         print(cn_line(res["cn_run"]))
+    if res["tcgcsv_run"]:
+        print(tcgcsv_line(res["tcgcsv_run"]))
     print(f"cards: {res['cards']}")
     if res["cn"]:
         print(f"cn snapshot: {res['cn']}")

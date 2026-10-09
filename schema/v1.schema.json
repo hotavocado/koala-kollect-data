@@ -15,7 +15,7 @@
       ]
     },
     "printing_site": {
-      "description": "Where a printing or its locator was read: an official site, or tcgcsv for DON printings only. No official site lists DON cards, so tcgcsv is their only source. Not a site for observations, products or runs.",
+      "description": "Where a printing, its locator, a DON card's observation or a run was read: an official site, or tcgcsv for DON only. No official site lists DON cards, so tcgcsv is their only source (alyssa 87523: the TCGplayer product name is the observed name). Never a product site.",
       "anyOf": [
         {
           "$ref": "#/$defs/site"
@@ -103,7 +103,7 @@
       ]
     },
     "card": {
-      "description": "Rules identity. Canonical facts come from one site's observation, jp first (JP is the authority), then en, asia-en, tc, cn; every site's own reading is kept in card_observation. Natural key: number for numbered cards, don_design for DON cards (Mike 86397: each DON design is its own card; normal and gold of one design are printings of it).",
+      "description": "Rules identity. Canonical facts come from one site's observation, jp first (JP is the authority), then en, asia-en, tc, cn, and tcgcsv for DON; every site's own reading is kept in card_observation. Natural key: number for numbered cards, don_design for DON cards (Mike 86397: each DON design is its own card; normal and gold of one design are printings of it).",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -124,7 +124,7 @@
           "minLength": 1
         },
         "don_design": {
-          "description": "DON cards only: {first product code}:{art slug}, e.g. OP-01:monkey-d-luffy. Unique. Normal and gold DON of one design share this card and differ as printings.",
+          "description": "DON cards only: {TCGplayer group abbreviation}:{slug of the normal product's name}, e.g. OP09:don-card-alternate-art. Unique, set once at mint and never rewritten. Art is not measured, so this over-splits: the same art reissued in another group is a second card until art is measured. Normal and gold of one design share this card and differ as printings.",
           "type": "string",
           "pattern": "^[A-Za-z0-9-]+:[a-z0-9-]+$"
         },
@@ -167,7 +167,7 @@
           "minimum": 0
         },
         "facts_site": {
-          "description": "Which source's current reading supplied the canonical facts. Fallback order: jp, en, asia-en, tc, cn (the first site with an observation wins), so a card with no JP printing still has facts. DON cards only may carry tcgcsv: no official site lists DON cards (0 on all five, 2026-10-08), so their facts come from tcgcsv.",
+          "description": "Which source's current reading supplied the canonical facts. Fallback order: jp, en, asia-en, tc, cn, tcgcsv (the first site with an observation wins), so a card with no JP printing still has facts. DON cards only may carry tcgcsv: no official site lists DON cards (0 on all five, 2026-10-08), so their facts come from tcgcsv.",
           "anyOf": [
             {
               "$ref": "#/$defs/site"
@@ -250,13 +250,13 @@
         "key": {
           "description": "{card_key}:{site}:{observation_hash}",
           "type": "string",
-          "pattern": "^card_[0-9a-z]{12}:(en|asia-en|jp|tc|cn):[0-9a-f]{16}$"
+          "pattern": "^card_[0-9a-z]{12}:(en|asia-en|jp|tc|cn|tcgcsv):[0-9a-f]{16}$"
         },
         "card_key": {
           "$ref": "#/$defs/card_key"
         },
         "site": {
-          "$ref": "#/$defs/site"
+          "$ref": "#/$defs/printing_site"
         },
         "lang": {
           "$ref": "#/$defs/lang"
@@ -322,6 +322,23 @@
         "superseded_at": {
           "$ref": "#/$defs/timestamp"
         }
+      },
+      "if": {
+        "required": [
+          "site"
+        ],
+        "properties": {
+          "site": {
+            "const": "tcgcsv"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "category": {
+            "const": "don"
+          }
+        }
       }
     },
     "printing": {
@@ -334,7 +351,6 @@
         "site",
         "rarity",
         "variant",
-        "image_url",
         "source_text",
         "block_icon",
         "first_seen_at"
@@ -363,12 +379,14 @@
             "reprint",
             "manga",
             "serial",
-            "other"
+            "other",
+            "normal",
+            "foil"
           ],
-          "description": "gold = gold DON!! of a DON design; base is the normal one."
+          "description": "DON (tcgcsv) printings use normal, foil and gold only: normal and foil are the two finishes of a normal DON product (TCGplayer's Normal and Foil price rows, two physical cards, alyssa 87481), gold is the gold DON product's printing, and gold is always foil."
         },
         "image_url": {
-          "description": "Absolute URL with no query string or fragment: the official site's, or TCGplayer's image for a tcgcsv DON printing. Bandai appends a site-wide deploy stamp (?260929) that changes on every redeploy; keeping it would make every printing differ on every run. Linked, never re-hosted.",
+          "description": "Absolute URL with no query string or fragment: the official site's, or TCGplayer's image for a tcgcsv DON printing. Required on every official site's printing. Omitted on a tcgcsv printing whose product TCGplayer has no image for (imageCount 0, where its CDN answers 403), until it has one (upper 87556). Bandai appends a site-wide deploy stamp (?260929) that changes on every redeploy; keeping it would make every printing differ on every run. Linked, never re-hosted.",
           "type": "string",
           "pattern": "^https://[^?#]+$"
         },
@@ -406,6 +424,25 @@
         }
       },
       "allOf": [
+        {
+          "if": {
+            "required": [
+              "site"
+            ],
+            "properties": {
+              "site": {
+                "not": {
+                  "const": "tcgcsv"
+                }
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "image_url"
+            ]
+          }
+        },
         {
           "if": {
             "required": [
@@ -477,9 +514,37 @@
               },
               "variant": {
                 "enum": [
-                  "base",
+                  "normal",
+                  "foil",
                   "gold"
                 ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "site"
+            ],
+            "properties": {
+              "site": {
+                "not": {
+                  "const": "tcgcsv"
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "variant": {
+                "description": "normal and foil are the two finishes of a tcgcsv DON product and nothing else: an official site's printing never carries them (codex, PR 15).",
+                "not": {
+                  "enum": [
+                    "normal",
+                    "foil"
+                  ]
+                }
               }
             }
           }
@@ -510,7 +575,7 @@
           "$ref": "#/$defs/printing_site"
         },
         "image_id": {
-          "description": "Site-local. Bandai sites: base number plus an optional _pN or _rN suffix (OP14-108_p3, P-001_p5, ..._r1), measured stable per site. cn: the API's numeric id, an ASSUMPTION not yet measured (the cn list also carries its own suffixed cardNumber such as P-084_01). Suffixes do not line up across sites. tcgcsv: TCGplayer's productId, an integer (roberto 86534).",
+          "description": "Site-local. Bandai sites: base number plus an optional _pN or _rN suffix (OP14-108_p3, P-001_p5, ..._r1), measured stable per site. cn: the API's numeric id, an ASSUMPTION not yet measured (the cn list also carries its own suffixed cardNumber such as P-084_01). Suffixes do not line up across sites. tcgcsv: {TCGplayer productId}:{finish}, the finish as TCGplayer's price row names it, Normal or Foil (alyssa 87481): always present, so a product that gains a second finish never rekeys.",
           "type": "string",
           "minLength": 1
         },
@@ -552,7 +617,7 @@
           "then": {
             "properties": {
               "image_id": {
-                "pattern": "^[0-9]+$"
+                "pattern": "^[0-9]+:(Normal|Foil)$"
               }
             },
             "not": {
@@ -852,6 +917,38 @@
       "description": "Data-repo audit only (runs/), not synced to the app. A page with any refusal never stamps removed_at.",
       "type": "object",
       "additionalProperties": false,
+      "if": {
+        "required": [
+          "site"
+        ],
+        "properties": {
+          "site": {
+            "const": "tcgcsv"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "unpriced",
+          "no_image"
+        ]
+      },
+      "else": {
+        "not": {
+          "anyOf": [
+            {
+              "required": [
+                "unpriced"
+              ]
+            },
+            {
+              "required": [
+                "no_image"
+              ]
+            }
+          ]
+        }
+      },
       "required": [
         "run_id",
         "site",
@@ -872,7 +969,7 @@
           "minLength": 1
         },
         "site": {
-          "$ref": "#/$defs/site"
+          "$ref": "#/$defs/printing_site"
         },
         "started_at": {
           "$ref": "#/$defs/timestamp"
@@ -944,6 +1041,16 @@
           "items": {
             "$ref": "#/$defs/product_key"
           }
+        },
+        "unpriced": {
+          "description": "tcgcsv only. DON products with no price row, so no finish and no key: refused, never minted, and minted on the first run that sees a price row (upper 87490). The run line names them by productId.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "no_image": {
+          "description": "tcgcsv only. DON products written this run with no image on TCGplayer (imageCount 0), so their printings carry no image_url yet. The run line names them by productId.",
+          "type": "integer",
+          "minimum": 0
         },
         "variant_disagreements": {
           "description": "cn only. Printings written this run whose variant signals (number token, image token, name marker) did not all agree. Any one present makes the printing a parallel; this counts the rows where that call rested on less than all of them (alyssa 87295).",

@@ -32,6 +32,11 @@ the pages still on the current list. A failed list or event page fails the run.
 cn is fetched into the page set as cn/ (cn.fetch_pageset): the list, the
 products, and a detail call only for ids the data repo has no printing for, so
 a normal day costs the list plus the new ids. A failed detail fails the run.
+
+DON cards come from tcgcsv, fetched into the page set as tcgcsv/
+(tcgcsv.fetch_pageset): the groups, every group's products, and prices for the
+groups that carry a DON. Any failed request fails the run, as for every other
+source; tcgcsv has no removals, so the next day's run heals it.
 """
 import argparse
 import json
@@ -47,6 +52,7 @@ import model
 import events
 import products
 import run
+import tcgcsv
 from bandai import series_options
 
 SITES = run.SITES
@@ -103,6 +109,14 @@ def decide(fetch_failures, result):
                 failures.append(f"cn: {n} refused ({arm})")
         c = cn_run["counts"]
         if c["added"] or c["changed"] or c["removed"]:
+            changed = True
+    tcg_run = result.get("tcgcsv_run")
+    if tcg_run:
+        for arm, n in tcg_run["refusals"].items():
+            if n:
+                failures.append(f"tcgcsv: {n} refused ({arm})")
+        c = tcg_run["counts"]
+        if c["added"] or c["changed"]:
             changed = True
     if any(result["cards"].values()):
         changed = True
@@ -204,6 +218,13 @@ def fetch_all(pageset, sites, repo):
     except Exception as e:
         failures.append(f"cn: list failed: {type(e).__name__}: {e}")
         print(f"fetch cn: FAILED after {time.monotonic() - t0:.0f}s: {type(e).__name__}: {e}", flush=True)
+    t0 = time.monotonic()
+    try:
+        n = tcgcsv.fetch_pageset(Path(pageset) / "tcgcsv")
+        print(f"fetch tcgcsv: {n} groups, products and DON prices, {time.monotonic() - t0:.0f}s", flush=True)
+    except Exception as e:
+        failures.append(f"tcgcsv: fetch failed: {type(e).__name__}: {e}")
+        print(f"fetch tcgcsv: FAILED after {time.monotonic() - t0:.0f}s: {type(e).__name__}: {e}", flush=True)
     return failures
 
 
@@ -265,6 +286,10 @@ def daily(pageset, repo, out, sites=SITES, dry_run=False, fake=None, fetcher=Non
         summary["cn"] = result["cn"]
         if result.get("cn_run"):
             summary["cn_run"] = result["cn_run"]["run"]
+        if result.get("tcgcsv_run"):
+            summary["tcgcsv_run"] = dict(result["tcgcsv_run"]["run"],
+                                         unpriced_ids=result["tcgcsv_run"]["counts"]["unpriced"],
+                                         no_image_ids=result["tcgcsv_run"]["counts"]["no_image"])
     (out / "summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=1) + "\n", "utf-8")
     return (0 if not failures else 1), summary
 
@@ -293,6 +318,11 @@ def main(argv):
         print(f"cn: details read {r['pages_fetched']}, rows {r['blocks_parsed']}, added {r['added']}, "
               f"changed {r['changed']}, removed {r['removed']}, refusals {r['refusals']}, "
               f"variant signals disagree on {r['variant_disagreements']}")
+    if "tcgcsv_run" in s:
+        r = s["tcgcsv_run"]
+        print(f"tcgcsv: DON products {r['blocks_parsed']}, added {r['added']}, changed {r['changed']}, "
+              f"refusals {r['refusals']}, unpriced (refused, no key) {r['unpriced']} {r['unpriced_ids']}, "
+              f"no image yet {r['no_image']} {r['no_image_ids']}")
     if "cn" in s:
         print(f"cards: {s['cards']}  cn: {s['cn']}")
     if s["notice_title"]:

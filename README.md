@@ -13,8 +13,10 @@ re-hosted.
 **Status:** cards, printings, products and card text for `en`, `asia-en`, `jp`
 and `tc`, from each site's official card list (first run 2026-10-08), updated
 daily. Each product carries that site's release date, read from the site's own
-product index. Not yet: `cn` printings, DON cards, and event and promo
-distributions. `state/` holds what the ingest needs between runs (each page's
+product index. `cn` printings come from the mainland-China card API, promo
+origins from each site's event pages, and DON cards from tcgcsv, TCGplayer's
+catalogue, because no official card list carries them (see CONTRACT.md, DON;
+their images link to TCGplayer). `state/` holds what the ingest needs between runs (each page's
 last clean count and hash, the series each product page links, the `cn` id
 snapshot, and `keepalive.txt`, the date of the last heartbeat commit that stops
 GitHub switching the daily schedule off after a quiet spell); the app does not

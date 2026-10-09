@@ -21,6 +21,7 @@ runs/{YYYY}/{MM}/{run_id}.json        ingest_run (audit only, not synced)
 state/pages/{site}.json               last clean block count, hash and fetched_at per page (ingest only, not synced)
 state/cn_ids.jsonl                    cn id snapshot, numeric id and cardNumber (ingest only, not synced)
 state/cn.json                         cn list fetch time and row count of the last committed run (ingest only, not synced)
+state/tcgcsv.json                     tcgcsv groups fetch time of the last committed run (ingest only, not synced)
 state/product_pages/{site}.json       series each product page links, and the product index fetch time (ingest only, not synced)
 state/event_pages/{site}.json         event and topic pages already read, and the event list fetch time (ingest only, not synced)
 state/keepalive.txt                   date of the last heartbeat commit, written only after 30 quiet days (ingest only, not synced)
@@ -28,7 +29,8 @@ state/keepalive.txt                   date of the last heartbeat commit, written
 
 `site` is one of `en`, `asia-en`, `jp`, `tc`, `cn`. These are sites, not
 languages: `en` and `asia-en` are both English and list different products and
-promos.
+promos. DON rows add a sixth, `tcgcsv`, for printings, locators, observations
+and runs only (see DON).
 
 ## File format
 
@@ -48,7 +50,7 @@ promos.
 
 | Record | Key | Natural key |
 |---|---|---|
-| card | `card_` + 12 [0-9a-z], minted once | `number`; for DON cards, `don_design` |
+| card | `card_` + 12 [0-9a-z], minted once | `number`; for DON cards, `don_design` (see DON) |
 | printing | `prt_` + 12 [0-9a-z], minted once | its locator, `{site}:{image_id}` |
 | distribution | `dist_` + 12 [0-9a-z], minted from the natural key | `{site}\|{source_text}`: the pack a site's card list names |
 | product | `{site}:{series_id}` | itself |
@@ -63,30 +65,82 @@ promos.
 - `image_id` is site-local. Bandai sites use the base number plus an optional `_pN`
   or `_rN` suffix; cn uses the API's numeric id. Suffixes do not line up across
   sites, so the same art in two languages is a `printing_link`, never a shared
-  printing. tcgcsv (DON printings only) uses TCGplayer's numeric productId. Per site, image ids were measured stable (55 EN and 48 JP weekly
+  printing. tcgcsv (DON printings only) uses `{productId}:{Normal|Foil}`. Per site, image ids were measured stable (55 EN and 48 JP weekly
   snapshots, Wayback 2023-2026 on the EN promo page). **cn is an assumption, not
   yet measured:** nothing has covered the stability of the API's numeric id, and
   the cn list also carries its own suffixed `cardNumber` (`P-084_01`: two digits,
   no p or r). The ingest snapshots both, and later runs diff them.
-- DON: each DON design is its own card (`category: don`, no `number`,
-  `don_design` = `{first product code}:{art slug}`). The normal and gold DON of one
-  design are two printings of that card (`variant: base` and `variant: gold`).
-  No official card list carries DON cards (0 on all five sites, measured
-  2026-10-08), so DON designs are minted from tcgcsv, and a DON card's
-  `facts_site` is `tcgcsv`. The schema refuses `tcgcsv` on any other category.
-  A DON printing's `site` is `tcgcsv` and its locator is `tcgcsv:{productId}`,
-  TCGplayer's own integer id (roberto 86534), which phase 3's price rows key on
-  too. `tcgcsv` is a printing and locator site only, never a product,
-  observation or run site, and a tcgcsv printing must be `rarity: DON`,
-  `variant: base` or `gold`.
-  The card is minted from the art, never from the product: a design reissued
-  in a later DON pack is a new productId and so a second printing of the same
-  card, found by its `don_design`.
-  **Assumption, not yet measured:** a normal and a gold DON are separate
-  TCGplayer products, so one product is one printing. If they turn out to be
-  one product with a variant field, the locator becomes
-  `tcgcsv:{productId}:{variant}` and the row is otherwise unchanged. The ingest
-  measures this at its tcgcsv step.
+- DON: see DON below. tcgcsv is a printing, locator, observation and run site
+  for DON only, never a product site.
+
+## DON
+
+No official card list carries DON cards (0 on all five sites, measured
+2026-10-08), so they mint from tcgcsv, TCGplayer's catalogue (`ingest/tcgcsv.py`,
+`run_tcgcsv`). Mike 86397: each DON is its own card, and a normal and a gold
+DON are related the way a rare and its alt art are. Measured 2026-10-09 over 87
+groups and 7,717 products; a value outside these vocabularies stops the run.
+
+- **Which products are DON.** Those whose `extendedData` CardType is `DON!!`
+  (240). Not Rarity: 17 DON promos carry Rarity `PR`. The 18 sealed
+  "Special DON!! Card Pack DP-NN" products carry no card data, so they are not
+  DON cards. No DON carries a Number, so a DON card has none.
+- **Normal and gold are separate products.** A gold is named as its normal
+  plus ` (Gold)`, in the same group (73 of 74). A product named `(Gold)` whose
+  group has no normal of that name is a normal product, its own card:
+  482236 "DON!! Card (Gold)" sits in the promo colour series (Red, Yellow,
+  Blue, Purple, Silver beside it), which is inference from its neighbours, not
+  a measurement.
+- **The card is the normal product** (alyssa 87481). `don_design` is
+  `{group abbreviation}:{slug of the normal product's name}`
+  (`PRB-01:don-card-uta`; a space in an abbreviation becomes `-`, so
+  `ST-01-PRE:don-card`). It is set once, at mint, and never rewritten. A card
+  is found through its normal product's existing locators first, then its
+  `don_design`, and minted only when neither matches, so a TCGplayer rename
+  keeps the card and versions its observation. **This over-splits until art is
+  measured**: the same art reissued in another group is two cards today and
+  would be one card later (upper 87516). Over-split was chosen because a merge
+  is recoverable and a wrong merge is not.
+- **Finish is a printing.** TCGplayer prices each product per finish, its
+  price row's `subTypeName`, `Normal` or `Foil`, and one product can carry both
+  (69 do: PRB-01 30, PRB-02 30, OP-PR 4, EB03 4, OP10 1). They are two physical
+  cards (alyssa 87481). So a printing is one product in one finish, and its
+  locator **always** carries the finish: `tcgcsv:{productId}:{subType}`, on a
+  Foil-only product too, so a product that gains a finish later gains a
+  printing and nothing rekeys. `productId` is TCGplayer's own integer, which
+  price rows key on too.
+- **Variant.** A normal product's printing is `normal` or `foil`, its finish.
+  Those two are tcgcsv-only: the schema refuses them on every official site's
+  printing. A gold product's printing is `gold`, and **gold is always foil**: there is no
+  gold-foil variant (74 of 74 golds are Foil only; a gold priced Normal stops
+  the run). The rule lives in one function, `tcgcsv.variant`, so a ruling on
+  the finish is a change there only.
+- **No price row, no key** (upper 87490). Two DON have no price row
+  (2026-10-09: 561656 and 619595, the 2023 and 2024 World Championship promos),
+  so no finish and no locator. They are refused, counted in the run's
+  `unpriced`, named by productId on the run line, and mint on the first run
+  that sees a price row. No finish is ever guessed.
+- **Rows.** A DON printing: `site` `tcgcsv`, `rarity` `DON`, `source_text` the
+  TCGplayer product name verbatim (the gold's own name on a gold printing),
+  `image_url` TCGplayer's `{productId}_in_1000x1000.jpg`, `block_icon` `null`.
+- **image_url is omitted while TCGplayer has no image** (upper 87556, alyssa
+  87571). A product's `imageCount` is TCGplayer's own count of its images;
+  where it is 0 the CDN answers 403 (2026-10-09: 3 of 240, 677570, 677571 and
+  719824, and exactly those 3). Such a printing carries no `image_url`, the
+  run counts it in `no_image` and names it, and the first run that sees a
+  positive count writes the URL. This is why the field is split by site: a
+  new DON listing sits at `imageCount` 0 for a while, so a required URL would
+  be wrong by construction, not only for three rows. Every official site's
+  printing still requires one.
+  A DON card's observation (alyssa 87523): `site` `tcgcsv`, `lang` `en`, `name`
+  the normal product's name verbatim, `category` `don`, no colours, attributes
+  or types, and its `facts_site` is `tcgcsv`. tcgcsv has no product rows and no
+  listings, so a DON printing has no `printing_product` and nothing is ever
+  removed.
+- **Stale guard.** `state/tcgcsv.json` holds the committed page set's groups
+  `fetched_at`; an older page set stops the run with nothing written, an equal
+  one is a re-run. The page set is complete or absent: any failed request fails
+  the daily run, as for every other source.
 
 ## Write rules
 
@@ -118,7 +172,7 @@ promos.
   `source_text` is the empty string and the run counts it in
   `blocks_without_source_text`. A jump in that count means a broken parser.
 - **Images are linked, never hosted.** `image_url` is the absolute official URL
-  with no query string. Bandai's card images carry a site-wide deploy stamp
+  (TCGplayer's for a DON printing) with no query string. Bandai's card images carry a site-wide deploy stamp
   (`?260929`) that changes on every redeploy; keeping it would turn each
   redeploy into a change to every printing.
 - `printing_links` are reviewed; the ingest may propose them only with
