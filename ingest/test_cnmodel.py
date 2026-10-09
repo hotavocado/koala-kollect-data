@@ -39,7 +39,8 @@ class Numbers(unittest.TestCase):
     def test_inline_rows_mint_no_cn_only_card(self):
         # alyssa 87274: the number field is the base number. Read raw, the 75
         # inline rows name 75 numbers no card carries; split, they name none.
-        numbers = {json.loads(line)["number"] for line in CARDS.read_text("utf-8").splitlines()}
+        # DON cards carry no number (CONTRACT.md, DON).
+        numbers = {r["number"] for r in map(json.loads, CARDS.read_text("utf-8").splitlines()) if "number" in r}
         self.assertEqual(len(INLINE), 75)
         self.assertEqual(sum(r["cardNumber"] not in numbers for r in INLINE), 75)
         self.assertEqual([r["cardNumber"] for r in INLINE if cnmodel.split_number(r["cardNumber"])[0] not in numbers], [])
@@ -183,7 +184,7 @@ class Facts(unittest.TestCase):
 def jp_card(number):
     for line in CARDS.read_text("utf-8").splitlines():
         rec = json.loads(line)
-        if rec["number"] == number:
+        if rec.get("number") == number:  # DON cards carry none
             return rec
     raise KeyError(number)
 
