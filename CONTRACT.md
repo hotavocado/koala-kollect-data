@@ -160,7 +160,9 @@ cards in 7 TCGplayer groups whose abbreviation ends ` RE` (OP10 24068, OP11
 24834 is empty). Pre-Release stamps are out of scope.
 
 - **Which groups.** Only the groups in `tcgcsv.RE_GROUPS` mint, by groupId,
-  so a group joins the data by a change there: today OP17 RE (24775) alone.
+  so a group joins the data by a change there: today the seven listed above.
+  OP18 RE (24834) is not admitted while it lists no stamp, since an admitted
+  group with none stops the run.
   A stamp is a product in such a group with an `extendedData` Number; the
   group's sealed pack has none and is not read. An admitted group missing
   from `/groups`, holding no stamp, or with no price file stops the run.
