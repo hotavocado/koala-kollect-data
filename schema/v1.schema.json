@@ -521,6 +521,33 @@
               }
             }
           }
+        },
+        {
+          "if": {
+            "required": [
+              "site"
+            ],
+            "properties": {
+              "site": {
+                "not": {
+                  "const": "tcgcsv"
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "variant": {
+                "description": "normal and foil are the two finishes of a tcgcsv DON product and nothing else: an official site's printing never carries them (codex, PR 15).",
+                "not": {
+                  "enum": [
+                    "normal",
+                    "foil"
+                  ]
+                }
+              }
+            }
+          }
         }
       ]
     },

@@ -110,7 +110,8 @@ groups and 7,717 products; a value outside these vocabularies stops the run.
   printing and nothing rekeys. `productId` is TCGplayer's own integer, which
   price rows key on too.
 - **Variant.** A normal product's printing is `normal` or `foil`, its finish.
-  A gold product's printing is `gold`, and **gold is always foil**: there is no
+  Those two are tcgcsv-only: the schema refuses them on every official site's
+  printing. A gold product's printing is `gold`, and **gold is always foil**: there is no
   gold-foil variant (74 of 74 golds are Foil only; a gold priced Normal stops
   the run). The rule lives in one function, `tcgcsv.variant`, so a ruling on
   the finish is a change there only.
