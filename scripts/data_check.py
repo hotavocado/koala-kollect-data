@@ -111,16 +111,24 @@ def retired_errors(printing_keys, retired):
 
 
 def stamped_finish_errors(printings, locators):
-    """A stamped printing's locator ends :Normal.
+    """A stamped printing has a locator, and every locator it has ends :Normal.
 
     Every Release Event stamp prices Normal only (554 of 554, 2026-10-09) and a
     stamp priced Foil stops the walker (CONTRACT, Release Event stamps). The
-    schema cannot see this, because a locator does not carry its printing's
-    variant (codex, PR 17).
+    locator is a stamp's natural key, so one with none is refused too. The
+    schema cannot see either, because a locator does not carry its printing's
+    variant (codex, PR 17, rounds 1 and 2).
     """
     stamped = {rec["key"] for rec in printings if rec.get("variant") == "stamped"}
-    return [f"printing_locator {rec.get('key')}: stamped printing {rec['printing_key']} on a finish other than Normal"
-            for rec in locators if rec.get("printing_key") in stamped and not rec.get("image_id", "").endswith(":Normal")]
+    out, located = [], set()
+    for rec in locators:
+        if rec.get("printing_key") not in stamped:
+            continue
+        located.add(rec["printing_key"])
+        if not rec.get("image_id", "").endswith(":Normal"):
+            out.append(f"printing_locator {rec.get('key')}: stamped printing {rec['printing_key']} on a finish other than Normal")
+    out += [f"printing {k}: stamped with no locator" for k in sorted(stamped - located)]
+    return out
 
 
 def strings(val):

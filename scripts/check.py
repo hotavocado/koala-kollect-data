@@ -105,15 +105,16 @@ for why, live, rec in [
         bad += 1
         print("FAIL control passed:", why)
 
-# Control: a stamped printing on a Foil locator, and its Normal twin passing.
+# Controls: a stamped printing on a Foil locator, and one with no locator; its Normal twin passes.
 stamp = [{"key": "prt_op17002stamp", "variant": "stamped"}]
 foil = [{"key": "tcgcsv:712666:Foil", "printing_key": "prt_op17002stamp", "image_id": "712666:Foil"}]
 normal = [{"key": "tcgcsv:712666:Normal", "printing_key": "prt_op17002stamp", "image_id": "712666:Normal"}]
-if stamped_finish_errors(stamp, foil) and not stamped_finish_errors(stamp, normal):
-    print("ok   red   a stamped printing on a Foil locator")
-else:
-    bad += 1
-    print("FAIL control: a stamped printing on a Foil locator")
+for why, locs in [("a stamped printing on a Foil locator", foil), ("a stamped printing with no locator", [])]:
+    if stamped_finish_errors(stamp, locs) and not stamped_finish_errors(stamp, normal):
+        print("ok   red  ", why)
+    else:
+        bad += 1
+        print("FAIL control:", why)
 
 # The data itself, when the ingest has written any: manifest, files, schema, references.
 data_errors = check_data(root, schema)

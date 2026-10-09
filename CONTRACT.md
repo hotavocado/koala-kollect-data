@@ -167,8 +167,8 @@ cards in 7 TCGplayer groups whose abbreviation ends ` RE` (OP10 24068, OP11
   never minted.
 - **Locator.** Unchanged from DON: `tcgcsv:{productId}:{subType}`. All 554
   price Normal only, so every locator ends `:Normal`; `scripts/check.py`
-  refuses a stamped printing on any other finish (a cross-record check, since
-  a locator does not carry its printing's variant).
+  refuses a stamped printing on any other finish, or with no locator at all (a
+  cross-record check, since a locator does not carry its printing's variant).
 - **Variant `stamped`.** A stamp's printing is `stamped` and nothing else, and
   `stamped` is tcgcsv-only: the schema refuses it on every official site's
   printing, and refuses it on a DON. A tcgcsv printing is therefore a DON
