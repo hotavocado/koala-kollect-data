@@ -38,9 +38,11 @@ DON_TYPE = "DON!!"
 GOLD_SUFFIX = " (Gold)"
 # The finishes measured on DON price rows. Anything else stops the run.
 FINISH = {"Normal": "normal", "Foil": "foil"}
-# The Release Event groups whose stamps mint, by groupId. One at a time, so a
-# group joins the data by a change here (upper 88114: OP17 RE first).
-RE_GROUPS = {24775}
+# The Release Event groups whose stamps mint, by groupId, so a group joins the
+# data by a change here and never by TCGplayer adding one (upper 88114: OP17 RE
+# first; 88164: the other six). OP18 RE (24834) lists no stamp yet, and an
+# admitted group with no stamp stops the run, so it waits for its own change.
+RE_GROUPS = {24068, 24242, 24406, 24579, 24638, 24677, 24775}
 
 
 def _get(path, timeout=60):

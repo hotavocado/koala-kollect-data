@@ -31,6 +31,20 @@ URL = "https://tcgcsv.com/tcgplayer/68/24775/products"
 STAMPS = [712666, 712669, 712677]
 SEALED = 712741
 T1, T2 = "2026-10-09T14:01:28Z", "2026-10-10T14:01:28Z"
+# The allowlist as shipped, read before setUpModule narrows it.
+ADMITTED = frozenset(tcgcsv.RE_GROUPS)
+# A second admitted group for the two-group run: OP16 RE as tcgcsv names it,
+# holding one stamp cloned from Haruta under a product id of its own, with no
+# image (OP16 RE's 75 have none today).
+GID2, GROUP2_NAME, PID2 = 24677, "The Time of Battle Release Event Cards", 900001
+
+
+def setUpModule():
+    # The fixture holds one RE group, so admit that one alone; the shipped
+    # allowlist is pinned in Admitted.
+    p = mock.patch.object(tcgcsv, "RE_GROUPS", {GID})
+    p.start()
+    unittest.addModuleCleanup(p.stop)
 
 
 def fixture():
@@ -48,6 +62,23 @@ def product(p, pid):
 
 def set_ext(prod, name, value):
     next(e for e in prod["extendedData"] if e["name"] == name)["value"] = value
+
+
+def two_groups():
+    """fixture() plus GID2 holding the one stamp PID2."""
+    g, p, pr = fixture()
+    g.append({**FIX["group"], "groupId": GID2, "name": GROUP2_NAME, "abbreviation": "OP16 RE"})
+    clone = json.loads(json.dumps(product(p, 712669)))
+    clone.update(productId=PID2, groupId=GID2, imageCount=0)
+    p[GID2] = [clone]
+    pr[GID2] = [{**next(r for r in pr[GID] if r["productId"] == 712669), "productId": PID2}]
+    return g, p, pr
+
+
+class Admitted(unittest.TestCase):
+    def test_the_admitted_groups_are_the_seven_that_list_stamps(self):
+        # OP10, OP11, OP12, OP14, OP15, OP16, OP17 RE; OP18 RE (24834) lists none yet.
+        self.assertEqual(ADMITTED, {24068, 24242, 24406, 24579, 24638, 24677, 24775})
 
 
 class Plan(unittest.TestCase):
@@ -266,6 +297,33 @@ class Run(unittest.TestCase):
         with self.assertRaisesRegex(run.RunError, "stamp priced 'Foil'"):
             self.go()
         self.assertEqual(self.data(), before)
+
+    def test_two_groups_write_two_distributions_and_each_claim_names_its_own(self):
+        self.pageset(T1, *two_groups())
+        with mock.patch.object(tcgcsv, "RE_GROUPS", {GID, GID2}):
+            r = self.go()["tcgcsv_run"]
+        self.assertEqual((r["counts"]["stamps"], r["counts"]["no_image"]), (4, [PID2]))
+        url2 = f"https://tcgcsv.com/tcgplayer/68/{GID2}/products"
+        dists = {d["name"]: d for d in self.jsonl("distributions.jsonl").values()}
+        self.assertEqual(sorted(dists), sorted([GROUP_NAME, GROUP2_NAME]))
+        self.assertEqual((dists[GROUP_NAME]["source_url"], dists[GROUP2_NAME]["source_url"]), (URL, url2))
+        locs = self.jsonl("printing_locators/tcgcsv.jsonl")
+        group_of = {locs[f"tcgcsv:{pid}:Normal"]["printing_key"]: GROUP_NAME for pid in STAMPS}
+        group_of[locs[f"tcgcsv:{PID2}:Normal"]["printing_key"]] = GROUP2_NAME
+        claims = list(self.jsonl("printing_distributions.jsonl").values())
+        self.assertEqual(len(claims), 4)
+        for c in claims:
+            d = dists[group_of[c["printing_key"]]]
+            self.assertEqual((c["distribution_key"], c["source_url"], c["quote"]),
+                             (d["key"], d["source_url"], d["name"]))
+        # The clone stamps the same card as Haruta: two printings, one card.
+        stamps = self.stamps()
+        haruta = stamps[locs["tcgcsv:712669:Normal"]["printing_key"]]
+        clone = stamps[locs[f"tcgcsv:{PID2}:Normal"]["printing_key"]]
+        self.assertNotEqual(haruta["key"], clone["key"])
+        self.assertEqual(haruta["card_key"], clone["card_key"])
+        self.assertNotIn("image_url", clone)
+        self.assertEqual(check_data(self.repo, run.SCHEMA), [])
 
     def test_the_run_line_names_both_kinds(self):
         self.pageset(T1)
