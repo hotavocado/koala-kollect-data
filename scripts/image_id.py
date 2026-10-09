@@ -2,8 +2,9 @@
 
 Bandai sites use two suffix families, _pN and _rN (roberto 86390: 412 EN and
 461 JP ids carry _rN). cn ids are the API's numeric ids and have no suffix;
-tcgcsv ids (DON printings only) are a TCGplayer productId and the finish its
-price row names, {productId}:{Normal|Foil}, and have no suffix either.
+tcgcsv ids (DON and Release Event stamped printings) are a TCGplayer
+productId and the finish its price row names, {productId}:{Normal|Foil}, and
+have no suffix either.
 """
 import re
 

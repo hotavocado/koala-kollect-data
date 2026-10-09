@@ -15,7 +15,18 @@
       ]
     },
     "printing_site": {
-      "description": "Where a printing, its locator, a DON card's observation or a run was read: an official site, or tcgcsv for DON only. No official site lists DON cards, so tcgcsv is their only source (alyssa 87523: the TCGplayer product name is the observed name). Never a product site.",
+      "description": "Where a printing, its locator, a DON card's observation or a run was read: an official site, or tcgcsv for DON cards and Release Event stamps. No official site lists DON cards, so tcgcsv is their only source (alyssa 87523: the TCGplayer product name is the observed name). Release Event stamped prints are listed only by TCGplayer (Mike, dm-alyssa 88048); their card's facts and observations stay on the official sites. Never a product site.",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/site"
+        },
+        {
+          "const": "tcgcsv"
+        }
+      ]
+    },
+    "distribution_site": {
+      "description": "Where a distribution was read: an official site, or tcgcsv for a Release Event group (one distribution per TCGplayer RE group). Its own def, not $defs/site: product.site refs that one, and tcgcsv is never a product site.",
       "anyOf": [
         {
           "$ref": "#/$defs/site"
@@ -381,9 +392,10 @@
             "serial",
             "other",
             "normal",
-            "foil"
+            "foil",
+            "stamped"
           ],
-          "description": "DON (tcgcsv) printings use normal, foil and gold only: normal and foil are the two finishes of a normal DON product (TCGplayer's Normal and Foil price rows, two physical cards, alyssa 87481), gold is the gold DON product's printing, and gold is always foil."
+          "description": "tcgcsv printings only use normal, foil, gold and stamped. DON printings use normal, foil and gold: normal and foil are the two finishes of a normal DON product (TCGplayer's Normal and Foil price rows, two physical cards, alyssa 87481), gold is the gold DON product's printing, and gold is always foil. stamped is a Release Event stamped print of a numbered card, never a DON."
         },
         "image_url": {
           "description": "Absolute URL with no query string or fragment: the official site's, or TCGplayer's image for a tcgcsv DON printing. Required on every official site's printing. Omitted on a tcgcsv printing whose product TCGplayer has no image for (imageCount 0, where its CDN answers 403), until it has one (upper 87556). Bandai appends a site-wide deploy stamp (?260929) that changes on every redeploy; keeping it would make every printing differ on every run. Linked, never re-hosted.",
@@ -508,16 +520,33 @@
             }
           },
           "then": {
-            "properties": {
-              "rarity": {
-                "const": "DON"
-              },
-              "variant": {
-                "enum": [
-                  "normal",
-                  "foil",
-                  "gold"
-                ]
+            "description": "A tcgcsv printing is a DON (rarity DON, variant normal, foil or gold) or a Release Event stamp (variant stamped, any rarity but DON). Nothing else.",
+            "if": {
+              "required": [
+                "rarity"
+              ],
+              "properties": {
+                "rarity": {
+                  "const": "DON"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "variant": {
+                  "enum": [
+                    "normal",
+                    "foil",
+                    "gold"
+                  ]
+                }
+              }
+            },
+            "else": {
+              "properties": {
+                "variant": {
+                  "const": "stamped"
+                }
               }
             }
           }
@@ -538,11 +567,12 @@
           "then": {
             "properties": {
               "variant": {
-                "description": "normal and foil are the two finishes of a tcgcsv DON product and nothing else: an official site's printing never carries them (codex, PR 15).",
+                "description": "normal and foil are the two finishes of a tcgcsv DON product and stamped is a tcgcsv Release Event print, and nothing else: an official site's printing never carries them (codex, PR 15).",
                 "not": {
                   "enum": [
                     "normal",
-                    "foil"
+                    "foil",
+                    "stamped"
                   ]
                 }
               }
@@ -750,11 +780,11 @@
       ],
       "properties": {
         "key": {
-          "description": "dist_ + mint of {site}|{source_text}.",
+          "description": "dist_ + mint of {site}|{source_text}; for tcgcsv, of tcgcsv|{TCGplayer group name}.",
           "$ref": "#/$defs/distribution_key"
         },
         "site": {
-          "$ref": "#/$defs/site"
+          "$ref": "#/$defs/distribution_site"
         },
         "region": {
           "$ref": "#/$defs/region"
@@ -787,6 +817,28 @@
         "source_url": {
           "type": "string",
           "pattern": "^https?://"
+        }
+      },
+      "if": {
+        "required": [
+          "site"
+        ],
+        "properties": {
+          "site": {
+            "const": "tcgcsv"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "region": {
+            "description": "TCGplayer is a North American catalogue (CONTRACT, Release dates), so a tcgcsv distribution is region en.",
+            "const": "en"
+          },
+          "kind": {
+            "description": "A tcgcsv distribution is one TCGplayer Release Event group, so it is an event_pack (codex, PR 17). Pre-Release groups are out of scope; admitting them is a change here.",
+            "const": "event_pack"
+          }
         }
       }
     },

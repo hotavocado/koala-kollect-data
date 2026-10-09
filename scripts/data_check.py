@@ -5,8 +5,8 @@ path is one the app sync accepts; every data file is listed in the manifest and
 every listed file exists with its sha256 and row count; LF, trailing newline,
 lines sorted by unique key, object keys in schema order; every record valid for
 its type; no HTML tag or entity left in any string, however nested; every
-field the schema types as a reference resolves to a row of that type; and no
-retired printing is also a live one.
+field the schema types as a reference resolves to a row of that type; no
+retired printing is also a live one; and a stamped printing's locator is Normal.
 """
 import hashlib
 import json
@@ -90,6 +90,8 @@ def check_data(root, schema):
             if field in rec and rec[field] not in keys[target]:
                 errors.append(f"{path}:{i}: {field} {rec[field]} has no {target} row")
     errors += retired_errors(keys["printing"], [rec for _, _, rtype, rec in records if rtype == "retired_printing"])
+    errors += stamped_finish_errors([rec for _, _, rtype, rec in records if rtype == "printing"],
+                                    [rec for _, _, rtype, rec in records if rtype == "printing_locator"])
     return errors
 
 
@@ -105,6 +107,27 @@ def retired_errors(printing_keys, retired):
             out.append(f"retired_printing {rec.get('key')}: key differs from printing_key {rec.get('printing_key')}")
         if rec.get("printing_key") in printing_keys:
             out.append(f"retired_printing {rec.get('printing_key')}: also a live printing")
+    return out
+
+
+def stamped_finish_errors(printings, locators):
+    """A stamped printing has a locator, and every locator it has ends :Normal.
+
+    Every Release Event stamp prices Normal only (554 of 554, 2026-10-09) and a
+    stamp priced Foil stops the walker (CONTRACT, Release Event stamps). The
+    locator is a stamp's natural key, so one with none is refused too. The
+    schema cannot see either, because a locator does not carry its printing's
+    variant (codex, PR 17, rounds 1 and 2).
+    """
+    stamped = {rec["key"] for rec in printings if rec.get("variant") == "stamped"}
+    out, located = [], set()
+    for rec in locators:
+        if rec.get("printing_key") not in stamped:
+            continue
+        located.add(rec["printing_key"])
+        if not rec.get("image_id", "").endswith(":Normal"):
+            out.append(f"printing_locator {rec.get('key')}: stamped printing {rec['printing_key']} on a finish other than Normal")
+    out += [f"printing {k}: stamped with no locator" for k in sorted(stamped - located)]
     return out
 
 
