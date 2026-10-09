@@ -913,6 +913,48 @@
         }
       }
     },
+    "retired_printing": {
+      "description": "data/retired_printings.jsonl. A printing that should never have been minted, removed from the data by a reviewed PR. The app sync deletes the printing it names and every row that points at it (printing_products, printing_distributions, printing_locators, printing_links), matched on the printing key. The ingest refuses to write a retired printing again, and the check refuses a key that is both a live printing and retired.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "printing_key",
+        "reason",
+        "retired_at",
+        "source_ids"
+      ],
+      "properties": {
+        "key": {
+          "description": "Equal to printing_key; the app sync and the check refuse a row where they differ.",
+          "type": "string",
+          "pattern": "^prt_[0-9a-z]{12}$"
+        },
+        "printing_key": {
+          "description": "The retired printing. Not a reference: its printing row is gone.",
+          "type": "string",
+          "pattern": "^prt_[0-9a-z]{12}$"
+        },
+        "reason": {
+          "description": "duplicate_source_record: the source listed one printing under two ids, and the later id had been minted a printing of its own (cn, CONTRACT.md).",
+          "enum": [
+            "duplicate_source_record"
+          ]
+        },
+        "retired_at": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "source_ids": {
+          "description": "The locators that show it: the retired printing's own first, then the locator of the printing it duplicates.",
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
     "ingest_run": {
       "description": "Data-repo audit only (runs/), not synced to the app. A page with any refusal never stamps removed_at.",
       "type": "object",
@@ -1056,6 +1098,14 @@
           "description": "cn only. Printings written this run whose variant signals (number token, image token, name marker) did not all agree. Any one present makes the printing a parallel; this counts the rows where that call rested on less than all of them (alyssa 87295).",
           "type": "integer",
           "minimum": 0
+        },
+        "cn_duplicate_ids": {
+          "description": "cn only. Listed cn ids that are a second save of a lower id's printing: list row and detail equal apart from id, createTime and updateTime. Each is a second locator on that printing and mints nothing. Named on every run, so a new double-save shows as a new id.",
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 1
+          }
         }
       }
     },
@@ -1096,7 +1146,8 @@
                   "printing_product",
                   "distribution",
                   "printing_distribution",
-                  "printing_link"
+                  "printing_link",
+                  "retired_printing"
                 ]
               },
               "rows": {

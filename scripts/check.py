@@ -5,7 +5,7 @@ from jsonschema import Draft202012Validator
 
 sys.path.insert(0, str(Path(__file__).parent))
 from image_id import parse_image_id
-from data_check import check_data
+from data_check import check_data, retired_errors
 from tcgcsv_check import check as tcgcsv_check
 
 root = Path(__file__).resolve().parent.parent
@@ -91,6 +91,19 @@ for site, iid in [("en", "OP01-001_x1"), ("en", "op01-001"), ("cn", "OP01-001"),
         print("FAIL id accepted", site, iid)
     except ValueError:
         print("ok   id red", site, iid)
+
+# Controls: a key both live and retired, and a retired row whose key is not its printing_key.
+for why, live, rec in [
+    ("a retired key that is also a live printing", {"prt_4648aaaaaaaa"},
+     {"key": "prt_4648aaaaaaaa", "printing_key": "prt_4648aaaaaaaa"}),
+    ("a retired row whose key differs from its printing_key", set(),
+     {"key": "prt_4648aaaaaaaa", "printing_key": "prt_4649aaaaaaaa"}),
+]:
+    if retired_errors(live, [rec]):
+        print("ok   red  ", why)
+    else:
+        bad += 1
+        print("FAIL control passed:", why)
 
 # The data itself, when the ingest has written any: manifest, files, schema, references.
 data_errors = check_data(root, schema)
