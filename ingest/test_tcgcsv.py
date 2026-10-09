@@ -250,6 +250,30 @@ class Run(unittest.TestCase):
             self.go()
         self.assertEqual(self.data(), before)
 
+    def test_a_rename_keeps_the_card_of_a_gold_whose_normal_is_unpriced(self):
+        # codex round 2 on PR 15: the unpriced normal has no locator, so the card is
+        # reached through the gold's own locator, never re-minted from the new name.
+        g, p, pr = fixture()
+        pr[23496] = [x for x in pr[23496] if x["productId"] != 593826]
+        self.pageset(T1, g, p, pr)
+        self.go()
+        gold_loc = "tcgcsv:586181:Foil"
+        card = self.rows("printings")[self.rows("printing_locators")[gold_loc]["printing_key"]]["card_key"]
+        cards = run.read_jsonl(self.repo / "data" / "cards.jsonl")
+        for x in p[23496]:
+            if x["productId"] == 593826:
+                x["name"] = "DON!! Card (Uta) (Alternate Art)"
+            if x["productId"] == 586181:
+                x["name"] = "DON!! Card (Uta) (Alternate Art) (Gold)"
+        self.pageset(T2, g, p, pr)
+        self.go()
+        self.assertEqual(run.read_jsonl(self.repo / "data" / "cards.jsonl"), cards, "no card minted")
+        self.assertEqual(self.rows("printings")[self.rows("printing_locators")[gold_loc]["printing_key"]]["card_key"],
+                         card)
+        obs = [o for o in self.rows("card_observations").values() if o["card_key"] == card]
+        self.assertEqual(sorted((o["name"], "superseded_at" in o) for o in obs),
+                         [("DON!! Card (Uta)", True), ("DON!! Card (Uta) (Alternate Art)", False)])
+
     def test_the_finish_is_in_every_locator(self):
         self.pageset(T1)
         self.go()

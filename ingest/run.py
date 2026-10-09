@@ -714,7 +714,10 @@ def run_tcgcsv(store, tcg_dir, state):
     product_of_card, names = {}, {}
     for sp in specs:
         cp = sp["card_product_id"]
-        card_key = card_of_product.get(cp) or card_of_design.get(sp["design"]) or model.mint("card", sp["design"])
+        # The normal's locators first; then this product's own, since a gold whose
+        # normal is unpriced is the only locator its card has (codex, PR 15).
+        card_key = (card_of_product.get(cp) or card_of_product.get(sp["product_id"])
+                    or card_of_design.get(sp["design"]) or model.mint("card", sp["design"]))
         if product_of_card.setdefault(card_key, cp) != cp:
             raise RunError(f"tcgcsv: products {product_of_card[card_key]} and {cp} resolve to one card "
                            f"({card_key}, {sp['design']}); one normal product is one card")
@@ -949,7 +952,7 @@ def cn_line(r):
 def tcgcsv_line(r):
     run_rec = r["run"]
     ids, bare = r["counts"]["unpriced"], r["counts"]["no_image"]
-    return (f"tcgcsv: groups and price files read {run_rec['pages_fetched']}, DON products {run_rec['blocks_parsed']}, "
+    return (f"tcgcsv: product and price files read {run_rec['pages_fetched']}, DON products {run_rec['blocks_parsed']}, "
             f"added {run_rec['added']}, changed {run_rec['changed']}, refusals {run_rec['refusals']}, "
             f"unpriced (refused, no key) {len(ids)}{' [' + ', '.join(map(str, ids)) + ']' if ids else ''}, "
             f"no image yet {len(bare)}{' [' + ', '.join(map(str, bare)) + ']' if bare else ''}")
