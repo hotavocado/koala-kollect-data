@@ -334,6 +334,13 @@ class WorkflowOutputs(Harness, unittest.TestCase):
 class Don(Harness, unittest.TestCase):
     """The tcgcsv step inside the daily run: its changes count, a failed fetch fails the day."""
 
+    def setUp(self):
+        super().setUp()
+        # The DON fixture holds no Release Event group (test_stamps.py has those).
+        p = mock.patch.object(tcgcsv, "RE_GROUPS", set())
+        p.start()
+        self.addCleanup(p.stop)
+
     def fetcher(self, pageset, sites, repo=None):
         out = super().fetcher(pageset, sites, repo)
         import test_tcgcsv

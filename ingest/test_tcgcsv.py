@@ -22,6 +22,17 @@ import tcgcsv
 FIX = json.loads((Path(__file__).resolve().parent / "fixtures" / "tcgcsv_don.json").read_text("utf-8"))
 T1, T2 = "2026-10-09T00:58:26Z", "2026-10-10T00:58:26Z"
 UNPRICED = [561656, 619595]
+# This fixture is DON only; the Release Event stamps have their own fixture and
+# tests (test_stamps.py). With no RE group admitted, plan_stamps reads nothing.
+_no_re = mock.patch.object(tcgcsv, "RE_GROUPS", set())
+
+
+def setUpModule():
+    _no_re.start()
+
+
+def tearDownModule():
+    _no_re.stop()
 
 
 def fixture():

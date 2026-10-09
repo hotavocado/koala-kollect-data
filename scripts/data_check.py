@@ -6,7 +6,9 @@ every listed file exists with its sha256 and row count; LF, trailing newline,
 lines sorted by unique key, object keys in schema order; every record valid for
 its type; no HTML tag or entity left in any string, however nested; every
 field the schema types as a reference resolves to a row of that type; no
-retired printing is also a live one; and a stamped printing's locator is Normal.
+retired printing is also a live one; a stamped printing's locator is Normal;
+and a stamped printing has a tcgcsv claim, and every tcgcsv claim is a stamp's,
+corroborated and undated.
 """
 import hashlib
 import json
@@ -92,6 +94,9 @@ def check_data(root, schema):
     errors += retired_errors(keys["printing"], [rec for _, _, rtype, rec in records if rtype == "retired_printing"])
     errors += stamped_finish_errors([rec for _, _, rtype, rec in records if rtype == "printing"],
                                     [rec for _, _, rtype, rec in records if rtype == "printing_locator"])
+    errors += stamped_claim_errors([rec for _, _, rtype, rec in records if rtype == "printing"],
+                                   [rec for _, _, rtype, rec in records if rtype == "distribution"],
+                                   [rec for _, _, rtype, rec in records if rtype == "printing_distribution"])
     return errors
 
 
@@ -128,6 +133,37 @@ def stamped_finish_errors(printings, locators):
         if not rec.get("image_id", "").endswith(":Normal"):
             out.append(f"printing_locator {rec.get('key')}: stamped printing {rec['printing_key']} on a finish other than Normal")
     out += [f"printing {k}: stamped with no locator" for k in sorted(stamped - located)]
+    return out
+
+
+def stamped_claim_errors(printings, distributions, claims):
+    """A stamped printing has at least one tcgcsv claim, and every tcgcsv claim is a stamp's, as the contract states it.
+
+    A tcgcsv claim names a stamped printing and a tcgcsv distribution, is
+    corroborated (a third-party catalogue's own grouping, never authoritative),
+    and carries no starts_on or ends_on (tcgcsv is never a date source). The
+    count per printing is left open: several claims per printing are normal
+    (CONTRACT, Release Event stamps; upper 88125, off codex round 3 on PR 17).
+    """
+    stamped = {rec["key"] for rec in printings if rec.get("variant") == "stamped"}
+    tcg_dists = {rec["key"] for rec in distributions if rec.get("site") == "tcgcsv"}
+    out, claimed = [], set()
+    for rec in claims:
+        if rec.get("source") != "tcgcsv":
+            continue
+        k, prt = rec.get("key"), rec.get("printing_key")
+        if prt in stamped:
+            claimed.add(prt)
+        else:
+            out.append(f"printing_distribution {k}: tcgcsv claim on {prt}, which is not a stamped printing")
+        if rec.get("distribution_key") not in tcg_dists:
+            out.append(f"printing_distribution {k}: tcgcsv claim on {rec.get('distribution_key')}, which is not a tcgcsv distribution")
+        if rec.get("confidence") != "corroborated":
+            out.append(f"printing_distribution {k}: tcgcsv claim is {rec.get('confidence')!r}, not 'corroborated'")
+        dated = [f for f in ("starts_on", "ends_on") if f in rec]
+        if dated:
+            out.append(f"printing_distribution {k}: tcgcsv claim carries {', '.join(dated)}; tcgcsv is never a date source")
+    out += [f"printing {k}: stamped with no tcgcsv claim" for k in sorted(stamped - claimed)]
     return out
 
 

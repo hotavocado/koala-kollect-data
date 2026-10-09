@@ -19,6 +19,12 @@ What is measured (2026-10-09, 87 groups, 7,717 products):
 - imageCount is TCGplayer's own count of a product's images. Where it is 0 the
   CDN answers 403 (3 of 240, exactly those 3), so such a printing carries no
   image_url until it turns positive (upper 87556, alyssa 87559).
+
+Release Event stamps (CONTRACT.md, Release Event stamps) come from the groups
+in RE_GROUPS only: a product there with an extendedData Number is a stamped
+copy of the set card with that Number. The group's sealed pack has no Number
+and is not read. Every stamp measured prices Normal only (554 of 554), so a
+stamp priced any other finish stops the run.
 """
 import json
 import re
@@ -32,6 +38,9 @@ DON_TYPE = "DON!!"
 GOLD_SUFFIX = " (Gold)"
 # The finishes measured on DON price rows. Anything else stops the run.
 FINISH = {"Normal": "normal", "Foil": "foil"}
+# The Release Event groups whose stamps mint, by groupId. One at a time, so a
+# group joins the data by a change here (upper 88114: OP17 RE first).
+RE_GROUPS = {24775}
 
 
 def _get(path, timeout=60):
@@ -63,7 +72,7 @@ def fetch_pageset(tcg_dir, pause=0.3, attempts=3):
 
     tcg_dir/_groups.json            {"fetched_at", "groups"}
     tcg_dir/products/{groupId}.json {"fetched_at", "products"}  every group
-    tcg_dir/prices/{groupId}.json   {"fetched_at", "prices"}    groups that carry a DON
+    tcg_dir/prices/{groupId}.json   {"fetched_at", "prices"}    groups that carry a DON, and RE_GROUPS
     """
     tcg_dir = Path(tcg_dir)
 
@@ -83,7 +92,7 @@ def fetch_pageset(tcg_dir, pause=0.3, attempts=3):
         ft = _utc()
         prods = get(f"{gid}/products")
         _write(tcg_dir / "products" / f"{gid}.json", {"fetched_at": ft, "products": prods})
-        if any(is_don(p) for p in prods):
+        if gid in RE_GROUPS or any(is_don(p) for p in prods):
             ft = _utc()
             _write(tcg_dir / "prices" / f"{gid}.json", {"fetched_at": ft, "prices": get(f"{gid}/prices")})
         time.sleep(pause)
@@ -165,6 +174,67 @@ def plan(groups, products, prices):
                             "design": design(g["abbreviation"], card_product["name"]), "group_id": gid,
                             "has_image": bool(p.get("imageCount"))})
     return out, unpriced, don_count
+
+
+def ext(product, name):
+    """One extendedData value, or None."""
+    return next((e.get("value") for e in product.get("extendedData", []) if e.get("name") == name), None)
+
+
+def is_stamp(product):
+    """A card product in a Release Event group: it has a Number (DON never do; the sealed pack has none)."""
+    return bool(ext(product, "Number")) and not is_don(product)
+
+
+def stamp_variant(sub_type):
+    """THE stamp finish rule. Every stamp measured prices Normal only (554 of 554, 2026-10-09).
+
+    A stamp priced Foil would be a second physical card, and that is a ruling,
+    not a guess, so it stops the run (CONTRACT.md, Release Event stamps).
+    """
+    if sub_type != "Normal":
+        raise ValueError(f"a Release Event stamp priced {sub_type!r}; every stamp so far is Normal only")
+    return "stamped"
+
+
+def plan_stamps(groups, products, prices):
+    """(stamps, unpriced, stamp_count) for the RE_GROUPS in one page set.
+
+    Each stamp is a dict: product_id, sub_type, variant, number (the set card
+    it stamps, verbatim), rarity (verbatim), name, group_id, group_name and
+    has_image. unpriced is the stamps with no price row, refused as a DON's
+    are: no finish, no key. An allowlisted group missing from /groups, or
+    holding no stamp, stops the run: that is TCGplayer's layout moving, not a
+    quiet day.
+    """
+    by_id = {g["groupId"]: g for g in groups}
+    out, unpriced, count = [], [], 0
+    for gid in sorted(RE_GROUPS):
+        g = by_id.get(gid)
+        if g is None:
+            raise ValueError(f"Release Event group {gid} is not in /groups")
+        stamps = [p for p in products.get(gid, []) if is_stamp(p)]
+        if not stamps:
+            raise ValueError(f"Release Event group {gid} ({g['name']}) carries no stamped card")
+        if gid not in prices:
+            raise ValueError(f"Release Event group {gid} carries {len(stamps)} stamps but no price file")
+        count += len(stamps)
+        finishes = {}
+        for r in prices[gid]:
+            finishes.setdefault(r["productId"], set()).add(r["subTypeName"])
+        for p in sorted(stamps, key=lambda p: p["productId"]):
+            rarity = ext(p, "Rarity")
+            if not rarity:
+                raise ValueError(f"stamp {p['productId']} ({ext(p, 'Number')}) has no Rarity")
+            subs = finishes.get(p["productId"])
+            if not subs:
+                unpriced.append(p["productId"])
+                continue
+            for sub in sorted(subs):
+                out.append({"product_id": p["productId"], "sub_type": sub, "variant": stamp_variant(sub),
+                            "number": ext(p, "Number"), "rarity": rarity, "name": p["name"], "group_id": gid,
+                            "group_name": g["name"], "has_image": bool(p.get("imageCount"))})
+    return out, unpriced, count
 
 
 def read_pageset(tcg_dir):

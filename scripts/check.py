@@ -5,7 +5,7 @@ from jsonschema import Draft202012Validator
 
 sys.path.insert(0, str(Path(__file__).parent))
 from image_id import parse_image_id
-from data_check import check_data, retired_errors, stamped_finish_errors
+from data_check import check_data, retired_errors, stamped_claim_errors, stamped_finish_errors
 from tcgcsv_check import check as tcgcsv_check
 
 root = Path(__file__).resolve().parent.parent
@@ -115,6 +115,35 @@ for why, locs in [("a stamped printing on a Foil locator", foil), ("a stamped pr
     else:
         bad += 1
         print("FAIL control:", why)
+
+# Controls: the stamped-claim invariants (upper 88125). Each red case is the
+# passing claim with one thing changed, so a red here is that one thing.
+dists = [{"key": "dist_op17re000000", "site": "tcgcsv"}, {"key": "dist_enop17re0000", "site": "en"}]
+good = {"key": "ev_0000000000000001", "printing_key": "prt_op17002stamp", "distribution_key": "dist_op17re000000",
+        "source": "tcgcsv", "confidence": "corroborated"}
+plain = [{"key": "prt_op17002base0", "variant": "base"}]
+if stamped_claim_errors(stamp, dists, [good]):
+    bad += 1
+    print("FAIL control: the passing stamped claim is red:", stamped_claim_errors(stamp, dists, [good]))
+for why, printings, claims in [
+    ("a stamped printing with no tcgcsv claim", stamp, [dict(good, source="official_cardlist")]),
+    ("a tcgcsv claim that is not corroborated", stamp, [dict(good, confidence="authoritative")]),
+    ("a tcgcsv claim with starts_on", stamp, [dict(good, starts_on="2026-08-21")]),
+    ("a tcgcsv claim with ends_on", stamp, [dict(good, ends_on="2026-08-31")]),
+    ("a tcgcsv claim on a printing that is not stamped", stamp + plain, [good, dict(good, key="ev_0000000000000002", printing_key="prt_op17002base0")]),
+    ("a tcgcsv claim on an official site's distribution", stamp, [dict(good, distribution_key="dist_enop17re0000")]),
+]:
+    if stamped_claim_errors(printings, dists, claims):
+        print("ok   red  ", why)
+    else:
+        bad += 1
+        print("FAIL control passed:", why)
+# The count is open: two tcgcsv claims on one stamp are not an error.
+if stamped_claim_errors(stamp, dists, [good, dict(good, key="ev_0000000000000003")]):
+    bad += 1
+    print("FAIL control: two claims on one stamp read red, but the count is open")
+else:
+    print("ok   green two tcgcsv claims on one stamped printing (count open)")
 
 # The data itself, when the ingest has written any: manifest, files, schema, references.
 data_errors = check_data(root, schema)
