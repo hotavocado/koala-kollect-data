@@ -18,6 +18,7 @@ another (P-084_01 is jp P-084_p1, OP12-026_02 is jp OP12-026_r1), and no
 signal tells them apart. jp stays the variant authority, through
 printing_links. The tokens are kept verbatim on the printing.
 """
+import json
 import re
 
 from model import _int
@@ -100,6 +101,29 @@ def split_number(raw):
 
 def known_token(token):
     return token == "" or bool(_TOKEN.match(token))
+
+
+# What a repeated admin save changes and nothing else does (OP09-043, ids
+# 4647-4649, created 2025-04-17 14:17:03-04; P-108, ids 5521-5522, created
+# 2025-10-20 13:16:55-56). Every other field of both the list row and the
+# detail is the same on those ids, and on no other pair of the 4,927.
+SAVE_FIELDS = ("id", "createTime", "updateTime")
+
+
+def list_signature(row):
+    """A list row without its id. The row carries the product (cardOfferType), so equal rows name one product."""
+    return json.dumps({k: v for k, v in row.items() if k != "id"}, sort_keys=True, ensure_ascii=False)
+
+
+def duplicate_signature(row, info):
+    """Equal for two ids only when cn saved one printing twice: the list rows and the details agree apart from SAVE_FIELDS.
+
+    The list row is part of the signature, so two duplicates are always on one
+    product. One image listed under two products (asia-en P-029_r1, CONTRACT.md
+    cn) can never match: it differs in cardOfferType.
+    """
+    return json.dumps([list_signature(row), {k: v for k, v in info.items() if k not in SAVE_FIELDS}],
+                      sort_keys=True, ensure_ascii=False)
 
 
 def image_token(image_url, base):

@@ -317,7 +317,8 @@ def main(argv):
         r = s["cn_run"]
         print(f"cn: details read {r['pages_fetched']}, rows {r['blocks_parsed']}, added {r['added']}, "
               f"changed {r['changed']}, removed {r['removed']}, refusals {r['refusals']}, "
-              f"variant signals disagree on {r['variant_disagreements']}")
+              f"variant signals disagree on {r['variant_disagreements']}, "
+              f"duplicate ids {len(r['cn_duplicate_ids'])} {r['cn_duplicate_ids']}")
     if "tcgcsv_run" in s:
         r = s["tcgcsv_run"]
         print(f"tcgcsv: DON products {r['blocks_parsed']}, added {r['added']}, changed {r['changed']}, "

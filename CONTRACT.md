@@ -17,6 +17,7 @@ data/printing_products/{site}.jsonl   printing_product
 data/distributions.jsonl              distribution
 data/printing_distributions.jsonl     printing_distribution
 data/printing_links.jsonl             printing_link
+data/retired_printings.jsonl          retired_printing (printings removed by reviewed PR; the app deletes them)
 runs/{YYYY}/{MM}/{run_id}.json        ingest_run (audit only, not synced)
 state/pages/{site}.json               last clean block count, hash and fetched_at per page (ingest only, not synced)
 state/cn_ids.jsonl                    cn id snapshot, numeric id and cardNumber (ingest only, not synced)
@@ -59,6 +60,7 @@ and runs only (see DON).
 | printing_product | `{printing_key}@{product_key}` | itself |
 | printing_distribution | `ev_` + sha256(printing\|distribution\|source\|source_url)[:16] | itself |
 | printing_link | `{printing_a}={printing_b}`, a sorts first | itself |
+| retired_printing | the retired printing's key | itself (`key` equals `printing_key`) |
 
 - Minted keys never change and are never reused. The ingest looks up the natural
   key first and mints only when nothing matches.
@@ -147,7 +149,9 @@ groups and 7,717 products; a value outside these vocabularies stops the run.
 - **Nothing is deleted.** A listing that disappears gets `removed_at` on its
   `printing_product` row. Printings have no `removed_at`, because a printing can
   move between series pages under the same image id (13 left the EN promo page
-  for Other Product Card).
+  for Other Product Card). The one exception is a printing that should never
+  have been minted: a reviewed PR removes it and lists it in
+  `data/retired_printings.jsonl` (see Retired printings).
 - **Removal guard.** A page stamps `removed_at` only when it was read cleanly.
   The run refuses removals from a page, and counts the refusal in its
   `ingest_run`, when any of these holds:
@@ -333,7 +337,8 @@ for a new id, so **an erratum on cn shows only on a full re-read**, which is a
 deliberate run, not the daily one.
 
 **Identity.** A cn printing's locator is `cn:{id}`, and its key is minted from
-that locator, so two cn ids never share a printing. A product is
+that locator, so two cn ids share a printing only when cn saved one
+printing twice (Duplicates, below). A product is
 `cn:{product id}`, its `code` is the last 【...】 group in the name, and its
 `kind` comes from the name's leading word (补充包 booster, 特别补充包 extra,
 豪华补充包 premium, 基本卡组 / 进阶卡组 / 究极进阶卡组 starter), with two named
@@ -381,6 +386,31 @@ printings, base and parallel, because the printing key comes from `cn:{id}`. A
 key built from the site and the number would make them one printing; a test
 runs the pair through a run and a re-run and asserts both survive.
 
+**Duplicates.** cn sometimes saves one printing twice: two ids whose list row
+and detail agree in every field apart from `id`, `createTime` and `updateTime`.
+On 2026-10-08 there were two such groups in 4,927 ids, each saved within one
+second: OP09-043 as ids 4647, 4648 and 4649 (created 2025-04-17 14:17:03,
+14:17:03 and 14:17:04, 特别宣传包Vol.7) and P-108 as ids 5521 and 5522
+(2025-10-20 13:16:55 and 13:16:56, 参加纪念). jp, tc and asia-en list one
+printing for each. The lowest id keeps the printing; each later id is a second
+locator on it (`cn:4648` points at the `cn:4647` printing) and mints nothing,
+so a later run still knows the id. `ingest_run.cn_duplicate_ids` names every
+such id on every run, so a new double-save shows as a new id. Both details are
+needed to tell, so `cn.fetch_pageset` fetches a held id's detail again when a
+new id's list row equals it. A duplicate that already has a printing of its
+own stops the run: that printing leaves only through a reviewed PR, as the
+three above did (see Retired printings).
+
+The predicate includes the list row, and a cn list row names its product, so
+two duplicates are always on one product. **Known case it must not match:**
+asia-en lists P-029_r1 (one image id) under two products, ST-16 and PRB-01,
+where en, jp and tc list two image ids. Those are two releases, but the
+locator `{site}:{image_id}` cannot tell them apart, so asia-en P-029_r1 stays
+one printing with two `printing_product` rows (alyssa 87754). If a second case
+appears, or pricing needs the two priced apart, the shape to rule is a product
+suffix on the locator, as tcgcsv carries one. On cn that shape is two ids with
+different `cardOfferType`, and a test asserts it stays two printings.
+
 **Facts.** Rarity maps cn's labels to the Bandai codes (推广卡（P）, 宣传（P）
 and a bare P are all `P`; 罕见（U） is `UC`; 隐藏稀有 is `SEC` in either case;
 `TR` stays `TR`, as the Bandai sites print it). `cardLife` is life on a leader
@@ -419,6 +449,30 @@ stamps `removed_at` on its listing, unless the list fell more than 10% below
 the last committed one (`count_drop`), when nothing is removed. A listed id
 with no detail and no printing yet is refused (`http_error`) and comes in on a
 later run.
+
+## Retired printings
+
+`data/retired_printings.jsonl` lists printings that should never have been
+minted and were removed from the data by a reviewed PR (alyssa 87767). One row
+per printing: `key` (equal to `printing_key`), `printing_key`, `reason`,
+`retired_at`, and `source_ids`, the locators that show it (the retired
+printing's own first, then the one it duplicates).
+
+- The app sync applies the file as a delete: the printing, and every row that
+  points at it (`printing_products`, `printing_distributions`,
+  `printing_locators`, `printing_links`), matched on the printing key and never
+  on a locator string. The sync is otherwise insert or update only, so a row
+  removed from the data without a retired row stays in the app.
+- The ingest refuses to write a retired printing again, and the check refuses a
+  key that is both a live printing and retired, or a row whose `key` is not its
+  `printing_key`.
+- A locator is never retired by this file: a retired printing's locator either
+  goes with it or moves to the printing that survives (cn duplicates, above).
+- Reasons: `duplicate_source_record`, the source listed one printing under two
+  ids and the later id had been minted a printing of its own.
+
+The first three, retired 2026-10-09: the printings of `cn:4648` and `cn:4649`
+(duplicates of `cn:4647`) and of `cn:5522` (duplicate of `cn:5521`).
 
 ## Transition (2026-10-08)
 
@@ -462,7 +516,8 @@ green at every step:
 The app reads `manifest.json` and checks every file's `sha256` and row count.
 On any mismatch it refuses and records the refusal in `data_syncs`, writing
 nothing. Then it upserts by `key`. Records are never deleted on the app side
-either.
+either, except the printings listed in `data/retired_printings.jsonl` and
+the rows that point at them (see Retired printings).
 
 ## Checks
 

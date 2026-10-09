@@ -60,7 +60,8 @@ PER_SITE = {"card_observation": "card_observations", "printing": "printings",
             "printing_locator": "printing_locators", "product": "products",
             "printing_product": "printing_products"}
 SHARED = {"card": "cards", "distribution": "distributions",
-          "printing_distribution": "printing_distributions", "printing_link": "printing_links"}
+          "printing_distribution": "printing_distributions", "printing_link": "printing_links",
+          "retired_printing": "retired_printings"}
 TYPE_OF_DIR = {v: k for k, v in {**PER_SITE, **SHARED}.items()}
 
 
@@ -117,6 +118,10 @@ class Store:
         A change to anything but first_seen_at counts as changed, so a re-run
         over the same pages adds 0 and changes 0 and writes the same bytes.
         """
+        if rtype == "printing" and rec["key"] in self.recs["retired_printing"]:
+            # A retired printing never comes back under its old key
+            # (data/retired_printings.jsonl, CONTRACT.md).
+            raise RunError(f"printing {rec['key']} is retired ({self.recs['retired_printing'][rec['key']]['reason']}); nothing written")
         old = self.recs[rtype].get(rec["key"])
         if old is None:
             new = dict(rec, first_seen_at=t)
@@ -315,6 +320,15 @@ def with_dates(rec, dates):
     return rec
 
 
+def cn_ids(store):
+    """{printing key: its cn id}. A duplicate cn id is a second locator on one printing (run_cn), so the lowest id names it."""
+    ids = {}
+    for r in store.recs["printing_locator"].values():
+        if r["site"] == "cn":
+            ids[r["printing_key"]] = min(ids.get(r["printing_key"], int(r["image_id"])), int(r["image_id"]))
+    return ids
+
+
 def link_site(store, site, counts):
     """Mint each promo printing's distribution from its card-list source_text. Returns {source_text: [printing_key]}.
 
@@ -324,7 +338,7 @@ def link_site(store, site, counts):
     """
     by_name = defaultdict(list)
     prods = store.recs["product"]
-    cn_ids = {r["printing_key"]: r["image_id"] for r in store.recs["printing_locator"].values() if r["site"] == "cn"}
+    ids = cn_ids(store)
     for pp in sorted(store.recs["printing_product"].values(), key=lambda r: r["key"]):
         prod = prods.get(pp["product_key"])
         if "removed_at" in pp or prod is None or prod["site"] != site or prod["kind"] != "promo_bucket":
@@ -338,7 +352,7 @@ def link_site(store, site, counts):
         put(store, "distribution", {"key": dist, "site": site, "region": REGION[site],
                                     "kind": events.kind_of(name), "name": name}, counts)
         # cn has no card-list page per product; its card list is the detail call.
-        url = prod.get("product_url") or cnmodel.DETAIL_URL.format(cn_ids[prt["key"]])
+        url = prod.get("product_url") or cnmodel.DETAIL_URL.format(ids[prt["key"]])
         rec = {"key": claim_key(prt["key"], dist, "official_cardlist", url), "printing_key": prt["key"],
                "distribution_key": dist, "source": "official_cardlist", "source_url": url,
                "quote": text, "confidence": "authoritative", "observed_at": pp["first_seen_at"]}
@@ -567,6 +581,22 @@ def run_cn(store, cn_dir, state):
             raise RunError(f"cn: two products named {p['name']!r}")
         by_name[p["name"]] = key
 
+    # cn sometimes saves one printing twice: two ids whose list rows and details
+    # agree apart from the id and the save times (cnmodel.duplicate_signature).
+    # The later id becomes a second locator on the lowest id's printing and
+    # mints nothing. Read only where both details are in the page set;
+    # cn.fetch_pageset fetches a held twin's detail when a new id's list row
+    # matches it, so a new double-save is always read.
+    first, dup_of = {}, {}
+    for r in sorted(rows, key=lambda r: r["id"]):
+        dpath = cn_dir / "detail" / f"{r['id']}.json"
+        if dpath.exists():
+            sig = cnmodel.duplicate_signature(r, json.loads(dpath.read_text("utf-8"))["info"])
+            if sig in first:
+                dup_of[r["id"]] = first[sig]
+            else:
+                first[sig] = r["id"]
+
     seen, details = set(), {}
     for r in sorted(rows, key=lambda r: r["id"]):
         counts["blocks_parsed"] += 1
@@ -578,6 +608,22 @@ def run_cn(store, cn_dir, state):
             base, token = cnmodel.split_number(r["cardNumber"])
         except ValueError as ex:
             raise RunError(f"{loc_key}: {ex}") from ex
+        if r["id"] in dup_of:
+            prt = store.printing_key(f"cn:{dup_of[r['id']]}")
+            own = store.recs["printing_locator"].get(loc_key, {}).get("printing_key")
+            if own not in (None, prt) and own in store.recs["printing"]:
+                # A printing already minted for a duplicate leaves the data only
+                # through a reviewed PR (CONTRACT.md, Write rules), never on its own.
+                raise RunError(f"{loc_key} duplicates cn:{dup_of[r['id']]} but has its own printing {own}; "
+                               f"remove it by a reviewed PR; nothing written")
+            dt = json.loads((cn_dir / "detail" / f"{r['id']}.json").read_text("utf-8"))["fetched_at"]
+            counts["pages_fetched"] += 1
+            store.upsert("printing_locator", {"key": loc_key, "printing_key": prt, "site": "cn", "image_id": str(r["id"])},
+                         dt, counts)
+            listing = f"{prt}@{product_key}"
+            seen.add(listing)
+            store.upsert("printing_product", {"key": listing, "printing_key": prt, "product_key": product_key}, t, counts)
+            continue
         prt = store.printing_key(loc_key)
         dpath = cn_dir / "detail" / f"{r['id']}.json"
         if dpath.exists():
@@ -624,6 +670,14 @@ def run_cn(store, cn_dir, state):
             if rec["product_key"].startswith("cn:") and key not in seen and "removed_at" not in rec:
                 rec["removed_at"] = t
                 counts["removed"] += 1
+    # Every listed id that is a second locator on a lower id's printing, named
+    # on every run, so a new double-save shows as a new id in the list.
+    ids_by_prt = defaultdict(list)
+    for r in rows:
+        loc = store.recs["printing_locator"].get(f"cn:{r['id']}")
+        if loc:
+            ids_by_prt[loc["printing_key"]].append(r["id"])
+    counts["duplicate_ids"] = sorted(i for ids in ids_by_prt.values() for i in sorted(ids)[1:])
 
     # One observation per number, from its preferred printing over every cn
     # printing the store knows: if that printing's detail is not in this run,
@@ -632,7 +686,7 @@ def run_cn(store, cn_dir, state):
     for k, p in store.recs["printing"].items():
         if p["site"] == "cn":
             cn_by_card[p["card_key"]].append(k)
-    cn_id = {r["printing_key"]: int(r["image_id"]) for r in store.recs["printing_locator"].values() if r["site"] == "cn"}
+    cn_id = cn_ids(store)
 
     def preference(k):
         # base before parallel, then the lowest numeric id
@@ -825,7 +879,7 @@ def manifest(files, repo):
                         "sha256": hashlib.sha256(text.encode()).hexdigest()}
         for ln in text.splitlines():
             r = json.loads(ln)
-            for k in ("first_seen_at", "removed_at", "superseded_at", "observed_at"):
+            for k in ("first_seen_at", "removed_at", "superseded_at", "observed_at", "retired_at"):
                 if k in r:
                     newest = max(newest, r[k])
     return json.dumps({"schema_version": 1, "generated_at": newest, "files": entries},
@@ -907,6 +961,7 @@ def run(pageset, repo, sites=SITES, now=time.time):
             run_rec["new_products"] = c["new_products"]
         if site == "cn":
             run_rec["variant_disagreements"] = c["variant_disagreements"]
+            run_rec["cn_duplicate_ids"] = c.get("duplicate_ids", [])
         if site == "tcgcsv":
             run_rec["unpriced"] = len(c["unpriced"])
             run_rec["no_image"] = len(c["no_image"])
@@ -946,7 +1001,9 @@ def cn_line(r):
     return (f"cn: details read {run_rec['pages_fetched']}, rows {run_rec['blocks_parsed']}, "
             f"added {run_rec['added']}, changed {run_rec['changed']}, removed {run_rec['removed']}, "
             f"refusals {run_rec['refusals']}, variant signals disagree on {run_rec['variant_disagreements']}, "
-            f"unknown number tokens {r['counts']['unknown_tokens']}, distributions {r['distributions']}")
+            f"unknown number tokens {r['counts']['unknown_tokens']}, distributions {r['distributions']}, "
+            f"duplicate ids (a second save of a lower id's printing) {len(run_rec['cn_duplicate_ids'])}"
+            f"{' ' + str(run_rec['cn_duplicate_ids']) if run_rec['cn_duplicate_ids'] else ''}")
 
 
 def tcgcsv_line(r):

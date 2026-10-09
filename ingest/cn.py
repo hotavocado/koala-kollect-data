@@ -14,6 +14,8 @@ import time
 import urllib.request
 from pathlib import Path
 
+import cnmodel
+
 BASE = "https://webadmin.windoent.com/front/op-public"
 UA = "Mozilla/5.0 (compatible; koala-kollect-ingest/0.1; +https://github.com/hotavocado/koala-kollect-data)"
 
@@ -74,16 +76,22 @@ def fetch_pageset(cn_dir, known_ids, pause=1.0):
     cn_dir/detail/{id}.json {"fetched_at", "info"}
     A detail already on disk is kept, so a re-run after a failure fetches only
     what is missing. Returns the failures; any one fails the daily run.
+
+    A held id is fetched again when a new id's list row equals it apart from
+    the id: that is what a double-save looks like, and run_cn needs both
+    details to tell (cnmodel.duplicate_signature).
     """
     cn_dir = Path(cn_dir)
     t = _utc()
     rows = list_all(pause=pause)
     _write(cn_dir / "_list.json", {"fetched_at": t, "rows": rows})
     _write(cn_dir / "_products.json", {"fetched_at": _utc(), "products": products()})
+    new_sigs = {cnmodel.list_signature(r) for r in rows if r["id"] not in known_ids}
     failures = []
     for r in rows:
         out = cn_dir / "detail" / f"{r['id']}.json"
-        if r["id"] in known_ids or out.exists():
+        twin = r["id"] in known_ids and cnmodel.list_signature(r) in new_sigs
+        if (r["id"] in known_ids and not twin) or out.exists():
             continue
         try:
             _write(out, {"fetched_at": _utc(), "info": detail(r["id"])})

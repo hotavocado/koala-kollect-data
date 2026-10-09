@@ -4,8 +4,9 @@ Returns a list of errors; empty means the data is clean. Checks: every manifest
 path is one the app sync accepts; every data file is listed in the manifest and
 every listed file exists with its sha256 and row count; LF, trailing newline,
 lines sorted by unique key, object keys in schema order; every record valid for
-its type; no HTML tag or entity left in any string, however nested; and every
-field the schema types as a reference resolves to a row of that type.
+its type; no HTML tag or entity left in any string, however nested; every
+field the schema types as a reference resolves to a row of that type; and no
+retired printing is also a live one.
 """
 import hashlib
 import json
@@ -17,7 +18,8 @@ from jsonschema import Draft202012Validator
 TYPE_OF_DIR = {"cards": "card", "card_observations": "card_observation", "printings": "printing",
                "printing_locators": "printing_locator", "products": "product",
                "printing_products": "printing_product", "distributions": "distribution",
-               "printing_distributions": "printing_distribution", "printing_links": "printing_link"}
+               "printing_distributions": "printing_distribution", "printing_links": "printing_link",
+               "retired_printings": "retired_printing"}
 
 # The app sync's own path rule (koala-kollect, alyssa/2026-10-08-data-sync).
 SYNC_PATH = re.compile(r"^data/(?:[a-z_]+/)?[a-z_-]+\.jsonl$")
@@ -87,7 +89,23 @@ def check_data(root, schema):
         for field, target in references(schema, rtype).items():
             if field in rec and rec[field] not in keys[target]:
                 errors.append(f"{path}:{i}: {field} {rec[field]} has no {target} row")
+    errors += retired_errors(keys["printing"], [rec for _, _, rtype, rec in records if rtype == "retired_printing"])
     return errors
+
+
+def retired_errors(printing_keys, retired):
+    """A retired printing is gone: its key may not also be a live printing, and its key is its printing_key.
+
+    The app sync applies the file as a delete, so a key that is both would be
+    written and deleted by one sync (alyssa 87774 refuses the same thing on her side).
+    """
+    out = []
+    for rec in retired:
+        if rec.get("key") != rec.get("printing_key"):
+            out.append(f"retired_printing {rec.get('key')}: key differs from printing_key {rec.get('printing_key')}")
+        if rec.get("printing_key") in printing_keys:
+            out.append(f"retired_printing {rec.get('printing_key')}: also a live printing")
+    return out
 
 
 def strings(val):
