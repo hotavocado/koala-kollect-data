@@ -251,7 +251,7 @@ def observation_fields(info):
            "colors": colors}
     rec["life" if cat == "leader" else "cost"] = _num(info.get("cardLife"), "life/cost")
     # cn prints 0 (or ０) where every Bandai site that has the card carries no
-    # power (152 cards, 252 details; 0 details read 0 on a card whose jp record
+    # power (152 cards, 253 details: 252 "0", 1 "０"; 0 details read 0 on a card whose jp record
     # has power, and no Bandai site ever records power 0), so it is cn's
     # spelling of no power, not a zero (upper 87441/87442).
     rec["power"] = None if info.get("cardPower") in POWER_NONE else _num(info.get("cardPower"), "power")
