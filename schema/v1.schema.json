@@ -23,6 +23,32 @@
         }
       ]
     },
+    "run_site": {
+      "description": "Where a run read: a printing site, or a site retired since (asia-en, tc, retired 2026-10-10; CONTRACT.md, Retired sites). Runs are the audit record, so the runs a retired site made before its retirement stay valid. A run of a retired site started after its retirement is refused by scripts/check.py, and run() never makes one.",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/printing_site"
+        },
+        {
+          "enum": [
+            "asia-en",
+            "tc"
+          ]
+        }
+      ]
+    },
+    "run_product_key": {
+      "description": "A product key named by a run: a live product key, or one on a site retired since (run_site). Runs keep what they wrote when they wrote it.",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/product_key"
+        },
+        {
+          "type": "string",
+          "pattern": "^(asia-en|tc):[A-Za-z0-9-]+$"
+        }
+      ]
+    },
     "distribution_site": {
       "description": "Where a distribution was read: an official site, or tcgcsv for a Release Event group (one distribution per TCGplayer RE group). Its own def, not $defs/site: product.site refs that one, and tcgcsv is never a product site.",
       "anyOf": [
@@ -1164,7 +1190,7 @@
           "minLength": 1
         },
         "site": {
-          "$ref": "#/$defs/printing_site"
+          "$ref": "#/$defs/run_site"
         },
         "started_at": {
           "$ref": "#/$defs/timestamp"
@@ -1234,7 +1260,7 @@
         "new_products": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/product_key"
+            "$ref": "#/$defs/run_product_key"
           }
         },
         "unpriced": {

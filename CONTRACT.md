@@ -638,6 +638,12 @@ OP14-EB04 and OP15-EB04 packs. OP-14 and OP-15 keep an English title from the
 hand-placed en rows (Release dates); EB-04 shows the jp name. No set date
 moves from the removal itself: a set dates off en, else jp, never asia-en.
 
+Runs stay: the `runs/` records both sites wrote before 2026-10-10 are the audit
+record, so `ingest_run.site` and `new_products` still admit them (`run_site`,
+`run_product_key`). `scripts/check.py` validates every run and refuses a run of
+a retired site started after its retirement, which it reads from the
+`site_retired` rows' `retired_at`.
+
 Measurement tables below that name asia-en or tc are dated history and are left
 as they were.
 
@@ -725,4 +731,6 @@ schema cannot express: no retired printing is also live, a stamped printing
 has a locator and every one ends `:Normal`, the Release Event claim rules
 above, and every DON card has exactly one `don_set` row whose `don_design`,
 `printing_keys` and `set_slug` agree with the card, its tcgcsv printings and
-the en product codes (`source` `promo` only on `promo`, `group` never on it). Each has red controls in `check.py`. CI runs it on every push.
+the en product codes (`source` `promo` only on `promo`, `group` never on it),
+and every record under `runs/` is a valid `ingest_run`, none of a retired site
+started after its retirement. Each has red controls in `check.py`. CI runs it on every push.
