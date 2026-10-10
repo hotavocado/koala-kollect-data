@@ -128,6 +128,31 @@ class Run(Harness, unittest.TestCase):
             self.fetch(FIX.replace("?260929", "?261001"), T2)
             self.assertEqual(self.go()["counts"]["changed"], 12)
 
+    def place_name_en(self, name):
+        # The hand edit: name_en set on the product row in the committed data.
+        path = self.repo / "data" / "products" / "en.jsonl"
+        (row,) = self.rows("product")
+        path.write_text(run.line("product", dict(row, name_en=name)) + "\n", "utf-8")
+
+    def test_hand_placed_name_en_survives_a_rewalk(self):
+        self.baseline()
+        self.place_name_en("EGGHEAD CRISIS")
+        self.fetch(FIX.replace("?260929", "?261001"), T2)
+        r = self.go()
+        self.assertEqual(r["counts"]["changed"], 0)
+        self.assertEqual(self.rows("product")[0]["name_en"], "EGGHEAD CRISIS")
+
+    def test_control_without_the_carry_over_the_rewalk_drops_name_en(self):
+        # Proves the test above can go red: the walk rebuilds the product row
+        # from the page, so a field it does not carry is gone after one run.
+        self.baseline()
+        self.place_name_en("EGGHEAD CRISIS")
+        self.fetch(FIX.replace("?260929", "?261001"), T2)
+        with mock.patch.object(run, "PRODUCT_CARRIED", ("release_date", "release_date_source")):
+            r = self.go()
+        self.assertEqual(r["counts"]["changed"], 1)
+        self.assertNotIn("name_en", self.rows("product")[0])
+
     def test_clean_removal_stamps_the_listing_not_the_printing(self):
         self.baseline()
         self.fetch(without(FIX, "OP17-007"), T2)  # 11 of 12: under the 10% floor
