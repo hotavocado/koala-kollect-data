@@ -15,8 +15,8 @@ from urllib.parse import urljoin, urlsplit, urlunsplit
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 from image_id import parse_image_id  # noqa: E402
 
-HOSTS = {"en": "en", "asia-en": "asia-en", "jp": "www", "tc": "asia-tc"}
-LANG = {"en": "en", "asia-en": "en", "jp": "ja", "tc": "zh-Hant", "cn": "zh-Hans"}
+HOSTS = {"en": "en", "jp": "www"}
+LANG = {"en": "en", "jp": "ja", "cn": "zh-Hans"}
 
 COLORS = {
     "Red": "red", "Green": "green", "Blue": "blue", "Purple": "purple", "Black": "black", "Yellow": "yellow",

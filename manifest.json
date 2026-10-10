@@ -1,12 +1,7 @@
 {
  "schema_version": 1,
- "generated_at": "2026-10-10T17:46:24Z",
+ "generated_at": "2026-10-10T18:04:04Z",
  "files": {
-  "data/card_observations/asia-en.jsonl": {
-   "type": "card_observation",
-   "rows": 2815,
-   "sha256": "b2612445cf1818c72908095bcb2b3fba02c9f02d31ac2a6ebce2de3890f2d99c"
-  },
   "data/card_observations/cn.jsonl": {
    "type": "card_observation",
    "rows": 2832,
@@ -22,11 +17,6 @@
    "rows": 2824,
    "sha256": "4c0ce365d70f14e96fd88f0c058bc31e97123dc3a68ccae9f6be3dd1f3d5f591"
   },
-  "data/card_observations/tc.jsonl": {
-   "type": "card_observation",
-   "rows": 2815,
-   "sha256": "028f95650ad68d57d9817a79db6703f562e068c83fe567e1da35484bbc101018"
-  },
   "data/card_observations/tcgcsv.jsonl": {
    "type": "card_observation",
    "rows": 165,
@@ -39,8 +29,8 @@
   },
   "data/distributions.jsonl": {
    "type": "distribution",
-   "rows": 809,
-   "sha256": "09a6e30907bd99acc190680988c1be9cb687e8f448b87b0868917e362e1bb68f"
+   "rows": 456,
+   "sha256": "3cf4740c51c2ba1764f9e4381345c650558ee51faf127ddf0648f5d2997cd089"
   },
   "data/don_sets.jsonl": {
    "type": "don_set",
@@ -49,13 +39,8 @@
   },
   "data/printing_distributions.jsonl": {
    "type": "printing_distribution",
-   "rows": 6521,
-   "sha256": "50218e87f907cd14e70f5aa638d6317caa60ce6da83e088825cacc39c901f92b"
-  },
-  "data/printing_locators/asia-en.jsonl": {
-   "type": "printing_locator",
-   "rows": 4914,
-   "sha256": "964b17363a849cb84788bac81790da5451386709dc891bc87a08725378fca4f5"
+   "rows": 4716,
+   "sha256": "a2b1eae3181bea068a5170cddbb12003597abab49b05e66f6b2ed627ea9f35b1"
   },
   "data/printing_locators/cn.jsonl": {
    "type": "printing_locator",
@@ -72,20 +57,10 @@
    "rows": 4997,
    "sha256": "4716b94672032314bca6b21f56bcb0522757a955a43e4c8cd79ea8612bec7068"
   },
-  "data/printing_locators/tc.jsonl": {
-   "type": "printing_locator",
-   "rows": 4915,
-   "sha256": "709bd52398fb8883b58215e552c122c6dcbefda703d8442211bafe1efec31d66"
-  },
   "data/printing_locators/tcgcsv.jsonl": {
    "type": "printing_locator",
    "rows": 862,
    "sha256": "aa7b72fc0d8893affbe883955e2646be817e741218111af66da72267eb6d36d5"
-  },
-  "data/printing_products/asia-en.jsonl": {
-   "type": "printing_product",
-   "rows": 4915,
-   "sha256": "0133178eb788d3a70261c2a80f0d8b8e517bad28dfea2da660027f5bc1c10dae"
   },
   "data/printing_products/cn.jsonl": {
    "type": "printing_product",
@@ -102,16 +77,6 @@
    "rows": 4997,
    "sha256": "94c13f665189c1e7546a07f7f81915ad323f9586d9b6c9d3e240f3f032b5005b"
   },
-  "data/printing_products/tc.jsonl": {
-   "type": "printing_product",
-   "rows": 4915,
-   "sha256": "570ee28db7d9379ce3432fba09e8f7808bd8c9a887fa69a2071dc2bddf27fc33"
-  },
-  "data/printings/asia-en.jsonl": {
-   "type": "printing",
-   "rows": 4914,
-   "sha256": "f32924ec9c5959ae8d33647b3ee3609e394339093663c8f69d423e05c235e54e"
-  },
   "data/printings/cn.jsonl": {
    "type": "printing",
    "rows": 4924,
@@ -127,20 +92,10 @@
    "rows": 4997,
    "sha256": "f8ae68cd9fd060f318405da48e4e23cabed904611583461ff2e59fb47766ddd0"
   },
-  "data/printings/tc.jsonl": {
-   "type": "printing",
-   "rows": 4915,
-   "sha256": "98a3691139db7077e1dc3271a3556173024c9d00b603cbc77d81b150c13d6a78"
-  },
   "data/printings/tcgcsv.jsonl": {
    "type": "printing",
    "rows": 862,
    "sha256": "c9fe957dca0f373619f32c96d5388ad80b20bd562c7d91727fd73077b490f782"
-  },
-  "data/products/asia-en.jsonl": {
-   "type": "product",
-   "rows": 62,
-   "sha256": "cfd1be11410d22c69c26104a7aae5ff43304584be1be17423399b917282f8009"
   },
   "data/products/cn.jsonl": {
    "type": "product",
@@ -149,23 +104,18 @@
   },
   "data/products/en.jsonl": {
    "type": "product",
-   "rows": 72,
-   "sha256": "7aec6ef0dfeb46c2f30341212f370ee76348f9d975ce58e7208726818e17bc33"
+   "rows": 74,
+   "sha256": "c6ae42ab6b3710f5b9408cc35db6fd6c4aa8473d72fd27a1de09259ef435e171"
   },
   "data/products/jp.jsonl": {
    "type": "product",
    "rows": 62,
    "sha256": "198baf7d06afc9cba1437ca5d7feeda93a92ed60855c3edc10afd3c2650a4221"
   },
-  "data/products/tc.jsonl": {
-   "type": "product",
-   "rows": 62,
-   "sha256": "3007d5501b1681f30f3f90d4071e98aa49b40b0c4538ceba5fea00e82ce84f59"
-  },
   "data/retired_printings.jsonl": {
    "type": "retired_printing",
-   "rows": 3,
-   "sha256": "7ef4905f253f55e3f333981f284c85ab8749f5e7b24fe233b20c7958c84583fe"
+   "rows": 9832,
+   "sha256": "bfb8aa97a6e8ded48b090d50cb50658699c1022079e33f1764f05608a1bedfb7"
   }
  }
 }

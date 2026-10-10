@@ -51,9 +51,12 @@ from bandai import independent_count, parse_page
 
 ROOT = Path(__file__).resolve().parent.parent
 SCHEMA = json.loads((ROOT / "schema/v1.schema.json").read_text("utf-8"))
-SITES = ["en", "asia-en", "jp", "tc"]
-REGION = {"en": "en", "asia-en": "asia", "jp": "jp", "tc": "asia", "cn": "cn"}
-FACTS_ORDER = ["jp", "en", "asia-en", "tc", "cn", "tcgcsv"]
+# asia-en and tc are retired (Mike, dm-roberto 88876; CONTRACT.md, Retired sites):
+# never walked, and run() refuses them.
+SITES = ["en", "jp"]
+RETIRED_SITES = {"asia-en", "tc"}
+REGION = {"en": "en", "jp": "jp", "cn": "cn"}
+FACTS_ORDER = ["jp", "en", "cn", "tcgcsv"]
 ARMS = ["http_error", "zero_parse", "count_drop", "count_mismatch"]
 DROP_FLOOR = 0.9
 REQUIRED = ["number", "rarity", "category", "name", "image_src"]
@@ -984,6 +987,9 @@ def write(files):
 
 def run(pageset, repo, sites=SITES, now=time.time):
     pageset, repo = Path(pageset), Path(repo)
+    retired = sorted(set(sites) & RETIRED_SITES)
+    if retired:
+        raise RunError(f"site {', '.join(retired)} is retired (CONTRACT.md, Retired sites); nothing written")
     store = Store(repo)
     # The committed data must already meet the schema. A row the schema refuses
     # (a legacy last_seen_at or observation block_icon) stops the run before any

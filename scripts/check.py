@@ -5,7 +5,7 @@ from jsonschema import Draft202012Validator
 
 sys.path.insert(0, str(Path(__file__).parent))
 from image_id import parse_image_id
-from data_check import check_data, don_set_errors, retired_errors, stamped_claim_errors, stamped_finish_errors
+from data_check import check_data, don_set_errors, retired_errors, run_errors, stamped_claim_errors, stamped_finish_errors
 from tcgcsv_check import check as tcgcsv_check
 
 root = Path(__file__).resolve().parent.parent
@@ -100,6 +100,31 @@ for why, live, rec in [
      {"key": "prt_4648aaaaaaaa", "printing_key": "prt_4649aaaaaaaa"}),
 ]:
     if retired_errors(live, [rec]):
+        print("ok   red  ", why)
+    else:
+        bad += 1
+        print("FAIL control passed:", why)
+
+# Controls: runs. A retired site's run from before its retirement passes (the
+# audit record stays); the same run started after it, and a run of a site that
+# never existed, go red.
+run_rec = {"run_id": "20261008T175529Z-asia-en", "site": "asia-en", "started_at": "2026-10-08T17:55:29Z",
+           "finished_at": "2026-10-08T17:58:00Z", "pages_fetched": 1, "pages_unchanged": 0, "blocks_parsed": 1,
+           "blocks_without_source_text": 0, "added": 0, "changed": 0, "removed": 0,
+           "refusals": {"http_error": 0, "zero_parse": 0, "count_drop": 0, "count_mismatch": 0}}
+site_retired = [{"key": "prt_000000000009", "printing_key": "prt_000000000009", "reason": "site_retired",
+                 "retired_at": "2026-10-10T18:02:46Z", "source_ids": ["asia-en:OP01-001_p1"]}]
+if run_errors([("runs/a.json", run_rec)], schema, site_retired):
+    bad += 1
+    print("FAIL control red: a retired site's run from before its retirement")
+else:
+    print("ok   green a retired site's run from before its retirement")
+for why, rec in [
+    ("a retired site's run started after its retirement", dict(run_rec, started_at="2026-10-11T04:23:00Z")),
+    ("a run of a site the schema has never had", dict(run_rec, site="kr")),
+    ("a retired site's run with no usable started_at (reported, not a crash)", dict(run_rec, started_at=None)),
+]:
+    if run_errors([("runs/a.json", rec)], schema, site_retired):
         print("ok   red  ", why)
     else:
         bad += 1

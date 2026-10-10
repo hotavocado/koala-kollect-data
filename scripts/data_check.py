@@ -8,8 +8,9 @@ its type; no HTML tag or entity left in any string, however nested; every
 field the schema types as a reference resolves to a row of that type; no
 retired printing is also a live one; a stamped printing's locator is Normal;
 a stamped printing has a tcgcsv claim, and every tcgcsv claim is a stamp's,
-corroborated and undated; and every DON card has one don_set row that agrees
-with its card, printings and the en product codes.
+corroborated and undated; every DON card has one don_set row that agrees
+with its card, printings and the en product codes; and every run record under
+runs/ is a valid ingest_run, none of a retired site started after its retirement.
 """
 import hashlib
 import json
@@ -93,6 +94,8 @@ def check_data(root, schema):
             if field in rec and rec[field] not in keys[target]:
                 errors.append(f"{path}:{i}: {field} {rec[field]} has no {target} row")
     errors += retired_errors(keys["printing"], [rec for _, _, rtype, rec in records if rtype == "retired_printing"])
+    runs = [(p.relative_to(root).as_posix(), json.loads(p.read_text("utf-8"))) for p in sorted((root / "runs").rglob("*.json"))]
+    errors += run_errors(runs, schema, [rec for _, _, rtype, rec in records if rtype == "retired_printing"])
     errors += stamped_finish_errors([rec for _, _, rtype, rec in records if rtype == "printing"],
                                     [rec for _, _, rtype, rec in records if rtype == "printing_locator"])
     errors += stamped_claim_errors([rec for _, _, rtype, rec in records if rtype == "printing"],
@@ -115,6 +118,29 @@ def retired_errors(printing_keys, retired):
             out.append(f"retired_printing {rec.get('key')}: key differs from printing_key {rec.get('printing_key')}")
         if rec.get("printing_key") in printing_keys:
             out.append(f"retired_printing {rec.get('printing_key')}: also a live printing")
+    return out
+
+
+def run_errors(runs, schema, retired):
+    """Each (path, record) under runs/ is a valid ingest_run, and no retired site ran after its retirement.
+
+    A site's retirement is the earliest retired_at of its site_retired rows; the
+    site is the prefix of the row's own locator. Its earlier runs are the audit
+    record and stay (CONTRACT.md, Retired sites).
+    """
+    v = Draft202012Validator({"$schema": schema["$schema"], "$defs": schema["$defs"], "$ref": "#/$defs/ingest_run"})
+    since = {}
+    for rec in retired:
+        if rec.get("reason") == "site_retired" and rec.get("source_ids"):
+            site = rec["source_ids"][0].split(":")[0]
+            since[site] = min(since.get(site, rec["retired_at"]), rec["retired_at"])
+    out = []
+    for path, rec in runs:
+        out += [f"{path}: {e.message}" for e in v.iter_errors(rec)]
+        site, started = rec.get("site"), rec.get("started_at")
+        # A started_at the schema already refused is reported above, not compared.
+        if site in since and isinstance(started, str) and started >= since[site]:
+            out.append(f"{path}: a {site} run started {started}, after {site} was retired at {since[site]}")
     return out
 
 
