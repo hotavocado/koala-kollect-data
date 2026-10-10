@@ -37,6 +37,14 @@ UA = "Mozilla/5.0 (compatible; koala-kollect-ingest/0.1; +https://github.com/hot
 # Kinds that are card pools, not products: no single date is right for them
 # (x801 is linked by several premium collection pages with different dates).
 UNDATED_KINDS = {"limited", "promo_bucket"}
+# Double Pack Sets are sealed products with no card list of their own (their
+# cards are a booster's), so no product page links a series and the card-list
+# walk never mints them. The index is their only record, and a DON packed in one
+# needs a product to name as its origin (don_sets). en only: measured 2026-10-10
+# over three walks of en's 18 index pages, twelve items titled
+# "Double Pack Set Vol.N [DP-NN]", DP-01 to DP-12, every one dated.
+DOUBLE_PACK_SITES = {"en"}
+_DOUBLE_PACK = re.compile(r"\[(DP-[0-9]{2})\]$")
 # Index walks: at least MIN_WALKS, then stop at the first walk that lists no
 # product page the earlier walks missed, and never more than MAX_WALKS.
 MIN_WALKS, MAX_WALKS = 2, 4
@@ -256,6 +264,29 @@ def dates_by_series(items, links):
             if hit not in out.setdefault(sid, []):
                 out[sid].append(hit)
     return out
+
+
+def double_packs(items):
+    """({code: index item}, [code of each undated item]) for the items titled "... [DP-NN]".
+
+    An undated item is named and not returned: a product row carries a date or
+    is not written (an undated row would make the daily run re-read every
+    unlinked product page, daily.undated). One code listed with two pages or
+    two dates has no right answer, so that raises rather than picks one.
+    """
+    dated, undated = {}, []
+    for it in items:
+        m = _DOUBLE_PACK.search(it["title"])
+        if not m:
+            continue
+        code = m.group(1)
+        if not it["date"]:
+            undated.append(code)
+            continue
+        old = dated.setdefault(code, it)
+        if (old["href"], old["date"]) != (it["href"], it["date"]):
+            raise ValueError(f"{code} listed twice: {old['href']} {old['date']} and {it['href']} {it['date']}")
+    return dated, sorted(set(undated) - set(dated))
 
 
 def retail_date(hits):

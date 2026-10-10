@@ -342,6 +342,22 @@ all.
   dropdown), because a page published before its card list goes live links
   nothing yet. A product index older than the one the data was built from is
   refused, the same replay guard as the card pages.
+- **Double Pack Sets are minted from the index, en only.** A Double Pack Set
+  has no card list of its own (its cards are a booster's), so its page links no
+  series and the card-list walk never writes it. The run writes one `other` row
+  per en index item titled `... [DP-NN]`: key `en:DP-NN`, `series_id` and
+  `code` `DP-NN`, `name` the index title, `release_date` the item's date,
+  `release_date_source` and `product_url` the item's page. Each run dates it
+  from its own item again, so a moved date moves; one code listed under two
+  pages or two dates stops the run. A pack that drops off the index keeps its
+  row and date (sticky). jp, asia-en and tc are not read for packs.
+- **No undated row is written, and that is load-bearing.** A pack the index
+  lists with no date is not written; the run line names it. The reason is the
+  undated check above: one product row of a dated kind without a date makes
+  every daily run re-read every product page that linked no series (139 of 190
+  en pages on 2026-10-10), forever, and hides the next real undated product
+  under a check that is already true. Anything minted outside the card-list
+  walk follows the same rule: dated, or not written.
 
 ## Promo origin
 
