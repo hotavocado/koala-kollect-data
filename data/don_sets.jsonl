@@ -36,7 +36,7 @@
 {"key":"card_at3k72duw3ex","printing_keys":["prt_fqezpcakdlso"],"don_design":"OP06:don-card-alternate-art","set_slug":"op-06","source":"group","first_seen_at":"2026-10-10T17:46:13Z"}
 {"key":"card_aw06sxbmrtj0","printing_keys":["prt_3iygsq1y0rid","prt_fpiwy3emrz48","prt_jm0eq4o1dcxv"],"don_design":"PRB-01:don-card-uta","set_slug":"prb-01","source":"group","first_seen_at":"2026-10-10T17:46:07Z"}
 {"key":"card_bj5q2gcujszz","printing_keys":["prt_w1hqp35sqbth"],"don_design":"OP17:don-card-alternate-art-rocks-special-foil","set_slug":"op-17","source":"group","first_seen_at":"2026-10-10T17:45:48Z"}
-{"key":"card_bs9geovwswu7","printing_keys":["prt_6kw1rvp9p8fe"],"don_design":"OP04:don-card-black-white-special-don-card-pack","set_slug":"op-04","source":"group","first_seen_at":"2026-10-10T17:46:16Z"}
+{"key":"card_bs9geovwswu7","printing_keys":["prt_6kw1rvp9p8fe"],"don_design":"OP04:don-card-black-white-special-don-card-pack","set_slug":"promo","source":"override","first_seen_at":"2026-10-10T17:46:16Z"}
 {"key":"card_bwmwpbkaue34","printing_keys":["prt_53f95mbsgcd4"],"don_design":"OP-PR:don-card-purple","set_slug":"promo","source":"promo","first_seen_at":"2026-10-10T17:46:23Z"}
 {"key":"card_c7n9xlp0kidb","printing_keys":["prt_8u4ce84mxl5d","prt_iwim5zfw0c88","prt_onjmj238wqtn"],"don_design":"PRB-01:don-card-trafalgar-law","set_slug":"prb-01","source":"group","first_seen_at":"2026-10-10T17:46:07Z"}
 {"key":"card_cbnyy1xb9r7y","printing_keys":["prt_rtjo23ccnzuh"],"don_design":"OP-PR:don-card-world-united-zoro","set_slug":"promo","source":"promo","first_seen_at":"2026-10-10T17:46:23Z"}
@@ -87,7 +87,7 @@
 {"key":"card_jnzetwdpzmhc","printing_keys":["prt_1eu1ha4e6yhn","prt_7e22nzqlle8e","prt_apyv63v4cku5"],"don_design":"PRB-01:don-card-rebecca","set_slug":"prb-01","source":"group","first_seen_at":"2026-10-10T17:46:07Z"}
 {"key":"card_k8mn4r7348px","printing_keys":["prt_gw0zq5jh0nqt","prt_n7oz0nec9jbh","prt_osjjsmhzjre9"],"don_design":"PRB-01:don-card-kaido","set_slug":"prb-01","source":"group","first_seen_at":"2026-10-10T17:46:07Z"}
 {"key":"card_kgxdpsn77i8s","printing_keys":["prt_dw0ypc4fayjs","prt_ete2trjkcvov","prt_tiv4pgxxtf2g"],"don_design":"PRB-02:don-card-shirahoshi","set_slug":"prb-02","source":"group","first_seen_at":"2026-10-10T17:45:58Z"}
-{"key":"card_kqyc2q47nl81","printing_keys":["prt_bqiity46u0uc"],"don_design":"OP04:don-card-color-special-don-card-pack","set_slug":"op-04","source":"group","first_seen_at":"2026-10-10T17:46:16Z"}
+{"key":"card_kqyc2q47nl81","printing_keys":["prt_bqiity46u0uc"],"don_design":"OP04:don-card-color-special-don-card-pack","set_slug":"promo","source":"override","first_seen_at":"2026-10-10T17:46:16Z"}
 {"key":"card_l85bpyhrhwer","printing_keys":["prt_yxl3iaowqt6g"],"don_design":"OP02:don-card-manga","set_slug":"op-02","source":"group","first_seen_at":"2026-10-10T17:46:19Z"}
 {"key":"card_lcqjl1vfeklu","printing_keys":["prt_6c5ar7btd13p","prt_b3fixxqani7t","prt_ryqkftu44v3b"],"don_design":"PRB-02:don-card-pudding","set_slug":"prb-02","source":"group","first_seen_at":"2026-10-10T17:45:58Z"}
 {"key":"card_lgm29ex78k4f","printing_keys":["prt_a9dnt2asiws5"],"don_design":"ST-01-PRE:don-card","set_slug":"promo","source":"promo","first_seen_at":"2026-10-10T17:46:24Z"}

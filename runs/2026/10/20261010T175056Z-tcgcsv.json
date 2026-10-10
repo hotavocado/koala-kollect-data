@@ -1,0 +1,23 @@
+{
+ "run_id": "20261010T175056Z-tcgcsv",
+ "site": "tcgcsv",
+ "started_at": "2026-10-10T17:50:56Z",
+ "finished_at": "2026-10-10T17:50:57Z",
+ "pages_fetched": 120,
+ "pages_unchanged": 0,
+ "blocks_parsed": 794,
+ "blocks_without_source_text": 0,
+ "added": 0,
+ "changed": 2,
+ "removed": 0,
+ "refusals": {
+  "http_error": 0,
+  "zero_parse": 0,
+  "count_drop": 0,
+  "count_mismatch": 0
+ },
+ "unpriced": 2,
+ "no_image": 78,
+ "unmatched": 0,
+ "rarity_disagreements": 1
+}
