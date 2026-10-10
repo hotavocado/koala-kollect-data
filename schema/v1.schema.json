@@ -1018,6 +1018,55 @@
         }
       }
     },
+    "don_set": {
+      "description": "data/don_sets.jsonl. Which set page a DON card sits on, one row per DON card. DON carry no number, so no set can be read off them: the tcgcsv walker places each card by its TCGplayer group, by an override where the product names another product, or on the promo page (CONTRACT.md, DON sets). Placement within the page is the app's.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "printing_keys",
+        "don_design",
+        "set_slug",
+        "source",
+        "first_seen_at"
+      ],
+      "properties": {
+        "key": {
+          "description": "The DON card's key. The check refuses a key that is no DON card.",
+          "$ref": "#/$defs/card_key"
+        },
+        "printing_keys": {
+          "description": "Every tcgcsv printing of the card, sorted. The check refuses a list that differs from the card's printings.",
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/printing_key"
+          }
+        },
+        "don_design": {
+          "description": "The card's don_design, for readers and checks only.",
+          "type": "string",
+          "pattern": "^[A-Za-z0-9-]+:[a-z0-9-]+$"
+        },
+        "set_slug": {
+          "description": "The app's set slug: an en product code lowercased (dp-06, op14-eb04, prb-01), or promo.",
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$"
+        },
+        "source": {
+          "description": "group: the card's TCGplayer group is that en product. override: the product's name names another product, or a DON with no en product sits on promo. promo: a TCGplayer promo group (OP-PR, OP-DD, ST-01 PRE), set_slug promo.",
+          "enum": [
+            "group",
+            "override",
+            "promo"
+          ]
+        },
+        "first_seen_at": {
+          "$ref": "#/$defs/timestamp"
+        }
+      }
+    },
     "ingest_run": {
       "description": "Data-repo audit only (runs/), not synced to the app. A page with any refusal never stamps removed_at.",
       "type": "object",
@@ -1230,7 +1279,8 @@
                   "distribution",
                   "printing_distribution",
                   "printing_link",
-                  "retired_printing"
+                  "retired_printing",
+                  "don_set"
                 ]
               },
               "rows": {

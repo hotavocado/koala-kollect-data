@@ -7,8 +7,9 @@ lines sorted by unique key, object keys in schema order; every record valid for
 its type; no HTML tag or entity left in any string, however nested; every
 field the schema types as a reference resolves to a row of that type; no
 retired printing is also a live one; a stamped printing's locator is Normal;
-and a stamped printing has a tcgcsv claim, and every tcgcsv claim is a stamp's,
-corroborated and undated.
+a stamped printing has a tcgcsv claim, and every tcgcsv claim is a stamp's,
+corroborated and undated; and every DON card has one don_set row that agrees
+with its card, printings and the en product codes.
 """
 import hashlib
 import json
@@ -21,7 +22,7 @@ TYPE_OF_DIR = {"cards": "card", "card_observations": "card_observation", "printi
                "printing_locators": "printing_locator", "products": "product",
                "printing_products": "printing_product", "distributions": "distribution",
                "printing_distributions": "printing_distribution", "printing_links": "printing_link",
-               "retired_printings": "retired_printing"}
+               "retired_printings": "retired_printing", "don_sets": "don_set"}
 
 # The app sync's own path rule (koala-kollect, alyssa/2026-10-08-data-sync).
 SYNC_PATH = re.compile(r"^data/(?:[a-z_]+/)?[a-z_-]+\.jsonl$")
@@ -97,6 +98,8 @@ def check_data(root, schema):
     errors += stamped_claim_errors([rec for _, _, rtype, rec in records if rtype == "printing"],
                                    [rec for _, _, rtype, rec in records if rtype == "distribution"],
                                    [rec for _, _, rtype, rec in records if rtype == "printing_distribution"])
+    by_type = {t: [rec for _, _, rtype, rec in records if rtype == t] for t in ("card", "printing", "product", "don_set")}
+    errors += don_set_errors(by_type["card"], by_type["printing"], by_type["product"], by_type["don_set"])
     return errors
 
 
@@ -164,6 +167,43 @@ def stamped_claim_errors(printings, distributions, claims):
         if dated:
             out.append(f"printing_distribution {k}: tcgcsv claim carries {', '.join(dated)}; tcgcsv is never a date source")
     out += [f"printing {k}: stamped with no tcgcsv claim" for k in sorted(stamped - claimed)]
+    return out
+
+
+def don_set_errors(cards, printings, products, don_sets):
+    """Every DON card has one don_set row, and each row agrees with the data it summarises.
+
+    The row's key is a DON card (one with a don_design) and its don_design is
+    the card's; its printing_keys are exactly the card's tcgcsv printings,
+    sorted; a set_slug other than promo is an en product code lowercased, the
+    app's own slug rule; source promo always means set_slug promo, and source
+    group never does (CONTRACT.md, DON sets). The schema can see none of this.
+    """
+    design = {c["key"]: c["don_design"] for c in cards if "don_design" in c}
+    prints = {}
+    for p in printings:
+        if p.get("site") == "tcgcsv" and p.get("card_key") in design:
+            prints.setdefault(p["card_key"], []).append(p["key"])
+    slugs = {p["code"].lower() for p in products if p.get("site") == "en" and "code" in p}
+    out, seen = [], set()
+    for rec in don_sets:
+        k = rec.get("key")
+        seen.add(k)
+        if k not in design:
+            out.append(f"don_set {k}: not a DON card")
+            continue
+        if rec.get("don_design") != design[k]:
+            out.append(f"don_set {k}: don_design {rec.get('don_design')!r}, the card's is {design[k]!r}")
+        if rec.get("printing_keys") != sorted(prints.get(k, [])):
+            out.append(f"don_set {k}: printing_keys differ from the card's tcgcsv printings")
+        slug, source = rec.get("set_slug"), rec.get("source")
+        if slug != "promo" and slug not in slugs:
+            out.append(f"don_set {k}: set_slug {slug!r} is no en product code")
+        if source == "promo" and slug != "promo":
+            out.append(f"don_set {k}: source promo on set_slug {slug!r}")
+        if source == "group" and slug == "promo":
+            out.append(f"don_set {k}: source group on set_slug promo")
+    out += [f"card {k}: DON card with no don_set row" for k in sorted(design.keys() - seen)]
     return out
 
 

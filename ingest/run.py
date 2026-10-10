@@ -19,7 +19,9 @@ Rules (CONTRACT.md):
   stops the whole run before anything is written.
 - DON cards mint from tcgcsv/ in the page set when it is there (Mike 86520;
   run_tcgcsv, CONTRACT.md DON): one card per normal DON product, one printing
-  per product and finish, keyed tcgcsv:{productId}:{subType}.
+  per product and finish, keyed tcgcsv:{productId}:{subType}. Each DON card
+  gets one don_set row naming its set page (CONTRACT.md, DON sets); a DON the
+  rules cannot place stops the run.
 - A product's release_date comes from its site's product index (products.py),
   only where the page set carries one ({site}/products/_log.json). A date is
   sticky: a run sets or moves it and never clears it.
@@ -61,7 +63,7 @@ PER_SITE = {"card_observation": "card_observations", "printing": "printings",
             "printing_product": "printing_products"}
 SHARED = {"card": "cards", "distribution": "distributions",
           "printing_distribution": "printing_distributions", "printing_link": "printing_links",
-          "retired_printing": "retired_printings"}
+          "retired_printing": "retired_printings", "don_set": "don_sets"}
 TYPE_OF_DIR = {v: k for k, v in {**PER_SITE, **SHARED}.items()}
 
 
@@ -827,6 +829,26 @@ def run_tcgcsv(store, tcg_dir, state):
         if card_key not in names:
             normal = next(p for p in prods[sp["group_id"]] if p["productId"] == sp["card_product_id"])
             names[card_key] = (normal["name"], times[sp["group_id"]])
+    # Each DON card's set page (CONTRACT.md, DON sets): one don_set row per card
+    # this run sees, listing every tcgcsv printing the card has.
+    try:
+        slugs = tcgcsv.set_slugs(p["code"] for p in store.recs["product"].values() if p["site"] == "en" and "code" in p)
+        placed = {}
+        for sp in specs:
+            card_key = card_of_product[sp["card_product_id"]]
+            if card_key not in placed:
+                placed[card_key] = (tcgcsv.don_set(sp["group_id"], sp["abbreviation"], sp["card_product_id"],
+                                                   sp["card_name"], slugs), times[sp["group_id"]])
+    except ValueError as ex:
+        raise RunError(f"tcgcsv: {ex}") from ex
+    printings_of = defaultdict(list)
+    for p in store.recs["printing"].values():
+        if p["site"] == "tcgcsv" and p["card_key"] in placed:
+            printings_of[p["card_key"]].append(p["key"])
+    for card_key, ((set_slug, source), dt) in sorted(placed.items()):
+        store.upsert("don_set", {"key": card_key, "printing_keys": sorted(printings_of[card_key]),
+                                 "don_design": store.design_by_card[card_key], "set_slug": set_slug,
+                                 "source": source}, dt, counts)
 
     # Release Event stamps (CONTRACT.md): a printing on the set card its Number
     # names, never a card of its own and never an observation. A Number that is
