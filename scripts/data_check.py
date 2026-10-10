@@ -137,9 +137,10 @@ def run_errors(runs, schema, retired):
     out = []
     for path, rec in runs:
         out += [f"{path}: {e.message}" for e in v.iter_errors(rec)]
-        site = rec.get("site")
-        if site in since and rec.get("started_at", "") >= since[site]:
-            out.append(f"{path}: a {site} run started {rec.get('started_at')}, after {site} was retired at {since[site]}")
+        site, started = rec.get("site"), rec.get("started_at")
+        # A started_at the schema already refused is reported above, not compared.
+        if site in since and isinstance(started, str) and started >= since[site]:
+            out.append(f"{path}: a {site} run started {started}, after {site} was retired at {since[site]}")
     return out
 
 

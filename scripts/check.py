@@ -122,6 +122,7 @@ else:
 for why, rec in [
     ("a retired site's run started after its retirement", dict(run_rec, started_at="2026-10-11T04:23:00Z")),
     ("a run of a site the schema has never had", dict(run_rec, site="kr")),
+    ("a retired site's run with no usable started_at (reported, not a crash)", dict(run_rec, started_at=None)),
 ]:
     if run_errors([("runs/a.json", rec)], schema, site_retired):
         print("ok   red  ", why)
