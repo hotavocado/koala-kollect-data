@@ -390,13 +390,13 @@ class DonSets(unittest.TestCase):
 
     def test_a_don_with_no_en_product_is_promo_by_override(self):
         # upper 88805: the Heroines Special Set and the Film RED promo. source says a hand placed it.
-        for pid in (710745, 456320):
+        for pid in (710745, 456320, 517477, 517478):
             self.assertEqual(tcgcsv.don_set(1, "EB03", pid, "DON!! Card", self.SLUGS), ("promo", "override"))
 
     def test_the_override_table(self):
         dp = sorted(v for v in tcgcsv.SET_OVERRIDES.values() if v != "promo")
         self.assertEqual(dp, sorted(f"dp-{n:02d}" for n in range(2, 13) for _ in range(2)))
-        self.assertEqual(sorted(k for k, v in tcgcsv.SET_OVERRIDES.items() if v == "promo"), [456320, 710745])
+        self.assertEqual(sorted(k for k, v in tcgcsv.SET_OVERRIDES.items() if v == "promo"), [456320, 517477, 517478, 710745])
 
     def test_an_override_onto_no_en_product_stops_the_run(self):
         with mock.patch.dict(tcgcsv.SET_OVERRIDES, {605125: "dp-99"}):
@@ -407,6 +407,15 @@ class DonSets(unittest.TestCase):
         # The next volume, in a group that maps, must not land on that group's page.
         with self.assertRaisesRegex(ValueError, "names another product"):
             tcgcsv.don_set(1, "OP09", 999999, "DON!! Card (Luffy) (Double Pack Set Vol. 13)", self.SLUGS)
+
+    def test_a_special_don_card_pack_name_with_no_override_stops_the_run(self):
+        with self.assertRaisesRegex(ValueError, "names another product"):
+            tcgcsv.don_set(1, "OP04", 999999, "DON!! Card (Sepia) (Special DON!! Card Pack)", self.SLUGS)
+
+    def test_the_sealed_pack_is_not_a_card_and_never_reaches_placement(self):
+        # "Special DON!! Card Pack DP-11" (701593) carries no CardType, so plan never yields it.
+        specs, _, _ = tcgcsv.plan(*fixture())
+        self.assertFalse(any(tcgcsv.NAMES_ANOTHER.search(s["card_name"]) for s in specs))
 
     def test_a_group_with_no_en_product_stops_the_run(self):
         with self.assertRaisesRegex(ValueError, "no en product, no override, not a promo group"):

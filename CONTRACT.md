@@ -179,18 +179,23 @@ alyssa general 88538, upper 88539/88540, 88803, 88805.
 - **source group.** The card's TCGplayer group abbreviation, with punctuation
   and spaces stripped, equals an en product code stripped the same way (`OP09`
   is `OP-09`, `OP14-EB04` is itself). Measured 2026-10-10: 23 groups, 189
-  products. Two en codes that strip alike stop the run.
+  DON products, of which the overrides below take 27. Two en codes that strip
+  alike stop the run.
 - **source override.** The product's own name names another product, so its
   group is the wrong page. `tcgcsv.SET_OVERRIDES` keys these by the card's
   normal productId; a gold follows its normal's card. 22 Double Pack Set DONs,
   two per volume, sit on `dp-02` … `dp-12` (Double Pack Sets, en `DP-NN`
-  products). A name that says Double Pack with no row in the table stops the
-  run, so the next volume cannot land on its group's page by default.
+  products). A name that says Double Pack or Special DON!! Card Pack with no
+  row in the table **stops the run; it is a stop, not a skip**, so the next
+  volume cannot land on its group's page by default and cannot go missing
+  either.
   **A DON with no en product sits on promo with source override**: the
-  Heroines Special Set DON 710745 (its gold 710746) in EB03 and the Film RED
-  promo 456320 in OP01. `source` says a hand placed them; `promo` would claim
-  the promo page lists them, and it does not (upper 88805). If a real en
-  product appears later, the row moves then.
+  Heroines Special Set DON 710745 (its gold 710746) in EB03, the Film RED promo
+  456320 in OP01, and the two Special DON!! Card Pack DONs in OP04, 517477
+  (Color) and 517478 (Black & White). `source` says a hand placed them;
+  `promo` would claim the promo page lists them, and it does not (upper 88805,
+  88872). If a real en product appears later, such as a Special DON!! Card
+  Pack in the product index, the row moves then.
 - **source promo.** TCGplayer's promo groups, which list promos and not a
   product: OP-PR (17675), OP-DD (23907) and ST-01 PRE (17659). `set_slug` is
   `promo`.

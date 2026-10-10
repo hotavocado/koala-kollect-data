@@ -59,10 +59,12 @@ PROVENANCE = {
 PROMO_GROUPS = {17659, 17675, 23907}
 # A DON whose product name names another product, by its card's normal
 # productId (a gold follows its normal's card). Measured 2026-10-10. A DON with
-# no en product sits on promo with source override (upper 88805): the Film RED
-# promo and the Heroines Special Set, whose gold is 710746.
+# no en product sits on promo with source override (upper 88805, 88872): the
+# Film RED promo, the Heroines Special Set (its gold is 710746) and the two
+# Special DON!! Card Pack DONs in OP04.
 SET_OVERRIDES = {
     456320: "promo",
+    517477: "promo", 517478: "promo",
     530119: "dp-02", 530120: "dp-02",
     542683: "dp-03", 542684: "dp-03",
     557078: "dp-04", 557080: "dp-04",
@@ -76,9 +78,9 @@ SET_OVERRIDES = {
     710745: "promo",
     715681: "dp-12", 715682: "dp-12",
 }
-# A name that names a Double Pack Set is never placed by its group: the next
-# volume stops the run until it joins SET_OVERRIDES.
-NAMES_ANOTHER = re.compile(r"Double Pack", re.I)
+# A name that names one of these products is never placed by its group: a new
+# one stops the run (a stop, not a skip) until it joins SET_OVERRIDES.
+NAMES_ANOTHER = re.compile(r"Double Pack|Special DON!! Card Pack", re.I)
 
 
 def _get(path, timeout=60):
@@ -183,7 +185,8 @@ def don_set(group_id, abbreviation, card_product_id, name, slugs):
     """(set_slug, source) for one DON card: override, then promo group, then the group's en product.
 
     name is the card's normal product name. A card none of the three places, or
-    whose name names a Double Pack Set with no override, stops the run.
+    whose name names a Double Pack Set or a Special DON!! Card Pack with no
+    override, stops the run.
     """
     if card_product_id in SET_OVERRIDES:
         slug_ = SET_OVERRIDES[card_product_id]
