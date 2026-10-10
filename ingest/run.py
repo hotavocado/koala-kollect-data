@@ -266,9 +266,32 @@ def date_site(store, site, site_dir, pstate, counts):
     links = {href: p["series"] for href, p in pages.items()}
     by_series = products.dates_by_series(items, links)
     out = {"dated": 0, "set": 0, "moved": 0, "kept": 0, "undated": [], "pages_read": len(fetched)}
+    packs = set()
+    if site in products.DOUBLE_PACK_SITES:
+        # Minted from the index item itself, dated from it on every run, so a
+        # moved date updates. A pack that drops off the index is dated below
+        # like any product: it keeps the date it had.
+        try:
+            items_by_code, undated_packs = products.double_packs(items)
+        except ValueError as ex:
+            raise RunError(f"{site} product index: {ex}") from None
+        out["double_packs"], out["double_packs_undated"] = len(items_by_code), undated_packs
+        for code, it in sorted(items_by_code.items()):
+            key = f"{site}:{code}"
+            old = store.recs["product"].get(key)
+            rec = {"key": key, "site": site, "series_id": code, "code": code, "name": it["title"], "kind": "other",
+                   "release_date": it["date"], "release_date_source": it["href"], "product_url": it["href"]}
+            store.upsert("product", rec, index_at, counts)
+            packs.add(key)
+            out["dated"] += 1
+            if old is None:
+                counts["new_products"].append(key)
+                out["set"] += 1
+            elif old.get("release_date") != it["date"]:
+                out["moved"] += 1
     added = set(counts["new_products"])
     for key, p in sorted(store.recs["product"].items()):
-        if p["site"] != site:
+        if p["site"] != site or key in packs:
             continue
         if p["kind"] in products.UNDATED_KINDS:
             continue
@@ -1030,7 +1053,10 @@ def date_line(d):
         return "release dates: not in this page set, none read"
     return (f"release dates: dated {d['dated']} (set {d['set']}, moved {d['moved']}, kept off the index {d['kept']}), "
             f"undated {len(d['undated'])}{' [' + ', '.join(d['undated']) + ']' if d['undated'] else ''}, "
-            f"product pages read {d['pages_read']}")
+            f"product pages read {d['pages_read']}"
+            + (f", double packs {d['double_packs']}" if "double_packs" in d else "")
+            + (f", double packs with no date on the index [{', '.join(d['double_packs_undated'])}]"
+               if d.get("double_packs_undated") else ""))
 
 
 def origin_line(dists, o):

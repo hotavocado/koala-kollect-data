@@ -337,6 +337,125 @@ class Dating(RunHarness, unittest.TestCase):
         self.assertNotIn("release_date", self.product())
 
 
+DP02 = EN + "other/dp02.php"
+DP12 = EN + "dp12.html"
+
+
+class DoublePacks(RunHarness, unittest.TestCase):
+    """Double Pack Sets: minted from the en index item, since no page links a series for them."""
+
+    index, go_dates = Dating.index, Dating.go_dates
+
+    def pack(self, code):
+        return next((r for r in self.rows("product") if r["key"] == f"en:{code}"), None)
+
+    def test_the_twelve_measured_titles_parse(self):
+        # The en index titles and hrefs as listed 2026-10-10 (two href shapes).
+        items = [{"href": EN + (f"other/dp{n:02d}.php" if n <= 10 else f"dp{n:02d}.html"),
+                  "title": f"Double Pack Set Vol.{n} [DP-{n:02d}]", "date": "2024-01-01"} for n in range(1, 13)]
+        items.append({"href": OP17, "title": "BOOSTER PACK [OP-17]", "date": "2026-08-22"})
+        dated, undated = products.double_packs(items)
+        self.assertEqual((sorted(dated), undated), ([f"DP-{n:02d}" for n in range(1, 13)], []))
+
+    def test_a_pack_is_minted_dated_from_its_own_index_item(self):
+        self.fetch(FIX, T1)
+        self.index([(OP17, "BOOSTER PACK [OP-17]", "2026-08-22", [SID]),
+                    (DP02, "Double Pack Set Vol.2 [DP-02]", "2023-12-08", [])], T1)
+        r, d = self.go_dates()
+        p = self.pack("DP-02")
+        self.assertEqual({k: v for k, v in p.items() if k != "first_seen_at"},
+                         {"key": "en:DP-02", "site": "en", "series_id": "DP-02", "code": "DP-02",
+                          "name": "Double Pack Set Vol.2 [DP-02]", "kind": "other", "release_date": "2023-12-08",
+                          "release_date_source": DP02, "product_url": DP02})
+        self.assertEqual(p["first_seen_at"], T1)
+        self.assertIn("en:DP-02", r["counts"]["new_products"])
+        self.assertEqual((d["double_packs"], d["dated"], d["set"], d["undated"]), (1, 2, 2, []))
+        self.assertIn("double packs 1", run.date_line(d))
+
+    def test_rerun_on_the_same_pages_is_byte_identical(self):
+        self.fetch(FIX, T1)
+        self.index([(OP17, "BOOSTER PACK [OP-17]", "2026-08-22", [SID]),
+                    (DP02, "Double Pack Set Vol.2 [DP-02]", "2023-12-08", [])], T1)
+        self.go()
+        before = self.data()
+        r, d = self.go_dates()
+        self.assertEqual(self.data(), before)
+        self.assertEqual((r["counts"]["added"], r["counts"]["changed"], d["set"], d["moved"]), (0, 0, 0, 0))
+
+    def test_an_undated_pack_is_not_written_and_is_named(self):
+        self.fetch(FIX, T1)
+        self.index([(OP17, "BOOSTER PACK [OP-17]", "2026-08-22", [SID]),
+                    (DP12, "Double Pack Set Vol.12 [DP-12]", None, [])], T1)
+        r, d = self.go_dates()
+        self.assertIsNone(self.pack("DP-12"))
+        self.assertEqual((d["double_packs"], d["double_packs_undated"], d["undated"]), (0, ["DP-12"], []))
+        self.assertIn("double packs with no date on the index [DP-12]", run.date_line(d))
+
+    def test_packs_leave_the_site_with_no_undated_product(self):
+        import daily
+        self.fetch(FIX, T1)
+        self.index([(OP17, "BOOSTER PACK [OP-17]", "2026-08-22", [SID]),
+                    (DP02, "Double Pack Set Vol.2 [DP-02]", "2023-12-08", [])], T1)
+        self.go()
+        self.assertIsNotNone(self.pack("DP-02"))
+        self.assertFalse(daily.undated(self.repo, "en", ""))
+        # Control: the same check is True once a pack row has no date.
+        path = self.repo / "data/products/en.jsonl"
+        rows = [json.loads(x) for x in path.read_text().splitlines()]
+        for rec in rows:
+            if rec["key"] == "en:DP-02":
+                rec.pop("release_date"), rec.pop("release_date_source")
+        path.write_text("".join(json.dumps(x) + "\n" for x in rows))
+        self.assertTrue(daily.undated(self.repo, "en", ""))
+
+    def test_a_moved_date_updates_the_pack(self):
+        self.fetch(FIX, T1)
+        self.index([(DP02, "Double Pack Set Vol.2 [DP-02]", "2023-12-08", [])], T1)
+        self.go()
+        self.fetch(FIX, T2)
+        self.index([(DP02, "Double Pack Set Vol.2 [DP-02]", "2023-12-15", [])], T2)
+        r, d = self.go_dates()
+        self.assertEqual((self.pack("DP-02")["release_date"], self.pack("DP-02")["first_seen_at"]), ("2023-12-15", T1))
+        self.assertEqual((d["moved"], r["counts"]["changed"]), (1, 1))
+
+    def test_a_pack_dropped_from_the_index_keeps_its_row_and_date(self):
+        self.fetch(FIX, T1)
+        self.index([(DP02, "Double Pack Set Vol.2 [DP-02]", "2023-12-08", [])], T1)
+        self.go()
+        before = self.data()
+        self.fetch(FIX, T2)
+        self.index([(EN + "other.php", "SLEEVES", "2026-09-01", [])], T2)
+        r, d = self.go_dates()
+        self.assertEqual(self.pack("DP-02")["release_date"], "2023-12-08")
+        self.assertEqual((d["double_packs"], d["kept"], r["counts"]["changed"]), (0, 1, 0))
+        self.assertEqual(self.data(), before)
+
+    def test_one_pack_under_two_dates_stops_the_run_and_writes_nothing(self):
+        self.fetch(FIX, T1)
+        self.index([(OP17, "BOOSTER PACK [OP-17]", "2026-08-22", [SID])], T1)
+        self.go()
+        before = self.data()
+        self.fetch(FIX, T2)
+        self.index([(DP02, "Double Pack Set Vol.2 [DP-02]", "2023-12-08", []),
+                    (EN + "dp02.html", "Double Pack Set Vol.2 [DP-02]", "2023-12-15", [])], T2)
+        with self.assertRaisesRegex(run.RunError, "DP-02 listed twice"):
+            self.go()
+        self.assertEqual(self.data(), before)
+
+    def test_one_pack_under_two_pages_stops_even_when_one_is_undated(self):
+        # codex r1, PR 21: the undated listing must not skip the two-pages check.
+        for order in ((None, "2023-12-08"), ("2023-12-08", None)):
+            items = [{"href": DP02, "title": "Double Pack Set Vol.2 [DP-02]", "date": order[0]},
+                     {"href": EN + "dp02.html", "title": "Double Pack Set Vol.2 [DP-02]", "date": order[1]}]
+            with self.assertRaisesRegex(ValueError, "DP-02 listed twice"):
+                products.double_packs(items)
+
+    def test_control_a_title_without_the_bracketed_code_mints_nothing(self):
+        dated, undated = products.double_packs([{"href": DP02, "title": "Double Pack Set Vol.2", "date": "2023-12-08"},
+                                                {"href": DP02, "title": "DP-02 sleeves [DP-02-S]", "date": "2023-12-08"}])
+        self.assertEqual((dated, undated), ({}, []))
+
+
 class TcgcsvCrossCheck(unittest.TestCase):
     GROUPS = [{"abbreviation": "ST-01", "publishedOn": "2022-12-02T00:00:00"},
               {"abbreviation": "ST-01 PRE", "publishedOn": "2022-09-30T00:00:00"},
