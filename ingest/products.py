@@ -274,19 +274,22 @@ def double_packs(items):
     unlinked product page, daily.undated). One code listed with two pages or
     two dates has no right answer, so that raises rather than picks one.
     """
-    dated, undated = {}, []
+    first, dated, undated = {}, {}, set()
     for it in items:
         m = _DOUBLE_PACK.search(it["title"])
         if not m:
             continue
         code = m.group(1)
-        if not it["date"]:
-            undated.append(code)
-            continue
-        old = dated.setdefault(code, it)
+        # Every listing is compared, dated or not, so a second page for one
+        # code stops the run even when one of the two carries no date.
+        old = first.setdefault(code, it)
         if (old["href"], old["date"]) != (it["href"], it["date"]):
             raise ValueError(f"{code} listed twice: {old['href']} {old['date']} and {it['href']} {it['date']}")
-    return dated, sorted(set(undated) - set(dated))
+        if it["date"]:
+            dated[code] = it
+        else:
+            undated.add(code)
+    return dated, sorted(undated)
 
 
 def retail_date(hits):

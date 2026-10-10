@@ -442,6 +442,14 @@ class DoublePacks(RunHarness, unittest.TestCase):
             self.go()
         self.assertEqual(self.data(), before)
 
+    def test_one_pack_under_two_pages_stops_even_when_one_is_undated(self):
+        # codex r1, PR 21: the undated listing must not skip the two-pages check.
+        for order in ((None, "2023-12-08"), ("2023-12-08", None)):
+            items = [{"href": DP02, "title": "Double Pack Set Vol.2 [DP-02]", "date": order[0]},
+                     {"href": EN + "dp02.html", "title": "Double Pack Set Vol.2 [DP-02]", "date": order[1]}]
+            with self.assertRaisesRegex(ValueError, "DP-02 listed twice"):
+                products.double_packs(items)
+
     def test_control_a_title_without_the_bracketed_code_mints_nothing(self):
         dated, undated = products.double_packs([{"href": DP02, "title": "Double Pack Set Vol.2", "date": "2023-12-08"},
                                                 {"href": DP02, "title": "DP-02 sleeves [DP-02-S]", "date": "2023-12-08"}])
