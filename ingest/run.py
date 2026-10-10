@@ -793,6 +793,8 @@ def run_tcgcsv(store, tcg_dir, state):
                     "source_text": sp["name"], "block_icon": None}
         if sp["has_image"]:
             printing["image_url"] = tcgcsv.image_url(sp["product_id"])
+        if sp["product_id"] in tcgcsv.PROVENANCE:
+            printing["provenance_url"] = tcgcsv.PROVENANCE[sp["product_id"]]
         store.upsert("printing", printing, dt, counts)
         store.upsert("printing_locator", {"key": loc_key, "printing_key": prt, "site": "tcgcsv",
                                           "image_id": f"{sp['product_id']}:{sp['sub_type']}"}, dt, counts)

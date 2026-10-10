@@ -138,6 +138,18 @@ groups and 7,717 products; a value outside these vocabularies stops the run.
   new DON listing sits at `imageCount` 0 for a while, so a required URL would
   be wrong by construction, not only for three rows. Every official site's
   printing still requires one.
+- **provenance_url links Bandai's own copy, measured matches only** (Mike,
+  DON provenance arc; app side koala-kollect #25). Optional on a tcgcsv
+  printing, refused on an official site's, and always an
+  `https://en.onepiece-cardgame.com/` URL. It is written from
+  `tcgcsv.PROVENANCE`, a hand-kept table by productId, onto every finish of
+  that product. A product joins only when Bandai's image matches TCGplayer's
+  `{productId}_in_1000x1000.jpg` at a mean absolute pixel difference of about
+  5/255 (2026-10-10: 677560 and 677559, EB-03 Nami normal and Gold; 683969,
+  Netflix Chopper). Where TCGplayer's image is its own scan the difference
+  runs 26-56 even for the same art, and an art correlation names the
+  character but cannot tell finishes apart, so those stay unlinked rather
+  than guessed.
   A DON card's observation (alyssa 87523): `site` `tcgcsv`, `lang` `en`, `name`
   the normal product's name verbatim, `category` `don`, no colours, attributes
   or types, and its `facts_site` is `tcgcsv`. tcgcsv has no product rows and no

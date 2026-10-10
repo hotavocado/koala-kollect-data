@@ -402,6 +402,11 @@
           "type": "string",
           "pattern": "^https://[^?#]+$"
         },
+        "provenance_url": {
+          "description": "tcgcsv printings only, optional: the Bandai en page image this printing's TCGplayer image was matched to, linking the card to the publisher's own copy (Mike, DON provenance arc). Written only for a measured match: mean absolute pixel difference about 5/255 against TCGplayer's image (CONTRACT.md, DON). Linked, never re-hosted. Never on an official site's printing.",
+          "type": "string",
+          "pattern": "^https://en\\.onepiece-cardgame\\.com/[^?#]+$"
+        },
         "source_text": {
           "description": "The verbatim Card Set(s) / 入手情報 / 獲取方法 string, unparsed, so a better parser can re-derive without a re-scrape. Empty string when the site shows none (EN ST14-010_r1 has no provenance block); every empty one is counted on the run.",
           "type": "string"
@@ -565,6 +570,12 @@
             }
           },
           "then": {
+            "not": {
+              "description": "provenance_url links a tcgcsv printing to Bandai's copy; an official site's printing is Bandai's copy.",
+              "required": [
+                "provenance_url"
+              ]
+            },
             "properties": {
               "variant": {
                 "description": "normal and foil are the two finishes of a tcgcsv DON product and stamped is a tcgcsv Release Event print, and nothing else: an official site's printing never carries them (codex, PR 15).",
