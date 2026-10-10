@@ -1,6 +1,6 @@
 {
  "schema_version": 1,
- "generated_at": "2026-10-10T17:28:17Z",
+ "generated_at": "2026-10-10T17:46:24Z",
  "files": {
   "data/card_observations/asia-en.jsonl": {
    "type": "card_observation",
@@ -41,6 +41,11 @@
    "type": "distribution",
    "rows": 809,
    "sha256": "09a6e30907bd99acc190680988c1be9cb687e8f448b87b0868917e362e1bb68f"
+  },
+  "data/don_sets.jsonl": {
+   "type": "don_set",
+   "rows": 165,
+   "sha256": "541fc49727169a6f9df8499d8d858413a48f728f400fdca3c35ac6e86c290bcf"
   },
   "data/printing_distributions.jsonl": {
    "type": "printing_distribution",
@@ -130,7 +135,7 @@
   "data/printings/tcgcsv.jsonl": {
    "type": "printing",
    "rows": 862,
-   "sha256": "b125b64e20e20bf6f7e785fcacae42639163964c1c283b0c8e13eb43958a6a15"
+   "sha256": "c9fe957dca0f373619f32c96d5388ad80b20bd562c7d91727fd73077b490f782"
   },
   "data/products/asia-en.jsonl": {
    "type": "product",
