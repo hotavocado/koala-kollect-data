@@ -1,6 +1,6 @@
 {
  "schema_version": 1,
- "generated_at": "2026-10-10T05:05:11Z",
+ "generated_at": "2026-10-10T17:28:17Z",
  "files": {
   "data/card_observations/asia-en.jsonl": {
    "type": "card_observation",
@@ -144,8 +144,8 @@
   },
   "data/products/en.jsonl": {
    "type": "product",
-   "rows": 60,
-   "sha256": "606921121f907b672b365710a72eea7f1f0279f9b1a5f11df7cb49fc1e0b4db2"
+   "rows": 72,
+   "sha256": "7aec6ef0dfeb46c2f30341212f370ee76348f9d975ce58e7208726818e17bc33"
   },
   "data/products/jp.jsonl": {
    "type": "product",

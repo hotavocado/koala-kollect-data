@@ -1,0 +1,33 @@
+{
+ "run_id": "20261010T173103Z-en",
+ "site": "en",
+ "started_at": "2026-10-10T17:31:03Z",
+ "finished_at": "2026-10-10T17:31:05Z",
+ "pages_fetched": 60,
+ "pages_unchanged": 60,
+ "blocks_parsed": 4844,
+ "blocks_without_source_text": 1,
+ "added": 12,
+ "changed": 0,
+ "removed": 0,
+ "refusals": {
+  "http_error": 0,
+  "zero_parse": 0,
+  "count_drop": 0,
+  "count_mismatch": 0
+ },
+ "new_products": [
+  "en:DP-01",
+  "en:DP-02",
+  "en:DP-03",
+  "en:DP-04",
+  "en:DP-05",
+  "en:DP-06",
+  "en:DP-07",
+  "en:DP-08",
+  "en:DP-09",
+  "en:DP-10",
+  "en:DP-11",
+  "en:DP-12"
+ ]
+}
