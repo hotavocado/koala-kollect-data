@@ -173,6 +173,7 @@ class Run(unittest.TestCase):
             "".join(run.line("card", c) + "\n" for c in FIX["cards"]), "utf-8")
         (self.repo / "data" / "printings" / "en.jsonl").write_text(
             "".join(run.line("printing", p) + "\n" for p in (en_base or FIX["en_base"])), "utf-8")
+        test_tcgcsv.seed_products(self.repo)
 
     def pageset(self, t, g=None, p=None, pr=None):
         fg, fp, fpr = fixture()

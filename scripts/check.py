@@ -5,7 +5,7 @@ from jsonschema import Draft202012Validator
 
 sys.path.insert(0, str(Path(__file__).parent))
 from image_id import parse_image_id
-from data_check import check_data, retired_errors, stamped_claim_errors, stamped_finish_errors
+from data_check import check_data, don_set_errors, retired_errors, stamped_claim_errors, stamped_finish_errors
 from tcgcsv_check import check as tcgcsv_check
 
 root = Path(__file__).resolve().parent.parent
@@ -144,6 +144,40 @@ if stamped_claim_errors(stamp, dists, [good, dict(good, key="ev_0000000000000003
     print("FAIL control: two claims on one stamp read red, but the count is open")
 else:
     print("ok   green two tcgcsv claims on one stamped printing (count open)")
+
+# Controls: the don_set rules (CONTRACT.md, DON sets). Each red case is the
+# passing set with one thing changed, so a red here is that one thing.
+d_cards = [{"key": "card_d0d0d0d0d0d0", "don_design": "PRB-01:don-card-luffy"}, {"key": "card_op01001aaaaa", "number": "OP01-001"}]
+d_prints = [{"key": "prt_00000000d0d2", "card_key": "card_d0d0d0d0d0d0", "site": "tcgcsv"},
+            {"key": "prt_00000000d0d1", "card_key": "card_d0d0d0d0d0d0", "site": "tcgcsv"},
+            {"key": "prt_op01001base0", "card_key": "card_op01001aaaaa", "site": "en"}]
+d_prods = [{"key": "en:569301", "site": "en", "code": "PRB-01"}, {"key": "jp:550301", "site": "jp", "code": "DP-99"}]
+d_good = {"key": "card_d0d0d0d0d0d0", "printing_keys": ["prt_00000000d0d1", "prt_00000000d0d2"],
+          "don_design": "PRB-01:don-card-luffy", "set_slug": "prb-01", "source": "group"}
+for why, rows in [("the passing don_set", [d_good]), ("an override onto promo", [dict(d_good, set_slug="promo", source="override")]),
+                  ("a promo group's DON", [dict(d_good, set_slug="promo", source="promo")])]:
+    if don_set_errors(d_cards, d_prints, d_prods, rows):
+        bad += 1
+        print("FAIL control: green case is red:", why, don_set_errors(d_cards, d_prints, d_prods, rows))
+    else:
+        print("ok   green", why)
+for why, rows in [
+    ("a DON card with no don_set row", []),
+    ("a don_set row on a numbered card", [d_good, dict(d_good, key="card_op01001aaaaa")]),
+    ("a don_set row whose don_design is not the card's", [dict(d_good, don_design="PRB-01:don-card-uta")]),
+    ("printing_keys missing one of the card's printings", [dict(d_good, printing_keys=["prt_00000000d0d1"])]),
+    ("printing_keys unsorted", [dict(d_good, printing_keys=["prt_00000000d0d2", "prt_00000000d0d1"])]),
+    ("printing_keys with another card's printing", [dict(d_good, printing_keys=["prt_00000000d0d1", "prt_00000000d0d2", "prt_op01001base0"])]),
+    ("a set_slug that is no en product code", [dict(d_good, set_slug="prb-09")]),
+    ("a set_slug that is only a jp product code", [dict(d_good, set_slug="dp-99")]),
+    ("source promo off the promo page", [dict(d_good, source="promo")]),
+    ("source group on the promo page", [dict(d_good, set_slug="promo")]),
+]:
+    if don_set_errors(d_cards, d_prints, d_prods, rows):
+        print("ok   red  ", why)
+    else:
+        bad += 1
+        print("FAIL control passed:", why)
 
 # The data itself, when the ingest has written any: manifest, files, schema, references.
 data_errors = check_data(root, schema)

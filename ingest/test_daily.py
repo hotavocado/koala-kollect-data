@@ -336,6 +336,8 @@ class Don(Harness, unittest.TestCase):
 
     def setUp(self):
         super().setUp()
+        import test_tcgcsv
+        test_tcgcsv.seed_products(self.repo)
         # The DON fixture holds no Release Event group (test_stamps.py has those).
         p = mock.patch.object(tcgcsv, "RE_GROUPS", set())
         p.start()

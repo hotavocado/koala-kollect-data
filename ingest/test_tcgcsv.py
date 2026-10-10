@@ -35,6 +35,21 @@ def tearDownModule():
     _no_re.stop()
 
 
+# The en product the fixture's PRB-01 DON sit on, verbatim from data main
+# (CONTRACT.md, DON sets). A DON is placed by its group's en product, so a repo
+# without this row stops the run.
+PRB01 = {"key": "en:569301", "site": "en", "series_id": "569301", "code": "PRB-01",
+         "name": "PREMIUM BOOSTER -ONE PIECE CARD THE BEST- [PRB-01]", "kind": "premium",
+         "release_date": "2024-11-08", "release_date_source": "https://en.onepiece-cardgame.com/products/boosters/prb01.php",
+         "product_url": "https://en.onepiece-cardgame.com/cardlist/?series=569301", "first_seen_at": "2026-10-08T15:56:33Z"}
+
+
+def seed_products(repo, rows=(PRB01,)):
+    d = Path(repo) / "data" / "products"
+    d.mkdir(parents=True, exist_ok=True)
+    (d / "en.jsonl").write_text("".join(run.line("product", r) + "\n" for r in rows), "utf-8")
+
+
 def fixture():
     return ([dict(g) for g in FIX["groups"]],
             {int(k): [json.loads(json.dumps(p)) for p in v] for k, v in FIX["products"].items()},
@@ -141,13 +156,14 @@ class FinishRule(unittest.TestCase):
             tcgcsv.plan(g, p, pr)
 
 
-class Run(unittest.TestCase):
+class RunHarness:
     """Through run.run on a temp repo, the way the daily job calls it."""
 
     def setUp(self):
         self.tmp = Path(tempfile.mkdtemp())
         self.repo, self.pages = self.tmp / "repo", self.tmp / "pages"
         self.repo.mkdir()
+        seed_products(self.repo)
         self.clock = itertools.count(1_791_331_200)
 
     def tearDown(self):
@@ -175,6 +191,8 @@ class Run(unittest.TestCase):
                 for p in sorted((self.repo / "data").rglob("*.jsonl"))} | {
             "manifest.json": hashlib.sha256((self.repo / "manifest.json").read_bytes()).hexdigest()}
 
+
+class Run(RunHarness, unittest.TestCase):
     def test_first_run(self):
         self.pageset(T1)
         res = self.go()
@@ -348,6 +366,119 @@ class Run(unittest.TestCase):
         res = self.go()
         self.assertEqual(res["sites"], {})
         self.assertFalse((self.repo / "data" / "printings" / "en.jsonl").exists())
+
+
+class DonSets(unittest.TestCase):
+    """Which set page a DON card sits on (CONTRACT.md, DON sets): override, promo group, then the group's en product."""
+
+    SLUGS = tcgcsv.set_slugs(["OP-09", "OP14-EB04", "PRB-01", "DP-06", "ST-01"])
+
+    def test_the_group_is_the_en_product_with_punctuation_stripped(self):
+        self.assertEqual(tcgcsv.don_set(1, "OP09", 1, "DON!! Card (Alternate Art)", self.SLUGS), ("op-09", "group"))
+        self.assertEqual(tcgcsv.don_set(1, "OP14-EB04", 1, "DON!! Card", self.SLUGS), ("op14-eb04", "group"))
+        self.assertEqual(tcgcsv.don_set(1, "PRB-01", 1, "DON!! Card (Uta)", self.SLUGS), ("prb-01", "group"))
+
+    def test_a_promo_group_sits_on_promo(self):
+        # ST-01 PRE strips to ST01PRE, which is no product; it is a promo group by id.
+        for gid, abbr in [(17659, "ST-01 PRE"), (17675, "OP-PR"), (23907, "OP-DD")]:
+            self.assertEqual(tcgcsv.don_set(gid, abbr, 1, "DON!! Card", self.SLUGS), ("promo", "promo"))
+
+    def test_an_override_beats_the_group(self):
+        # 605125 sits in OP09, which maps; its name names Double Pack Set Vol. 6.
+        name = "DON!! Card (Buggy) (Double Pack Set Vol. 6)"
+        self.assertEqual(tcgcsv.don_set(23589, "OP09", 605125, name, self.SLUGS), ("dp-06", "override"))
+
+    def test_a_don_with_no_en_product_is_promo_by_override(self):
+        # upper 88805: the Heroines Special Set and the Film RED promo. source says a hand placed it.
+        for pid in (710745, 456320, 517477, 517478):
+            self.assertEqual(tcgcsv.don_set(1, "EB03", pid, "DON!! Card", self.SLUGS), ("promo", "override"))
+
+    def test_the_override_table(self):
+        dp = sorted(v for v in tcgcsv.SET_OVERRIDES.values() if v != "promo")
+        self.assertEqual(dp, sorted(f"dp-{n:02d}" for n in range(2, 13) for _ in range(2)))
+        self.assertEqual(sorted(k for k, v in tcgcsv.SET_OVERRIDES.items() if v == "promo"), [456320, 517477, 517478, 710745])
+
+    def test_an_override_onto_no_en_product_stops_the_run(self):
+        with mock.patch.dict(tcgcsv.SET_OVERRIDES, {605125: "dp-99"}):
+            with self.assertRaisesRegex(ValueError, "which is no en product"):
+                tcgcsv.don_set(23589, "OP09", 605125, "DON!! Card", self.SLUGS)
+
+    def test_a_double_pack_name_with_no_override_stops_the_run(self):
+        # The next volume, in a group that maps, must not land on that group's page.
+        with self.assertRaisesRegex(ValueError, "names another product"):
+            tcgcsv.don_set(1, "OP09", 999999, "DON!! Card (Luffy) (Double Pack Set Vol. 13)", self.SLUGS)
+
+    def test_a_special_don_card_pack_name_with_no_override_stops_the_run(self):
+        with self.assertRaisesRegex(ValueError, "names another product"):
+            tcgcsv.don_set(1, "OP04", 999999, "DON!! Card (Sepia) (Special DON!! Card Pack)", self.SLUGS)
+
+    def test_the_sealed_pack_is_not_a_card_and_never_reaches_placement(self):
+        # "Special DON!! Card Pack DP-11" (701593) carries no CardType, so plan never yields it.
+        specs, _, _ = tcgcsv.plan(*fixture())
+        self.assertFalse(any(tcgcsv.NAMES_ANOTHER.search(s["card_name"]) for s in specs))
+
+    def test_a_group_with_no_en_product_stops_the_run(self):
+        with self.assertRaisesRegex(ValueError, "no en product, no override, not a promo group"):
+            tcgcsv.don_set(1, "OP18", 1, "DON!! Card", self.SLUGS)
+
+    def test_two_codes_that_strip_alike_stop_the_run(self):
+        with self.assertRaisesRegex(ValueError, "strip to one group key"):
+            tcgcsv.set_slugs(["OP-09", "OP09"])
+
+
+class DonSetRun(RunHarness, unittest.TestCase):
+    """don_sets.jsonl through run.run."""
+
+    def sets(self):
+        return run.read_jsonl(self.repo / "data" / "don_sets.jsonl")
+
+    def card_of(self, loc):
+        return self.rows("printings")[self.rows("printing_locators")[loc]["printing_key"]]["card_key"]
+
+    def test_one_row_per_don_card(self):
+        self.pageset(T1)
+        res = self.go()
+        sets, cards = self.sets(), run.read_jsonl(self.repo / "data" / "cards.jsonl")
+        self.assertEqual(set(sets), set(cards))
+        uta = sets[self.card_of("tcgcsv:593826:Normal")]
+        self.assertEqual({k: uta[k] for k in ("don_design", "set_slug", "source", "first_seen_at")},
+                         {"don_design": "PRB-01:don-card-uta", "set_slug": "prb-01", "source": "group", "first_seen_at": T1})
+        locs = self.rows("printing_locators")
+        self.assertEqual(uta["printing_keys"], sorted(locs[k]["printing_key"] for k in
+                                                      ("tcgcsv:593826:Normal", "tcgcsv:593826:Foil", "tcgcsv:586181:Foil")))
+        for loc in ("tcgcsv:482236:Foil", "tcgcsv:482237:Foil", "tcgcsv:683969:Normal", "tcgcsv:434340:Normal"):
+            self.assertEqual((sets[self.card_of(loc)]["set_slug"], sets[self.card_of(loc)]["source"]), ("promo", "promo"), loc)
+        manifest = json.loads((self.repo / "manifest.json").read_text())
+        self.assertEqual(manifest["files"]["data/don_sets.jsonl"]["type"], "don_set")
+        self.assertEqual(manifest["files"]["data/don_sets.jsonl"]["rows"], 5)
+        self.assertEqual(res["tcgcsv_run"]["run"]["added"], 5 + 7 + 7 + 5)
+
+    def test_a_new_finish_joins_its_cards_printing_keys(self):
+        self.pageset(T1)
+        self.go()
+        g, p, pr = fixture()
+        pr[17675].append({"productId": 482237, "subTypeName": "Normal"})
+        self.pageset(T2, g, p, pr)
+        self.go()
+        red = self.sets()[self.card_of("tcgcsv:482237:Foil")]
+        locs = self.rows("printing_locators")
+        self.assertEqual(red["printing_keys"], sorted(locs[k]["printing_key"] for k in ("tcgcsv:482237:Foil", "tcgcsv:482237:Normal")))
+        self.assertEqual(red["first_seen_at"], T1)
+
+    def test_an_override_places_the_card_and_its_gold(self):
+        with mock.patch.dict(tcgcsv.SET_OVERRIDES, {593826: "promo"}):
+            self.pageset(T1)
+            self.go()
+        uta = self.sets()[self.card_of("tcgcsv:586181:Foil")]
+        self.assertEqual((uta["set_slug"], uta["source"], len(uta["printing_keys"])), ("promo", "override", 3))
+
+    def test_a_don_with_no_place_writes_nothing(self):
+        seed_products(self.repo, rows=())
+        self.pageset(T1)
+        with self.assertRaisesRegex(run.RunError, "PRB-01.*no en product"):
+            self.go()
+        self.assertFalse((self.repo / "data" / "don_sets.jsonl").exists())
+        self.assertFalse((self.repo / "manifest.json").exists())
 
 
 if __name__ == "__main__":

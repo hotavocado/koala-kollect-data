@@ -18,6 +18,7 @@ data/distributions.jsonl              distribution
 data/printing_distributions.jsonl     printing_distribution
 data/printing_links.jsonl             printing_link
 data/retired_printings.jsonl          retired_printing (printings removed by reviewed PR; the app deletes them)
+data/don_sets.jsonl                   don_set (which set page each DON card sits on)
 runs/{YYYY}/{MM}/{run_id}.json        ingest_run (audit only, not synced)
 state/pages/{site}.json               last clean block count, hash and fetched_at per page (ingest only, not synced)
 state/cn_ids.jsonl                    cn id snapshot, numeric id and cardNumber (ingest only, not synced)
@@ -159,6 +160,52 @@ groups and 7,717 products; a value outside these vocabularies stops the run.
   `fetched_at`; an older page set stops the run with nothing written, an equal
   one is a re-run. The page set is complete or absent: any failed request fails
   the daily run, as for every other source.
+
+## DON sets
+
+A DON carries no number, so its set cannot be read off it the way a numbered
+card's is. `data/don_sets.jsonl` says which set page each DON card sits on: one
+`don_set` row per DON card, written by the tcgcsv walker in the run that mints
+the card (`tcgcsv.don_set`, called from `run_tcgcsv`). Survey and rulings:
+alyssa general 88538, upper 88539/88540, 88803, 88805.
+
+- **The unit is the card, not the product.** A gold is a printing of its
+  normal's card (73 of 74 in the same group), so a card and its gold sit on
+  one page. `key` is the card key, `printing_keys` every tcgcsv printing the
+  card has, sorted, and `don_design` the card's, for readers and checks only.
+- **set_slug** is the app's own slug for a set page: an en product `code`
+  lowercased (`prb-01`, `op14-eb04`, `dp-06`), or `promo`, the existing promo
+  page. Placement within the page is the app's; the file carries no order.
+- **source group.** The card's TCGplayer group abbreviation, with punctuation
+  and spaces stripped, equals an en product code stripped the same way (`OP09`
+  is `OP-09`, `OP14-EB04` is itself). Measured 2026-10-10: 23 groups, 189
+  DON products, of which the overrides below take 27. Two en codes that strip
+  alike stop the run.
+- **source override.** The product's own name names another product, so its
+  group is the wrong page. `tcgcsv.SET_OVERRIDES` keys these by the card's
+  normal productId; a gold follows its normal's card. 22 Double Pack Set DONs,
+  two per volume, sit on `dp-02` … `dp-12` (Double Pack Sets, en `DP-NN`
+  products). A name that says Double Pack or Special DON!! Card Pack with no
+  row in the table **stops the run; it is a stop, not a skip**, so the next
+  volume cannot land on its group's page by default and cannot go missing
+  either.
+  **A DON with no en product sits on promo with source override**: the
+  Heroines Special Set DON 710745 (its gold 710746) in EB03, the Film RED promo
+  456320 in OP01, and the two Special DON!! Card Pack DONs in OP04, 517477
+  (Color) and 517478 (Black & White). `source` says a hand placed them;
+  `promo` would claim the promo page lists them, and it does not (upper 88805,
+  88872). If a real en product appears later, such as a Special DON!! Card
+  Pack in the product index, the row moves then.
+- **source promo.** TCGplayer's promo groups, which list promos and not a
+  product: OP-PR (17675), OP-DD (23907) and ST-01 PRE (17659). `set_slug` is
+  `promo`.
+- **Anything else stops the run**: a DON whose group is no en product, no
+  promo group and not overridden, or an override onto a slug that is no en
+  product. Nothing is guessed.
+- **A row changes when its card does.** A finish appearing adds its printing
+  to `printing_keys`; an override added or removed moves `set_slug`.
+  `first_seen_at` keeps the first sighting. Rows are never removed, as no
+  tcgcsv row is.
 
 ## Release Event stamps
 
@@ -631,5 +678,7 @@ valid examples (the sync upserts by key, so a repeat overwrites silently; the
 data files get the same check, within and across files), and runs the
 image-id parser cases. Over the data it adds the cross-record checks the
 schema cannot express: no retired printing is also live, a stamped printing
-has a locator and every one ends `:Normal`, and the Release Event claim rules
-above. Each has red controls in `check.py`. CI runs it on every push.
+has a locator and every one ends `:Normal`, the Release Event claim rules
+above, and every DON card has exactly one `don_set` row whose `don_design`,
+`printing_keys` and `set_slug` agree with the card, its tcgcsv printings and
+the en product codes (`source` `promo` only on `promo`, `group` never on it). Each has red controls in `check.py`. CI runs it on every push.

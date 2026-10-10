@@ -52,6 +52,35 @@ PROVENANCE = {
     677560: "https://en.onepiece-cardgame.com/renewal/images/products/boosters/eb03/EB03_DON.webp",
     683969: "https://en.onepiece-cardgame.com/images/topics/028/01.png",
 }
+# Which set page a DON card sits on (CONTRACT.md, DON sets). By default its
+# group's: the abbreviation, punctuation stripped, is an en product code
+# (OP09 = OP-09). These groups list promos, not a product, so their DON sit on
+# the promo page: ST-01 PRE, OP-PR, OP-DD.
+PROMO_GROUPS = {17659, 17675, 23907}
+# A DON whose product name names another product, by its card's normal
+# productId (a gold follows its normal's card). Measured 2026-10-10. A DON with
+# no en product sits on promo with source override (upper 88805, 88872): the
+# Film RED promo, the Heroines Special Set (its gold is 710746) and the two
+# Special DON!! Card Pack DONs in OP04.
+SET_OVERRIDES = {
+    456320: "promo",
+    517477: "promo", 517478: "promo",
+    530119: "dp-02", 530120: "dp-02",
+    542683: "dp-03", 542684: "dp-03",
+    557078: "dp-04", 557080: "dp-04",
+    576484: "dp-05", 576485: "dp-05",
+    605125: "dp-06", 605126: "dp-06",
+    636744: "dp-07", 636745: "dp-07",
+    651174: "dp-08", 651175: "dp-08",
+    672736: "dp-09", 672738: "dp-09",
+    689810: "dp-10", 689811: "dp-10",
+    698315: "dp-11", 698316: "dp-11",
+    710745: "promo",
+    715681: "dp-12", 715682: "dp-12",
+}
+# A name that names one of these products is never placed by its group: a new
+# one stops the run (a stop, not a skip) until it joins SET_OVERRIDES.
+NAMES_ANOTHER = re.compile(r"Double Pack|Special DON!! Card Pack", re.I)
 
 
 def _get(path, timeout=60):
@@ -137,6 +166,43 @@ def design(abbreviation, name):
     return f"{re.sub(r'[^A-Za-z0-9-]+', '-', abbreviation).strip('-')}:{slug(name)}"
 
 
+def code_key(code):
+    """An abbreviation or product code with punctuation and spaces stripped: OP-09 and OP09 are both OP09."""
+    return re.sub(r"[^A-Za-z0-9]", "", code).upper()
+
+
+def set_slugs(en_codes):
+    """{code_key: set slug} over the en product codes. The slug is the code lowercased (the app's own rule)."""
+    out = {}
+    for code in en_codes:
+        k = code_key(code)
+        if out.setdefault(k, code.lower()) != code.lower():
+            raise ValueError(f"en product codes {out[k]!r} and {code.lower()!r} strip to one group key {k!r}")
+    return out
+
+
+def don_set(group_id, abbreviation, card_product_id, name, slugs):
+    """(set_slug, source) for one DON card: override, then promo group, then the group's en product.
+
+    name is the card's normal product name. A card none of the three places, or
+    whose name names a Double Pack Set or a Special DON!! Card Pack with no
+    override, stops the run.
+    """
+    if card_product_id in SET_OVERRIDES:
+        slug_ = SET_OVERRIDES[card_product_id]
+        if slug_ != "promo" and slug_ not in slugs.values():
+            raise ValueError(f"DON {card_product_id} overridden to {slug_!r}, which is no en product")
+        return slug_, "override"
+    if NAMES_ANOTHER.search(name):
+        raise ValueError(f"DON {card_product_id} {name!r} names another product and has no SET_OVERRIDES row")
+    if group_id in PROMO_GROUPS:
+        return "promo", "promo"
+    slug_ = slugs.get(code_key(abbreviation))
+    if slug_ is None:
+        raise ValueError(f"DON {card_product_id} in group {group_id} ({abbreviation}): no en product, no override, not a promo group")
+    return slug_, "group"
+
+
 def image_url(product_id):
     return f"https://tcgplayer-cdn.tcgplayer.com/product/{product_id}_in_1000x1000.jpg"
 
@@ -146,8 +212,8 @@ def plan(groups, products, prices):
 
     groups is the /groups list; products and prices map groupId to their lists.
     Each printing is a dict: product_id, sub_type, variant, name, card_product_id
-    (the normal product whose card it is), design (that card's don_design),
-    group_id and has_image (TCGplayer's imageCount above 0). unpriced is the DON products with no price row: they have no
+    (the normal product whose card it is) and card_name (its name), design (that
+    card's don_design), group_id, abbreviation (the group's) and has_image (TCGplayer's imageCount above 0). unpriced is the DON products with no price row: they have no
     finish and so no key, and never reach variant() (upper 87490). They mint
     the day a price row appears.
     """
@@ -181,8 +247,9 @@ def plan(groups, products, prices):
             for sub in sorted(subs):
                 out.append({"product_id": p["productId"], "sub_type": sub,
                             "variant": variant(partner is not None, sub), "name": p["name"],
-                            "card_product_id": card_product["productId"],
+                            "card_product_id": card_product["productId"], "card_name": card_product["name"],
                             "design": design(g["abbreviation"], card_product["name"]), "group_id": gid,
+                            "abbreviation": g["abbreviation"],
                             "has_image": bool(p.get("imageCount"))})
     return out, unpriced, don_count
 
