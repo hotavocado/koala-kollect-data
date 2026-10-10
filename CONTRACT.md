@@ -414,6 +414,13 @@ all.
   en product like every other set. They link no series, so the walk keeps them
   as they are (sticky) and never re-dates them. EB-04 has no such row: no en
   page names it on its own.
+- **EB-04's English title is `name_en` on jp:550204, placed by hand.** With no
+  en product, the set has only its jp row, whose `name` is Japanese. `name_en`
+  is `EGGHEAD CRISIS` (alyssa, general 89168), and the app, from her fix of
+  2026-10-10, titles a set with no en product from a product's `name_en`.
+  No page carries `name_en`, so the card-list walk carries it over on every
+  re-walk, as it carries the date (`PRODUCT_CARRIED` in ingest/run.py). The cn
+  walk and the en double-pack mint do not carry it: no row on either has one.
 
 ## Promo origin
 
@@ -636,7 +643,8 @@ sweep after this data lands (alyssa, general 88890).
 What the app shows differently: three sets, EB-04, OP-14 and OP-15, took their
 English title from asia-en, because en sells them only as the combined
 OP14-EB04 and OP15-EB04 packs. OP-14 and OP-15 keep an English title from the
-hand-placed en rows (Release dates); EB-04 shows the jp name. No set date
+hand-placed en rows (Release dates); EB-04 from `name_en` on its jp row
+(Release dates). No set date
 moves from the removal itself: a set dates off en, else jp, never asia-en.
 
 Runs stay: the `runs/` records both sites wrote before 2026-10-10 are the audit

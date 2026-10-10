@@ -110,7 +110,7 @@
   "data/products/jp.jsonl": {
    "type": "product",
    "rows": 62,
-   "sha256": "198baf7d06afc9cba1437ca5d7feeda93a92ed60855c3edc10afd3c2650a4221"
+   "sha256": "a6dcec33b6be897a2b73507393ce1f6e5a183bb90e2616d68b47776a612e4307"
   },
   "data/retired_printings.jsonl": {
    "type": "retired_printing",

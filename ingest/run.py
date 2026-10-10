@@ -57,6 +57,10 @@ SITES = ["en", "jp"]
 RETIRED_SITES = {"asia-en", "tc"}
 REGION = {"en": "en", "jp": "jp", "cn": "cn"}
 FACTS_ORDER = ["jp", "en", "cn", "tcgcsv"]
+# Product fields the card-list walk cannot see, so a re-walk keeps the
+# committed value: the date (from the product index) and name_en, placed by
+# hand where a set has no en product to title it (CONTRACT.md, EB-04).
+PRODUCT_CARRIED = ("release_date", "release_date_source", "name_en")
 ARMS = ["http_error", "zero_parse", "count_drop", "count_mismatch"]
 DROP_FLOOR = 0.9
 REQUIRED = ["number", "rarity", "category", "name", "image_src"]
@@ -197,8 +201,9 @@ def run_site(store, site_dir, site, state):
         before = counts["added"]
         product = {"key": product_key, "site": site, **model.product_fields(site, sid, label)}
         # The date is not on the card list page; it comes from the product
-        # index after this loop. Carried over here so an upsert never drops it.
-        for k in ("release_date", "release_date_source"):
+        # index after this loop. name_en is on no page either (PRODUCT_CARRIED).
+        # Carried over here so an upsert never drops them.
+        for k in PRODUCT_CARRIED:
             if k in store.recs["product"].get(product_key, {}):
                 product[k] = store.recs["product"][product_key][k]
         store.upsert("product", product, t, counts)
