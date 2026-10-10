@@ -627,7 +627,8 @@ either site as its `facts_site`, and every card keeps a printing on en, jp, cn
 or tcgcsv.
 
 How the app removes them: each retired printing is a `retired_printings` row
-with reason `site_retired` and its own locator as the one `source_id`, which the
+with reason `site_retired` and its own locator as the one `source_id` (an
+`asia-en:` or `tc:` locator; the schema refuses any other), which the
 sync deletes with everything pointing at it. The sync has no delete path for
 products, distributions or card_observations, so those go by a one-off app-side
 sweep after this data lands (alyssa, general 88890).

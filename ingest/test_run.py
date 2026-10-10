@@ -214,10 +214,13 @@ class RetiredSites(Harness, unittest.TestCase):
     def test_red_a_site_retired_printing_is_never_written_again(self):
         image_id = BLOCK.search(FIX).group(1)
         key = model.mint("prt", f"en:{image_id}")
+        # The guard is keyed on the printing key alone, so a key minted by the
+        # en walk stands in for any retired key coming back. The row itself
+        # must still be a valid site_retired row, naming a retired site's locator.
         (self.repo / "data").mkdir()
         (self.repo / "data" / "retired_printings.jsonl").write_text(json.dumps(
             {"key": key, "printing_key": key, "reason": "site_retired", "retired_at": T1,
-             "source_ids": [f"en:{image_id}"]}) + "\n", "utf-8")
+             "source_ids": [f"asia-en:{image_id}"]}) + "\n", "utf-8")
         self.fetch(FIX, T2)
         with self.assertRaisesRegex(run.RunError, rf"{key} is retired \(site_retired\)"):
             self.go()

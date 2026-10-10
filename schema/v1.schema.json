@@ -1037,7 +1037,10 @@
           "then": {
             "properties": {
               "source_ids": {
-                "maxItems": 1
+                "maxItems": 1,
+                "items": {
+                  "pattern": "^(asia-en|tc):.+$"
+                }
               }
             }
           }
