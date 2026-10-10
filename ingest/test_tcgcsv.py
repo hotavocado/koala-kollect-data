@@ -327,6 +327,22 @@ class Run(unittest.TestCase):
         gold = self.rows("printings")[self.rows("printing_locators")["tcgcsv:586181:Foil"]["printing_key"]]
         self.assertEqual(gold["image_url"], "https://tcgplayer-cdn.tcgplayer.com/product/586181_in_1000x1000.jpg")
 
+    def test_provenance_url_only_on_the_tabled_product(self):
+        # 683969 (Netflix Chopper) is in tcgcsv.PROVENANCE and in the fixture; nothing else in the fixture is.
+        self.pageset(T1)
+        self.go()
+        locs, prts = self.rows("printing_locators"), self.rows("printings")
+        chopper = prts[locs["tcgcsv:683969:Normal"]["printing_key"]]
+        self.assertEqual(chopper["provenance_url"], "https://en.onepiece-cardgame.com/images/topics/028/01.png")
+        others = [x for k, x in prts.items() if k != chopper["key"]]
+        self.assertEqual(len(others), 6)
+        self.assertTrue(all("provenance_url" not in x for x in others))
+
+    def test_provenance_table_is_bandai_en_only(self):
+        self.assertEqual(sorted(tcgcsv.PROVENANCE), [677559, 677560, 683969])
+        self.assertTrue(all(u.startswith("https://en.onepiece-cardgame.com/") and "?" not in u and "#" not in u
+                            for u in tcgcsv.PROVENANCE.values()))
+
     def test_bandai_cards_untouched_by_a_tcgcsv_only_run(self):
         self.pageset(T1)
         res = self.go()

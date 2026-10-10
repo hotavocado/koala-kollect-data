@@ -43,6 +43,15 @@ FINISH = {"Normal": "normal", "Foil": "foil"}
 # first; 88164: the other six). OP18 RE (24834) lists no stamp yet, and an
 # admitted group with no stamp stops the run, so it waits for its own change.
 RE_GROUPS = {24068, 24242, 24406, 24579, 24638, 24677, 24775}
+# Bandai's own image of a DON, by TCGplayer productId, written as the printing's
+# provenance_url on every finish of that product (CONTRACT.md, DON). Only
+# measured matches: mean absolute pixel difference 4-6/255 against TCGplayer's
+# {productId}_in_1000x1000.jpg, 2026-10-10. A product joins by a change here.
+PROVENANCE = {
+    677559: "https://en.onepiece-cardgame.com/renewal/images/products/boosters/eb03/EB03_DON_p1.webp",
+    677560: "https://en.onepiece-cardgame.com/renewal/images/products/boosters/eb03/EB03_DON.webp",
+    683969: "https://en.onepiece-cardgame.com/images/topics/028/01.png",
+}
 
 
 def _get(path, timeout=60):
