@@ -1,0 +1,19 @@
+{
+ "run_id": "20261010T050558Z-asia-en",
+ "site": "asia-en",
+ "started_at": "2026-10-10T05:06:02Z",
+ "finished_at": "2026-10-10T05:06:04Z",
+ "pages_fetched": 62,
+ "pages_unchanged": 62,
+ "blocks_parsed": 4915,
+ "blocks_without_source_text": 0,
+ "added": 0,
+ "changed": 0,
+ "removed": 0,
+ "refusals": {
+  "http_error": 0,
+  "zero_parse": 0,
+  "count_drop": 0,
+  "count_mismatch": 0
+ }
+}
