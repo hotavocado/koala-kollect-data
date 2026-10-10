@@ -5,12 +5,10 @@
   "description": "One record per JSONL line. Each data file holds one record type, named in manifest.json. Validate a line against #/$defs/<type>.",
   "$defs": {
     "site": {
-      "description": "The official card-list site a fact was read from. Sites, not languages: en and asia-en are both English and differ in products and promos.",
+      "description": "The official card-list site a fact was read from. asia-en and tc are retired: no row carries them, and their printings are in retired_printings (CONTRACT.md, Retired sites).",
       "enum": [
         "en",
-        "asia-en",
         "jp",
-        "tc",
         "cn"
       ]
     },
@@ -40,14 +38,12 @@
       "enum": [
         "en",
         "ja",
-        "zh-Hant",
         "zh-Hans"
       ]
     },
     "region": {
       "enum": [
         "en",
-        "asia",
         "jp",
         "cn"
       ]
@@ -81,7 +77,7 @@
     "product_key": {
       "description": "{site}:{series_id}, e.g. jp:550117, cn:OPC-16.",
       "type": "string",
-      "pattern": "^(en|asia-en|jp|tc|cn):[A-Za-z0-9-]+$"
+      "pattern": "^(en|jp|cn):[A-Za-z0-9-]+$"
     },
     "color": {
       "enum": [
@@ -94,7 +90,7 @@
       ]
     },
     "attribute": {
-      "description": "As printed. \"?\" is printed in place of an attribute (OP13-079 Imu): half-width on en and asia-en, full-width on jp and tc. Both are stored as half-width \"?\"; full-width is refused.",
+      "description": "As printed. \"?\" is printed in place of an attribute (OP13-079 Imu): half-width on en, full-width on jp. Both are stored as half-width \"?\"; full-width is refused.",
       "enum": [
         "slash",
         "strike",
@@ -114,7 +110,7 @@
       ]
     },
     "card": {
-      "description": "Rules identity. Canonical facts come from one site's observation, jp first (JP is the authority), then en, asia-en, tc, cn, and tcgcsv for DON; every site's own reading is kept in card_observation. Natural key: number for numbered cards, don_design for DON cards (Mike 86397: each DON design is its own card; normal and gold of one design are printings of it).",
+      "description": "Rules identity. Canonical facts come from one site's observation, jp first (JP is the authority), then en, cn, and tcgcsv for DON; every site's own reading is kept in card_observation. Natural key: number for numbered cards, don_design for DON cards (Mike 86397: each DON design is its own card; normal and gold of one design are printings of it).",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -178,7 +174,7 @@
           "minimum": 0
         },
         "facts_site": {
-          "description": "Which source's current reading supplied the canonical facts. Fallback order: jp, en, asia-en, tc, cn, tcgcsv (the first site with an observation wins), so a card with no JP printing still has facts. DON cards only may carry tcgcsv: no official site lists DON cards (0 on all five, 2026-10-08), so their facts come from tcgcsv.",
+          "description": "Which source's current reading supplied the canonical facts. Fallback order: jp, en, cn, tcgcsv (the first site with an observation wins), so a card with no JP printing still has facts. DON cards only may carry tcgcsv: no official site lists DON cards (0 on all five, 2026-10-08), so their facts come from tcgcsv.",
           "anyOf": [
             {
               "$ref": "#/$defs/site"
@@ -261,7 +257,7 @@
         "key": {
           "description": "{card_key}:{site}:{observation_hash}",
           "type": "string",
-          "pattern": "^card_[0-9a-z]{12}:(en|asia-en|jp|tc|cn|tcgcsv):[0-9a-f]{16}$"
+          "pattern": "^card_[0-9a-z]{12}:(en|jp|cn|tcgcsv):[0-9a-f]{16}$"
         },
         "card_key": {
           "$ref": "#/$defs/card_key"
@@ -607,7 +603,7 @@
         "key": {
           "description": "{site}:{image_id}. Unique.",
           "type": "string",
-          "pattern": "^(en|asia-en|jp|tc|cn|tcgcsv):.+$"
+          "pattern": "^(en|jp|cn|tcgcsv):.+$"
         },
         "printing_key": {
           "$ref": "#/$defs/printing_key"
@@ -736,7 +732,7 @@
         "release_date_source": {
           "description": "The product page whose entry on the site's product index carried release_date.",
           "type": "string",
-          "pattern": "^https://(en|asia-en|www|asia-tc)\\.onepiece-cardgame\\.com/products/"
+          "pattern": "^https://(en|www)\\.onepiece-cardgame\\.com/products/"
         },
         "product_url": {
           "type": "string",
@@ -761,7 +757,7 @@
         "key": {
           "description": "{printing_key}@{product_key}",
           "type": "string",
-          "pattern": "^prt_[0-9a-z]{12}@(en|asia-en|jp|tc|cn):[A-Za-z0-9-]+$"
+          "pattern": "^prt_[0-9a-z]{12}@(en|jp|cn):[A-Za-z0-9-]+$"
         },
         "printing_key": {
           "$ref": "#/$defs/printing_key"
@@ -987,6 +983,40 @@
         "retired_at",
         "source_ids"
       ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "reason": {
+                "const": "duplicate_source_record"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "source_ids": {
+                "minItems": 2
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "reason": {
+                "const": "site_retired"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "source_ids": {
+                "maxItems": 1
+              }
+            }
+          }
+        }
+      ],
       "properties": {
         "key": {
           "description": "Equal to printing_key; the app sync and the check refuse a row where they differ.",
@@ -999,18 +1029,19 @@
           "pattern": "^prt_[0-9a-z]{12}$"
         },
         "reason": {
-          "description": "duplicate_source_record: the source listed one printing under two ids, and the later id had been minted a printing of its own (cn, CONTRACT.md).",
+          "description": "duplicate_source_record: the source listed one printing under two ids, and the later id had been minted a printing of its own (cn, CONTRACT.md). site_retired: the printing's site is retired, and every printing it carried goes (CONTRACT.md, Retired sites).",
           "enum": [
-            "duplicate_source_record"
+            "duplicate_source_record",
+            "site_retired"
           ]
         },
         "retired_at": {
           "$ref": "#/$defs/timestamp"
         },
         "source_ids": {
-          "description": "The locators that show it: the retired printing's own first, then the locator of the printing it duplicates.",
+          "description": "The locators that show it, the retired printing's own first. duplicate_source_record: then the locator of the printing it duplicates (two or more). site_retired: its own locator only (exactly one).",
           "type": "array",
-          "minItems": 2,
+          "minItems": 1,
           "items": {
             "type": "string",
             "minLength": 1

@@ -34,7 +34,7 @@ import urllib.request
 from pathlib import Path
 from urllib.parse import unquote, urljoin, urlsplit
 
-HOSTS = {"en": "en", "asia-en": "asia-en", "jp": "www", "tc": "asia-tc"}
+HOSTS = {"en": "en", "jp": "www"}
 UA = "Mozilla/5.0 (compatible; koala-kollect-ingest/0.1; +https://github.com/hotavocado/koala-kollect-data)"
 MIN_WALKS, MAX_WALKS = 2, 4
 # The two paginated lists stop at the first page that lists nothing new; this

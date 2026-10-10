@@ -10,8 +10,8 @@ The schema is `schema/v1.schema.json`; layout and write rules are in
 [CONTRACT.md](CONTRACT.md). Card images are linked to the official sites, never
 re-hosted.
 
-**Status:** cards, printings, products and card text for `en`, `asia-en`, `jp`
-and `tc`, from each site's official card list (first run 2026-10-08), updated
+**Status:** cards, printings, products and card text for `en` and `jp`, from
+each site's official card list (first run 2026-10-08), updated
 daily. Each product carries that site's release date, read from the site's own
 product index. `cn` printings come from the mainland-China card API, promo
 origins from each site's event pages, and DON cards from tcgcsv, TCGplayer's

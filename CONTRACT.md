@@ -29,9 +29,9 @@ state/event_pages/{site}.json         event and topic pages already read, and th
 state/keepalive.txt                   date of the last heartbeat commit, written only after 30 quiet days (ingest only, not synced)
 ```
 
-`site` is one of `en`, `asia-en`, `jp`, `tc`, `cn`. These are sites, not
-languages: `en` and `asia-en` are both English and list different products and
-promos. DON rows add a sixth, `tcgcsv`, for printings, locators, observations
+`site` is one of `en`, `jp`, `cn`. These are sites, not languages. `asia-en`
+and `tc` were sites until 2026-10-10 and are retired (see Retired sites). DON
+rows add a fourth, `tcgcsv`, for printings, locators, observations
 and runs, and Release Event stamps add it for printings, locators,
 distributions and runs (see DON and Release Event stamps). It is never a
 product site.
@@ -301,7 +301,7 @@ cards in 7 TCGplayer groups whose abbreviation ends ` RE` (OP10 24068, OP11
 - **Errata are versions.** A changed card block closes the current
   `card_observation` (`superseded_at`) and opens a new one. `card` holds the facts
   from one site's current observation, in this order: jp (the authority), en,
-  asia-en, tc, cn. `facts_site` records which one, so a China-only or EN-only
+  cn. `facts_site` records which one, so a China-only or EN-only
   card still has facts.
 - **Raw strings stay raw.** `printing.source_text` and
   `printing_distribution.quote` are verbatim, so a better parser can re-derive
@@ -329,7 +329,7 @@ cards in 7 TCGplayer groups whose abbreviation ends ` RE` (OP10 24068, OP11
   on jp, 2026-10-08: no base, every printing 3). It is never `"X"`, and it is
   omitted when the printing it would come from shows none.
 - **`?` is an attribute value.** OP13-079 Imu prints `?` where an attribute goes:
-  half-width on en and asia-en, full-width on jp and tc. Both are stored as
+  half-width on en, full-width on jp. Both are stored as
   half-width `"?"`, and the schema refuses the full-width form.
 - **No `last_seen_at` on data rows.** It widened on every row on every run, so a
   day with no change still rewrote every line and the git diff stopped being
@@ -359,17 +359,16 @@ all.
 - **tcgcsv is never a source.** It is TCGplayer, so its dates are North
   American releases. It agrees with Bandai en on every en product it carries
   (58 of 58, 2026-10-08) and `scripts/check.py` prints any en disagreement as
-  a warning, never a failure. For asia-en, jp and tc a code match against
-  tcgcsv is a false join: it carries the en date, and those sites differ from
-  en on every shared code. The schema refuses a source outside the Bandai
+  a warning, never a failure. For jp a code match against tcgcsv is a false
+  join: it carries the en date, and jp differs from en on every shared code. The schema refuses a source outside the Bandai
   products path.
 - **The join is the series link, never a code.** A product page links its card
   list as `cardlist/?series=NNNNNN`, and that id equals `product.series_id` on
   the same site. A code read from the title would miss the bundle pages (the
   ST-01 to ST-04 page links four series) and the compound codes (en
   `op14-eb04` links 569114). A page that links no series dates nothing.
-- **The date is per site.** asia-en and tc match jp on every shared product; en
-  differs from jp on all of them, and is earlier on ST-23 to ST-28. The
+- **The date is per site.** en differs from jp on every shared product, and is
+  earlier on ST-23 to ST-28 (asia-en and tc, retired, matched jp on all of them). The
   `{site}:{series_id}` row is already that grain.
 - **Retail, never pre-release.** When a site lists more than one page for a
   series, the retail page's date is the product's date and a pre-release page
@@ -397,7 +396,7 @@ all.
   `release_date_source` and `product_url` the item's page. Each run dates it
   from its own item again, so a moved date moves; one code listed under two
   pages or two dates stops the run. A pack that drops off the index keeps its
-  row and date (sticky). jp, asia-en and tc are not read for packs.
+  row and date (sticky). jp is not read for packs.
 - **No undated row is written, and that is load-bearing.** A pack the index
   lists with no date is not written; the run line names it. The reason is the
   undated check above: one product row of a dated kind without a date makes
@@ -405,6 +404,16 @@ all.
   en pages on 2026-10-10), forever, and hides the next real undated product
   under a check that is already true. Anything minted outside the card-list
   walk follows the same rule: dated, or not written.
+- **en:OP-14 and en:OP-15 are placed by hand.** en sells OP-14 and OP-15 only
+  inside the combined OP14-EB04 and OP15-EB04 packs (en:569114, en:569115), so
+  no en walk writes a row with either code, and the app titles a set from a
+  product carrying its code. These two rows are those combined en listings
+  placed on the set code by hand (Mike, 2026-10-10): `name` verbatim from the en
+  page, so the row says `[OP14-EB04]` in its own text; `release_date` and
+  `release_date_source` the combined pack's, so each set dates off its earliest
+  en product like every other set. They link no series, so the walk keeps them
+  as they are (sticky) and never re-dates them. EB-04 has no such row: no en
+  page names it on its own.
 
 ## Promo origin
 
@@ -415,7 +424,7 @@ authority on which pack a printing came from.
 - **One distribution per (site, `source_text`).** Its key is minted from
   `{site}|{source_text}`, `name` is the string with the card list's own
   decoration removed (a trailing カードリスト, a leading "Included in"),
-  `region` is the site's region (en: en, asia-en and tc: asia, jp: jp), and
+  `region` is the site's region (en: en, jp: jp, cn: cn), and
   `kind` comes from a keyword table over the name (`events.KINDS`); a name no
   keyword matches is `other`, never a guess. A distribution holds no tier, date
   or quantity: those differ by page and live on each claim.
@@ -599,6 +608,39 @@ the last committed one (`count_drop`), when nothing is removed. A listed id
 with no detail and no printing yet is refused (`http_error`) and comes in on a
 later run.
 
+## Retired sites
+
+`asia-en` (Asia English) and `tc` (Traditional Chinese) are retired as of
+2026-10-10 (Mike, dm-roberto 88876: those are not real languages for the app).
+`run.RETIRED_SITES` names them; `run.SITES`, the daily walk's list, does not,
+and `run()` refuses either before it reads anything. The schema's `site`,
+`region` and `lang` enums and the locator, observation, product and
+printing_product key patterns no longer admit them, so a row for either fails
+the schema.
+
+What went, 2026-10-10: 9,829 printings (asia-en 4,914, tc 4,915) with their
+locators and printing_products, 5,630 card_observations, 124 products, 353
+distributions and the 1,805 claims on them (every one on a retired-site
+distribution and a retired-site printing), and their `state/pages`,
+`state/product_pages` and `state/event_pages` files. No card changed: none had
+either site as its `facts_site`, and every card keeps a printing on en, jp, cn
+or tcgcsv.
+
+How the app removes them: each retired printing is a `retired_printings` row
+with reason `site_retired` and its own locator as the one `source_id`, which the
+sync deletes with everything pointing at it. The sync has no delete path for
+products, distributions or card_observations, so those go by a one-off app-side
+sweep after this data lands (alyssa, general 88890).
+
+What the app shows differently: three sets, EB-04, OP-14 and OP-15, took their
+English title from asia-en, because en sells them only as the combined
+OP14-EB04 and OP15-EB04 packs. OP-14 and OP-15 keep an English title from the
+hand-placed en rows (Release dates); EB-04 shows the jp name. No set date
+moves from the removal itself: a set dates off en, else jp, never asia-en.
+
+Measurement tables below that name asia-en or tc are dated history and are left
+as they were.
+
 ## Retired printings
 
 `data/retired_printings.jsonl` lists printings that should never have been
@@ -618,7 +660,9 @@ printing's own first, then the one it duplicates).
 - A locator is never retired by this file: a retired printing's locator either
   goes with it or moves to the printing that survives (cn duplicates, above).
 - Reasons: `duplicate_source_record`, the source listed one printing under two
-  ids and the later id had been minted a printing of its own.
+  ids and the later id had been minted a printing of its own (`source_ids` two
+  or more); `site_retired`, the printing's site is retired (`source_ids` its own
+  locator only, see Retired sites).
 
 The first three, retired 2026-10-09: the printings of `cn:4648` and `cn:4649`
 (duplicates of `cn:4647`) and of `cn:5522` (duplicate of `cn:5521`).

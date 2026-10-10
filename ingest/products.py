@@ -32,7 +32,7 @@ import urllib.request
 from pathlib import Path
 from urllib.parse import urlsplit
 
-HOSTS = {"en": "en", "asia-en": "asia-en", "jp": "www", "tc": "asia-tc"}
+HOSTS = {"en": "en", "jp": "www"}
 UA = "Mozilla/5.0 (compatible; koala-kollect-ingest/0.1; +https://github.com/hotavocado/koala-kollect-data)"
 # Kinds that are card pools, not products: no single date is right for them
 # (x801 is linked by several premium collection pages with different dates).

@@ -12,7 +12,7 @@ from pathlib import Path
 
 from bandai import series_options
 
-HOSTS = {"en": "en", "asia-en": "asia-en", "jp": "www", "tc": "asia-tc"}
+HOSTS = {"en": "en", "jp": "www"}
 UA = "Mozilla/5.0 (compatible; koala-kollect-ingest/0.1; +https://github.com/hotavocado/koala-kollect-data)"
 
 

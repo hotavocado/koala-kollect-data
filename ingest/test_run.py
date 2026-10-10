@@ -197,6 +197,33 @@ class Run(Harness, unittest.TestCase):
         self.assertFalse((self.repo / "data").exists())
 
 
+class RetiredSites(Harness, unittest.TestCase):
+    """asia-en and tc are retired (CONTRACT.md, Retired sites): never walked, never written again."""
+
+    def test_red_a_retired_site_stops_the_run_and_writes_nothing(self):
+        self.baseline()
+        before = self.data()
+        for sites in (["asia-en"], ["tc"], ["en", "asia-en"]):
+            with self.assertRaisesRegex(run.RunError, "is retired"):
+                run.run(self.tmp / "pages", self.repo, sites, now=lambda: float(next(self.clock)))
+        self.assertEqual(self.data(), before)
+
+    def test_the_daily_site_list_has_no_retired_site(self):
+        self.assertFalse(set(run.SITES) & run.RETIRED_SITES)
+
+    def test_red_a_site_retired_printing_is_never_written_again(self):
+        image_id = BLOCK.search(FIX).group(1)
+        key = model.mint("prt", f"en:{image_id}")
+        (self.repo / "data").mkdir()
+        (self.repo / "data" / "retired_printings.jsonl").write_text(json.dumps(
+            {"key": key, "printing_key": key, "reason": "site_retired", "retired_at": T1,
+             "source_ids": [f"en:{image_id}"]}) + "\n", "utf-8")
+        self.fetch(FIX, T2)
+        with self.assertRaisesRegex(run.RunError, rf"{key} is retired \(site_retired\)"):
+            self.go()
+        self.assertFalse((self.repo / "data" / "printings").exists())
+
+
 class ReplayGuard(Harness, unittest.TestCase):
     """The stale-page guard reads fetched_at in state/pages, not a data row."""
 
