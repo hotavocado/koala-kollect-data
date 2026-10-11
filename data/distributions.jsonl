@@ -19,6 +19,7 @@
 {"key":"dist_1a8cx25be6eo","site":"cn","region":"cn","kind":"other","name":"5包现开赛特典包"}
 {"key":"dist_1cp1my5h3xla","site":"en","region":"en","kind":"store_tournament","name":"Tournament Kit 2025 Vol.2"}
 {"key":"dist_1dcrm8228ds3","site":"jp","region":"jp","kind":"store_tournament","name":"スタンダードバトル 9月優勝記念品"}
+{"key":"dist_1fsjh85h6zel","site":"cn","region":"cn","kind":"other","name":"四周年纪念赛 冠军纪念品"}
 {"key":"dist_1g4kf19rbjdc","site":"cn","region":"cn","kind":"other","name":"二周年纪念赛 前八名"}
 {"key":"dist_1hmth88m27so","site":"cn","region":"cn","kind":"other","name":"三周年纪念赛 亚军"}
 {"key":"dist_1kuxeo2fy9kt","site":"cn","region":"cn","kind":"other","name":"二周年纪念赛"}
@@ -239,8 +240,10 @@
 {"key":"dist_hm7dkvz5sa2u","site":"en","region":"en","kind":"championship","name":"Offline Regional Participation Pack 2025 Vol.2"}
 {"key":"dist_hpk0b3toy8xo","site":"jp","region":"jp","kind":"other","name":"ONE PIECE ODYSSEYデラックスエディション"}
 {"key":"dist_htz9dkquxupn","site":"cn","region":"cn","kind":"other","name":"锦标赛2025 春季入场"}
+{"key":"dist_hzlvn3syy0jb","site":"cn","region":"cn","kind":"other","name":"四周年纪念赛 亚军纪念品"}
 {"key":"dist_i0lo5ox6mqkp","site":"en","region":"en","kind":"store_tournament","name":"Tournament Pack 2026 Vol. 1"}
 {"key":"dist_i3c0g8bk6wnv","site":"jp","region":"jp","kind":"store_tournament","name":"8パックバトル 2025年10月"}
+{"key":"dist_i3vgqztbqka5","site":"cn","region":"cn","kind":"other","name":"航海王卡牌对战 豪华卡牌收藏 精选套装 vol.7"}
 {"key":"dist_i4fjt7kdfc2s","site":"jp","region":"jp","kind":"store_tournament","name":"フラッグシップバトル2023 7月優勝記念品"}
 {"key":"dist_i5v23ml2dbzg","site":"cn","region":"cn","kind":"other","name":"特别宣传包 Vol.3"}
 {"key":"dist_i7bumjmisnwa","site":"jp","region":"jp","kind":"magazine_insert","name":"最強ジャンプ5月号応募者全員サービス（2024年4月4日売）"}
@@ -267,6 +270,7 @@
 {"key":"dist_jy6up7wzscig","site":"cn","region":"cn","kind":"meetup","name":"交流会2023年12月-2月入场纪念品"}
 {"key":"dist_jy9atgszfgrf","site":"cn","region":"cn","kind":"other","name":"锦标赛2023 3on3宣传包Vol.1"}
 {"key":"dist_jzmiicnrcrkc","site":"cn","region":"cn","kind":"other","name":"锦标赛2025（中国内地） 春季决赛16强"}
+{"key":"dist_k1r25sgaxrry","site":"cn","region":"cn","kind":"other","name":"四周年纪念赛 16强纪念品"}
 {"key":"dist_k8wmqzwkkius","site":"jp","region":"jp","kind":"store_tournament","name":"スタンダードバトル 2024年6月優勝記念品"}
 {"key":"dist_kbs7vxcwpcza","site":"en","region":"en","kind":"store_tournament","name":"Tournament Pack Vol.2"}
 {"key":"dist_kowhorj7dro3","site":"jp","region":"jp","kind":"retail_tieup","name":"「プロモーションカードセット2025」ゲットキャンペーン"}
@@ -302,6 +306,7 @@
 {"key":"dist_nfkh6xeahy10","site":"en","region":"en","kind":"movie","name":"FILM RED Promotion Card Set"}
 {"key":"dist_ngqfsoj3ajyt","site":"tcgcsv","region":"en","kind":"event_pack","name":"The Time of Battle Release Event Cards","source_url":"https://tcgcsv.com/tcgplayer/68/24677/products"}
 {"key":"dist_nqu5ni7omsms","site":"en","region":"en","kind":"store_tournament","name":"Tournament Pack Vol.1"}
+{"key":"dist_nrgg7io4p7lm","site":"cn","region":"cn","kind":"other","name":"宣传卡"}
 {"key":"dist_ntg70kz8vzze","site":"cn","region":"cn","kind":"other","name":"25周年快闪活动"}
 {"key":"dist_nu7k5vq1t6bt","site":"en","region":"en","kind":"pre_release","name":"Pre-Release OP04"}
 {"key":"dist_o3rw77p1wnne","site":"jp","region":"jp","kind":"store_tournament","name":"スタンダードバトル 2026年9月優勝記念品"}
@@ -347,12 +352,14 @@
 {"key":"dist_r5m9ucymf69q","site":"jp","region":"jp","kind":"magazine_insert","name":"最強ジャンプ7月号付録（2025年6月4日売）"}
 {"key":"dist_r73zbn883o49","site":"cn","region":"cn","kind":"other","name":"锦标赛2023比赛套装"}
 {"key":"dist_r8rdi1czegvy","site":"en","region":"en","kind":"store_tournament","name":"Sealed Battle Kit Vol.1"}
+{"key":"dist_rc9f3v0rh9sq","site":"cn","region":"cn","kind":"other","name":"四周年纪念赛 季军纪念品"}
 {"key":"dist_rdn3s6ystxtm","site":"jp","region":"jp","kind":"store_tournament","name":"スタンダードバトル 2023年10月優勝記念品"}
 {"key":"dist_rgjbq9ufwjro","site":"jp","region":"jp","kind":"store_tournament","name":"フラッグシップバトル2026 10月優勝記念品"}
 {"key":"dist_rgs5swslrx4e","site":"en","region":"en","kind":"online","name":"Online Regional Champion Card Set 25-26 Season 1"}
 {"key":"dist_rj9i5qgl34vd","site":"cn","region":"cn","kind":"other","name":"万代卡牌游戏狂欢节2023-2024世界巡回-上海站 参加纪念"}
 {"key":"dist_rk5ng1401xrl","site":"en","region":"en","kind":"store_tournament","name":"Sealed Battle 2023 Vol.1"}
 {"key":"dist_rktm0h8pot64","site":"jp","region":"jp","kind":"championship","name":"チャンピオンシップ2024 WAVE2 3on3 Autumn ベスト16記念品"}
+{"key":"dist_rl2gijphnt7j","site":"cn","region":"cn","kind":"other","name":"四周年纪念赛 8强纪念品"}
 {"key":"dist_rllybxj404iz","site":"jp","region":"jp","kind":"magazine_insert","name":"『ONE PIECE学園 10巻』付録"}
 {"key":"dist_rqk41gqgt8o1","site":"jp","region":"jp","kind":"store_tournament","name":"フラッグシップバトル2025 1月優勝記念品"}
 {"key":"dist_s2wpfi9k2xqg","site":"jp","region":"jp","kind":"magazine_insert","name":"Vジャンプ4月特大号付録（2024年2月21日売）"}

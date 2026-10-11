@@ -1751,6 +1751,7 @@
 {"key":"card_kqif168ogsm5","number":"ST14-005","category":"character","colors":["black"],"cost":4,"power":6000,"counter":1000,"attributes":["wisdom"],"block_icon":2,"facts_site":"jp","first_seen_at":"2026-10-08T15:58:56Z"}
 {"key":"card_kqyc2q47nl81","don_design":"OP04:don-card-color-special-don-card-pack","category":"don","colors":[],"attributes":[],"facts_site":"tcgcsv","first_seen_at":"2026-10-09T01:15:18Z"}
 {"key":"card_krjwhn2gt00e","number":"OP08-066","category":"character","colors":["purple"],"cost":4,"power":1000,"counter":1000,"attributes":["special"],"block_icon":2,"facts_site":"jp","first_seen_at":"2026-10-08T15:57:25Z"}
+{"key":"card_krurcav0acgw","number":"P-158","category":"character","colors":["purple"],"cost":5,"power":6000,"counter":2000,"attributes":["strike"],"block_icon":5,"facts_site":"cn","first_seen_at":"2026-10-11T04:54:22Z"}
 {"key":"card_kryqce5dgtmh","number":"OP06-084","category":"character","colors":["black"],"cost":2,"power":3000,"counter":1000,"attributes":["slash"],"block_icon":2,"facts_site":"jp","first_seen_at":"2026-10-08T15:57:32Z"}
 {"key":"card_ks1lyoksfipg","number":"OP10-050","category":"character","colors":["blue"],"cost":7,"power":9000,"counter":1000,"attributes":["strike"],"block_icon":3,"facts_site":"jp","first_seen_at":"2026-10-08T15:57:13Z"}
 {"key":"card_ks85a2cindqx","number":"OP11-023","category":"character","colors":["green"],"cost":7,"power":7000,"counter":1000,"attributes":["slash"],"block_icon":3,"facts_site":"jp","first_seen_at":"2026-10-08T15:57:09Z"}

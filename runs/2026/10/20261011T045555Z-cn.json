@@ -1,0 +1,25 @@
+{
+ "run_id": "20261011T045555Z-cn",
+ "site": "cn",
+ "started_at": "2026-10-11T04:56:00Z",
+ "finished_at": "2026-10-11T04:56:01Z",
+ "pages_fetched": 30,
+ "pages_unchanged": 0,
+ "blocks_parsed": 4957,
+ "blocks_without_source_text": 0,
+ "added": 128,
+ "changed": 0,
+ "removed": 0,
+ "refusals": {
+  "http_error": 0,
+  "zero_parse": 0,
+  "count_drop": 0,
+  "count_mismatch": 0
+ },
+ "variant_disagreements": 29,
+ "cn_duplicate_ids": [
+  4648,
+  4649,
+  5522
+ ]
+}
