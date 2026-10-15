@@ -60,7 +60,7 @@ product site.
 | card | `card_` + 12 [0-9a-z], minted once | `number`; for DON cards, `don_design` (see DON) |
 | printing | `prt_` + 12 [0-9a-z], minted once | its locator, `{site}:{image_id}` |
 | distribution | `dist_` + 12 [0-9a-z], minted from the natural key | `{site}\|{source_text}`: the pack a site's card list names |
-| product | `{site}:{series_id}`, or `{site}:src_` + 12 hex of sha1(`{site}\|{source_text}`) when minted (see Promo origin) | itself |
+| product | `{site}:{series_id}`, or `{site}:src_` + 12 hex of sha1(`{site}\|{source_text}`) when minted (see Promo origin). A product that is not minted always carries `series_id`; a minted one never does | itself |
 | card_observation | `{card_key}:{site}:{observation_hash}` | itself |
 | printing_locator | `{site}:{image_id}` | itself |
 | printing_product | `{printing_key}@{product_key}` | itself |

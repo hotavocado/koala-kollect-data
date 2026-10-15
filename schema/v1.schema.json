@@ -718,13 +718,25 @@
         "release_date": ["release_date_source"],
         "release_date_source": ["release_date"]
       },
-      "if": {
-        "required": ["kind"],
-        "properties": {"kind": {"enum": ["limited", "promo_bucket"]}}
-      },
-      "then": {
-        "properties": {"release_date": false, "release_date_source": false}
-      },
+      "allOf": [
+        {
+          "if": {
+            "required": ["kind"],
+            "properties": {"kind": {"enum": ["limited", "promo_bucket"]}}
+          },
+          "then": {
+            "properties": {"release_date": false, "release_date_source": false}
+          }
+        },
+        {
+          "$comment": "Only a minted product (key {site}:src_ + 12 hex) goes without series_id; every other product is keyed {site}:{series_id} and carries it.",
+          "if": {
+            "required": ["key"],
+            "properties": {"key": {"pattern": "^(en|jp|cn):src_"}}
+          },
+          "else": {"required": ["series_id"]}
+        }
+      ],
       "required": [
         "key",
         "site",
