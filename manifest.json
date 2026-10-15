@@ -44,8 +44,8 @@
   },
   "data/printing_designs.jsonl": {
    "type": "printing_design",
-   "rows": 53,
-   "sha256": "7fd7c8d6e23afad3a5161433ed1225855462b5024abdca7a28be526eb64721c5"
+   "rows": 67,
+   "sha256": "332ad34d71d1c41e081ddc1c594affca8d135fcc34768d6fb9ff2ce2183acd4b"
   },
   "data/printing_distributions.jsonl": {
    "type": "printing_distribution",
