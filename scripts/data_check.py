@@ -105,11 +105,12 @@ def check_data(root, schema):
                                    [rec for _, _, rtype, rec in records if rtype == "printing_distribution"])
     by_type = {t: [rec for _, _, rtype, rec in records if rtype == t]
                for t in ("card", "printing", "product", "don_set", "printing_product", "printing_distribution",
-                         "set", "product_set", "printing_design")}
+                         "set", "product_set", "design", "printing_design")}
     errors += don_set_errors(by_type["card"], by_type["printing"], by_type["product"], by_type["don_set"])
     errors += origin_errors(by_type["product"], by_type["printing"], by_type["printing_product"],
                             by_type["printing_distribution"])
     errors += key_errors(by_type["set"], by_type["product_set"], by_type["printing_design"])
+    errors += design_errors(by_type["design"], by_type["printing"], by_type["printing_design"])
     return errors
 
 
@@ -176,6 +177,20 @@ def key_errors(sets, product_sets, memberships):
             for r in product_sets if r["key"] != f"{r['product_key']}@{r['set_key']}"]
     out += [f"printing_design {r['key']}: key is not its printing {r['printing_key']}"
             for r in memberships if r["key"] != r["printing_key"]]
+    return out
+
+
+def design_errors(designs, printings, memberships):
+    """A design is one art of one card, so every printing in it is a printing of
+    that card. The schema checks each reference resolves; it cannot see that the
+    printing and the design name the same card."""
+    card_of_design = {d["key"]: d.get("card_key") for d in designs}
+    card_of_printing = {p["key"]: p.get("card_key") for p in printings}
+    out = []
+    for r in memberships:
+        want, got = card_of_design.get(r["design_key"]), card_of_printing.get(r["printing_key"])
+        if want is not None and got is not None and want != got:
+            out.append(f"printing_design {r['key']}: printing is {got}, design {r['design_key']} is {want}")
     return out
 
 
