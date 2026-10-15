@@ -573,7 +573,9 @@ A set in its global form, one row per code across every language: `OP-09`,
   global ST-31 (verified by name on every cn starter). A cn two-deck starter,
   coded STC31&34 in its name, carries both sets. en coded the OP-14 and OP-15
   boosters OP14-EB04 and OP15-EB04 because they also carry EB-04's cards: such
-  a booster carries both its OP and its EB set.
+  a booster carries both its OP and its EB set. The hand-placed en:OP-14 and
+  en:OP-15 rows (Release dates) carry only their OP set; EB-04 sits on the
+  combined boosters en:569114 and en:569115.
 - Double packs (DP-NN) are products and carry no set. The promo bucket carries
   set `P`. The limited bucket and the minted products carry no set.
 
