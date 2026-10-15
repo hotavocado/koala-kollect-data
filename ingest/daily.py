@@ -30,8 +30,9 @@ Each site's event and topic lists are fetched too, for where promos came from
 the pages still on the current list. A failed list or event page fails the run.
 
 cn is fetched into the page set as cn/ (cn.fetch_pageset): the list, the
-products, and a detail call only for ids the data repo has no printing for, so
-a normal day costs the list plus the new ids. A failed detail fails the run.
+products, the product index, and a detail call only for ids the data repo has
+no printing for, so a normal day costs the list, the index and the new ids. A
+failed detail fails the run.
 
 DON cards come from tcgcsv, fetched into the page set as tcgcsv/
 (tcgcsv.fetch_pageset): the groups, every group's products, and prices for the

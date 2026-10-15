@@ -295,7 +295,9 @@ def double_packs(items):
 
 # The game's name, which a product index title carries and a minted origin's
 # name (a printing's source_text) mostly does not, or the other way round.
-_GAME = re.compile(r"^ONE ?PIECE ?(?:CARD ?GAME|カードゲーム)\s*", re.I)
+# cn's is 航海王卡牌对战 (measured 2026-10-15: 17 of the 25 cn minted names and
+# 49 of the 120 cn index titles open with it).
+_GAME = re.compile(r"^(?:ONE ?PIECE ?(?:CARD ?GAME|カードゲーム)|航海王卡牌对战)\s*", re.I)
 
 
 def title_key(title):
@@ -304,11 +306,53 @@ def title_key(title):
 
     Measured 2026-10-15 over the live en (208 items) and jp (182) indexes: two
     jp pages fold together (both titled リミテッドカードスリーブ), no en pages
-    do, and no two of the 80 minted origins do. A fold that puts two pages
+    do, and no two of the 80 minted origins do. cn's index (120 items) has no
+    two items under one key either; 18 of its 25 minted origins match, 14
+    without the cn game name folded. A fold that puts two pages
     under one key is read as no match (by_title), never as a pick.
     """
     s = _GAME.sub("", unicodedata.normalize("NFKC", title).strip())
     return "".join(c for c in s if unicodedata.category(c)[0] not in "PSZC").casefold()
+
+
+CN_SITE = "https://www.onepiece-cardgame.cn"
+
+
+def cn_index(rows):
+    """cn's product index as parse_index items: [{href, title, date}] in list order.
+
+    rows are cn.fetch_pageset's _index.json rows (cn.INDEX_FIELDS of each item
+    of products/productsinfo/webList). The cn site is a single-page app with no
+    product HTML to read, so the page is the one the site's own list opens
+    (toDetail in its app bundle, read 2026-10-15): the item's link when it has
+    one, else /products/detail?id=&type= when newDetail is set and
+    /products/newDetail?id=&type= when it is not. date is saleTime's date part
+    ("YYYY-MM-DD HH:MM:SS"). Measured 2026-10-15: 120 items, all with a
+    saleTime, 2 with a link (/op05, /op09).
+
+    Raises ValueError on anything outside that shape (a link off the cn site, a
+    non-integer id or type, a saleTime of another form), so an API change stops
+    the run.
+    """
+    items = []
+    for r in rows:
+        if not isinstance(r.get("id"), int) or not isinstance(r.get("type"), int):
+            raise ValueError(f"cn: index item with no integer id and type: {r.get('id')!r}")
+        if r.get("link"):
+            href = r["link"]
+            if not href.startswith(CN_SITE + "/"):
+                raise ValueError(f"cn: index item {r['id']} links off the site: {href!r}")
+        else:
+            path = "detail" if r.get("newDetail") else "newDetail"
+            href = f"{CN_SITE}/products/{path}?id={r['id']}&type={r['type']}"
+        sale = r.get("saleTime") or ""
+        date = None
+        if sale:
+            if len(sale) != 19 or sale[10] != " " or not _DATE.match(sale[:10]):
+                raise ValueError(f"cn: index item {r['id']} saleTime {sale!r} is not YYYY-MM-DD HH:MM:SS")
+            date = sale[:10]
+        items.append({"href": href, "title": re.sub(r"\s+", " ", r.get("name") or "").strip(), "date": date})
+    return items
 
 
 def by_title(items):

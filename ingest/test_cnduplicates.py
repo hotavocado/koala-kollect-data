@@ -159,6 +159,7 @@ class TwinFetch(unittest.TestCase):
         try:
             with mock.patch.object(cn, "list_all", return_value=rows), \
                  mock.patch.object(cn, "products", return_value=PRODUCTS), \
+                 mock.patch.object(cn, "product_index", return_value=[]), \
                  mock.patch.object(cn, "detail", side_effect=lambda i: got.append(i) or DETAILS[i]), \
                  mock.patch.object(cn.time, "sleep"):
                 self.assertEqual(cn.fetch_pageset(tmp, known), [])

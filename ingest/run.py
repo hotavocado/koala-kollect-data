@@ -29,7 +29,8 @@ Rules (CONTRACT.md):
   an authoritative claim; the event and topic pages ({site}/events/_log.json)
   add one claim per printing, distribution and page (CONTRACT.md, Promo origin).
 - cn comes from cn/ in the page set when it is there (cn.fetch_pageset): the
-  list, the products and a detail per id the store lacks (run_cn, CONTRACT.md cn).
+  list, the products and a detail per id the store lacks (run_cn, CONTRACT.md cn),
+  and the product index (cn/_index.json) that names and dates cn's minted origins.
 """
 import argparse
 import hashlib
@@ -431,7 +432,7 @@ def origin_page(old, name, titles, counts):
     rewrites the row on every run and a hand-written field would be dropped:
     the one product page whose index title folds to the minted name
     (products.title_key). The old row's values are carried when the index gives
-    none: not read in this page set (no run reads cn's), no title, or two or more
+    none: not read in this page set, no title, or two or more
     pages under one title. The index wins over a carried value, and that is
     counted. A page with no date, or a pre-release page, gives the url only: a
     date is kept only while its source is the matched page.
@@ -1180,6 +1181,8 @@ def run(pageset, repo, sites=SITES, now=time.time):
         cn_result = {"counts": counts, "refusals": refusals, "page_refusals": {}, "distributions": len(by_name),
                      "t0": t0, "t1": now()}
         cn_rows = json.loads((cn_dir / "_list.json").read_text("utf-8"))["rows"]
+        if (cn_dir / "_index.json").exists():
+            indexes["cn"] = products.cn_index(json.loads((cn_dir / "_index.json").read_text("utf-8"))["rows"])
     tcg_dir, tcg_state, tcg_result = pageset / "tcgcsv", None, None
     if (tcg_dir / "_groups.json").exists():
         sp = repo / "state" / "tcgcsv.json"

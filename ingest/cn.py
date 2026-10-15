@@ -53,6 +53,17 @@ def products():
     return _get("cardType/cardofferingtype/cachelist")["list"]
 
 
+# What _index.json keeps of each product index item: enough for products.cn_index
+# to name the page the site opens and date it. The rest (banners, page copy) is
+# about 300KB a day that nothing reads.
+INDEX_FIELDS = ("id", "type", "name", "saleTime", "link", "newDetail")
+
+
+def product_index():
+    """The product list the site's /products page shows (products/productsinfo/webList), unpaged."""
+    return _get("products/productsinfo/webList")["list"]
+
+
 def card_types():
     return _get("cardType/cardtype/cachelist")["list"]
 
@@ -74,6 +85,7 @@ def fetch_pageset(cn_dir, known_ids, pause=1.0):
     cn_dir/_list.json      {"fetched_at", "rows"}
     cn_dir/_products.json  {"fetched_at", "products"}
     cn_dir/detail/{id}.json {"fetched_at", "info"}
+    cn_dir/_index.json     {"fetched_at", "rows"}  the product index, INDEX_FIELDS of each item
     A detail already on disk is kept, so a re-run after a failure fetches only
     what is missing. Returns the failures; any one fails the daily run.
 
@@ -86,6 +98,8 @@ def fetch_pageset(cn_dir, known_ids, pause=1.0):
     rows = list_all(pause=pause)
     _write(cn_dir / "_list.json", {"fetched_at": t, "rows": rows})
     _write(cn_dir / "_products.json", {"fetched_at": _utc(), "products": products()})
+    _write(cn_dir / "_index.json", {"fetched_at": _utc(),
+                                    "rows": [{k: it.get(k) for k in INDEX_FIELDS} for it in product_index()]})
     new_sigs = {cnmodel.list_signature(r) for r in rows if r["id"] not in known_ids}
     failures = []
     for r in rows:

@@ -793,9 +793,9 @@
           "$ref": "#/$defs/date"
         },
         "release_date_source": {
-          "description": "The product page whose entry on the site's product index carried release_date.",
+          "description": "The product page whose entry on the site's product index carried release_date: an en or jp /products/ page, or a cn page (CONTRACT.md, Promo origin).",
           "type": "string",
-          "pattern": "^https://(en|www)\\.onepiece-cardgame\\.com/products/"
+          "pattern": "^https://((en|www)\\.onepiece-cardgame\\.com/products/|www\\.onepiece-cardgame\\.cn/)"
         },
         "product_url": {
           "type": "string",
