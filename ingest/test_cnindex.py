@@ -54,6 +54,13 @@ class CnIndex(unittest.TestCase):
             with self.subTest(bad=bad), self.assertRaises(ValueError):
                 products.cn_index([dict(SLEEVE, saleTime=bad)])
 
+    def test_red_new_detail_other_than_integer_0_or_1_refuses(self):
+        for bad in ("0", "1", None, 2, True):
+            with self.subTest(bad=bad), self.assertRaises(ValueError):
+                products.cn_index([dict(SLEEVE, newDetail=bad)])
+        with self.assertRaises(ValueError):
+            products.cn_index([{k: v for k, v in SLEEVE.items() if k != "newDetail"}])
+
     def test_red_id_that_is_not_an_integer_refuses(self):
         with self.assertRaises(ValueError):
             products.cn_index([dict(SLEEVE, id="137")])

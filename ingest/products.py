@@ -332,19 +332,22 @@ def cn_index(rows):
     saleTime, 2 with a link (/op05, /op09).
 
     Raises ValueError on anything outside that shape (a link off the cn site, a
-    non-integer id or type, a saleTime of another form), so an API change stops
+    non-integer id or type, a newDetail other than the integer 0 or 1, a
+    saleTime of another form), so an API change stops
     the run.
     """
     items = []
     for r in rows:
         if not isinstance(r.get("id"), int) or not isinstance(r.get("type"), int):
             raise ValueError(f"cn: index item with no integer id and type: {r.get('id')!r}")
+        if type(r.get("newDetail")) is not int or r["newDetail"] not in (0, 1):
+            raise ValueError(f"cn: index item {r['id']} newDetail {r.get('newDetail')!r} is not 0 or 1")
         if r.get("link"):
             href = r["link"]
             if not href.startswith(CN_SITE + "/"):
                 raise ValueError(f"cn: index item {r['id']} links off the site: {href!r}")
         else:
-            path = "detail" if r.get("newDetail") else "newDetail"
+            path = "detail" if r["newDetail"] == 1 else "newDetail"
             href = f"{CN_SITE}/products/{path}?id={r['id']}&type={r['type']}"
         sale = r.get("saleTime") or ""
         date = None
