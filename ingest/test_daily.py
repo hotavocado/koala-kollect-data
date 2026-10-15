@@ -152,6 +152,27 @@ class CommitPredicate(Harness, unittest.TestCase):
         self.assertTrue(any("cn list fetched" in f and "older than the data" in f for f in s["failures"]), s["failures"])
 
 
+class OriginCommit(unittest.TestCase):
+    """The minted origin rows count into result["origin"], apart from every site's counts."""
+    TALLIES = {"page_matched": 54, "page_dated": 30, "page_no_index": 25, "page_unmatched": 1}
+
+    def changed(self, origin):
+        return daily.decide([], {"sites": {}, "cards": {}, "origin": origin})[1]
+
+    def test_a_minted_row_written_is_a_change(self):
+        for arm in ("added", "changed", "removed"):
+            with self.subTest(arm=arm):
+                self.assertTrue(self.changed(dict(self.TALLIES, **{arm: 1})))
+
+    def test_red_match_tallies_alone_are_no_change(self):
+        self.assertFalse(self.changed(dict(self.TALLIES, added=0, changed=0, removed=0)))
+        self.assertFalse(self.changed(dict(self.TALLIES)))
+
+    def test_control_no_origin_counts_is_no_change(self):
+        self.assertFalse(self.changed({}))
+        self.assertFalse(daily.decide([], {"sites": {}, "cards": {}})[1])
+
+
 class FailsLoudly(Harness, unittest.TestCase):
     def test_a_refused_page_fails_the_run(self):
         self.go()
