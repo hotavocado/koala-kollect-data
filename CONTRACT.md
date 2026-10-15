@@ -517,18 +517,27 @@ printing with no distribution gets a real product minted from its `source_text`:
   (`page_date_dropped`). A run
   writes the row whole, so these are derived again every run, never written by
   hand. The row keeps the values it had when the index gives none: the site's
-  index was not read (no run reads cn's), no title matches, or two or more pages fold
+  index was not read, no title matches, or two or more pages fold
   to one title. When the index differs from a kept value, the index wins, and
   the run counts it (`page_url_replaced`, `page_date_replaced` in the origin
   counts).
 
 Measured 2026-10-15 against the live en and jp indexes: 54 of the 80 have a page
 (en 25, all dated; jp 29, 5 dated). One jp row has no page (週刊少年ジャンプ
-応募者全員サービス, a mail-in), and cn's 25 have none because no run reads a
-cn product index. The cn site has one (`products/productsinfo/webList`, 120
-items, each with a `saleTime`; 18 of the 25 match once 航海王卡牌对战 is folded
-out too), but its pages are not on the hosts `release_date_source` admits, so
-reading it is a contract change of its own.
+応募者全員サービス, a mail-in).
+
+- **cn's product index** is not HTML: the cn site is a single-page app over
+  the windoent API, and its product list is
+  `products/productsinfo/webList` (120 items on 2026-10-15, each with a
+  `saleTime`), fetched into the page set as `cn/_index.json`. An item's page is
+  the one the site's own list opens: its `link` when it has one (2 do, `/op05`
+  and `/op09`), else `/products/detail?id={id}&type={type}` when `newDetail` is
+  set and `/products/newDetail?id={id}&type={type}` when it is not. Its date is
+  `saleTime`'s date part. So `release_date_source` admits
+  `https://www.onepiece-cardgame.cn/` pages beside the en and jp product pages.
+  cn titles carry the game's name as 航海王卡牌对战, which the title fold drops
+  like the en and jp names: 18 of the 25 cn minted origins match a page, 14
+  without that fold, and no two cn index items fold to one title.
 
 Measured on the first run (2026-10-15): 80 minted products (en 25, jp 30, cn 25)
 and 570 minted rows (en 176, jp 203, cn 191). 2,004 bucket rows cover 2,003
