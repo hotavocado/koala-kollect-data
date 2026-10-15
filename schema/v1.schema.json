@@ -101,9 +101,22 @@
       "pattern": "^dist_[0-9a-z]{12}$"
     },
     "product_key": {
-      "description": "{site}:{series_id}, e.g. jp:550117, cn:OPC-16.",
+      "description": "{site}:{series_id}, e.g. jp:550117, cn:OPC-16; or {site}:src_ + 12 hex of sha1({site}|{source_text}) for a product minted from source_text.",
       "type": "string",
-      "pattern": "^(en|jp|cn):[A-Za-z0-9-]+$"
+      "pattern": "^(en|jp|cn):([A-Za-z0-9-]+|src_[0-9a-f]{12})$"
+    },
+    "set_code": {
+      "description": "A set code in its global form: OP-09, EB-04, ST-31, PRB-02, or P for promos.",
+      "type": "string",
+      "pattern": "^[A-Z]+(-[0-9]{2})?$"
+    },
+    "set_key": {
+      "description": "A set's key, equal to its code.",
+      "$ref": "#/$defs/set_code"
+    },
+    "design_key": {
+      "type": "string",
+      "pattern": "^dsn_[0-9a-z]{12}$"
     },
     "color": {
       "enum": [
@@ -458,6 +471,11 @@
           "type": "string",
           "minLength": 1
         },
+        "image_hash": {
+          "description": "Perceptual hash of the printing's art region, '{algo}:{hex}', written by the hash job. Evidence for design matching only, never an identity. Absent until hashed; a missing hash is a counted gap.",
+          "type": "string",
+          "pattern": "^[a-z0-9]+:[0-9a-f]+$"
+        },
         "first_seen_at": {
           "$ref": "#/$defs/timestamp"
         }
@@ -693,7 +711,7 @@
       ]
     },
     "product": {
-      "description": "A series page on one site: a sealed product, or a listing bucket such as promos. release_date and release_date_source come together. limited and promo_bucket rows are card pools, not products, and carry no date.",
+      "description": "A series page on one site: a sealed product, or a listing bucket such as promos; or a product minted from a bucket printing's source_text (key {site}:src_..., no series_id; CONTRACT.md, Promo origin). release_date and release_date_source come together. limited and promo_bucket rows are card pools or the products named in them, and carry no date.",
       "type": "object",
       "additionalProperties": false,
       "dependentRequired": {
@@ -710,7 +728,6 @@
       "required": [
         "key",
         "site",
-        "series_id",
         "name",
         "kind",
         "first_seen_at"
@@ -723,9 +740,13 @@
           "$ref": "#/$defs/site"
         },
         "series_id": {
-          "description": "550117, 569901, OPC-16",
+          "description": "550117, 569901, OPC-16. Absent only on a product minted from source_text.",
           "type": "string",
           "minLength": 1
+        },
+        "is_bucket": {
+          "description": "true on the six catch-all series (each site's promo_bucket and limited series): card pools, not products. Absent elsewhere, never false.",
+          "const": true
         },
         "code": {
           "description": "OP-17, EB-04, OPC-16, PRBC-01",
@@ -783,7 +804,7 @@
         "key": {
           "description": "{printing_key}@{product_key}",
           "type": "string",
-          "pattern": "^prt_[0-9a-z]{12}@(en|jp|cn):[A-Za-z0-9-]+$"
+          "pattern": "^prt_[0-9a-z]{12}@(en|jp|cn):([A-Za-z0-9-]+|src_[0-9a-f]{12})$"
         },
         "printing_key": {
           "$ref": "#/$defs/printing_key"
@@ -850,7 +871,21 @@
         "source_url": {
           "type": "string",
           "pattern": "^https?://"
+        },
+        "stamp_color": {
+          "description": "The stamp colour of a prize pack's cards (gold, black, ...), set at review. A design's stamp colour is read through its printings' distributions, never stored on the design.",
+          "type": "string",
+          "minLength": 1
+        },
+        "stamp_color_source": {
+          "description": "Where stamp_color was read: the competition page's URL, or the literal reviewed when it was read from the card in hand (cn prize images carry a watermark over the stamp).",
+          "type": "string",
+          "pattern": "^(https?://.+|reviewed)$"
         }
+      },
+      "dependentRequired": {
+        "stamp_color": ["stamp_color_source"],
+        "stamp_color_source": ["stamp_color"]
       },
       "if": {
         "required": [
@@ -953,48 +988,94 @@
         }
       }
     },
-    "printing_link": {
-      "description": "The same art across sites. Image ids do not line up across languages, so this is matching work with review, never derived from ids.",
+    "design": {
+      "description": "data/designs.jsonl. One art of one card, across every language it was printed in (CONTRACT.md, Designs). The app joins printings to it through printing_designs.",
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "key",
-        "printing_a",
-        "printing_b",
-        "method",
-        "confidence"
-      ],
+      "required": ["key", "card_key"],
       "properties": {
         "key": {
-          "description": "{printing_a}={printing_b}, a sorts before b.",
+          "$ref": "#/$defs/design_key"
+        },
+        "card_key": {
+          "$ref": "#/$defs/card_key"
+        },
+        "stamp": {
+          "description": "The stamp text verbatim, when the design is a stamped one. Stamped and unstamped are different designs.",
           "type": "string",
-          "pattern": "^prt_[0-9a-z]{12}=prt_[0-9a-z]{12}$"
+          "minLength": 1
         },
-        "printing_a": {
-          "$ref": "#/$defs/printing_key"
-        },
-        "printing_b": {
-          "$ref": "#/$defs/printing_key"
-        },
-        "method": {
-          "enum": [
-            "manual",
-            "image_hash",
-            "number_and_distribution"
-          ]
-        },
-        "confidence": {
-          "enum": [
-            "authoritative",
-            "corroborated",
-            "inferred"
-          ]
+        "exclusive_override": {
+          "description": "Set at review only, for a design the derived language-exclusive test gets wrong.",
+          "type": "boolean"
         },
         "reviewed_by": {
           "type": "string"
         },
         "reviewed_at": {
           "$ref": "#/$defs/timestamp"
+        }
+      }
+    },
+    "printing_design": {
+      "description": "data/printing_designs.jsonl. Which design a printing is an instance of. At most one row per printing, so the key is the printing's key; a printing with no row is unreviewed.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "printing_key", "design_key", "method"],
+      "properties": {
+        "key": {
+          "description": "Equal to printing_key.",
+          "$ref": "#/$defs/printing_key"
+        },
+        "printing_key": {
+          "$ref": "#/$defs/printing_key"
+        },
+        "design_key": {
+          "$ref": "#/$defs/design_key"
+        },
+        "method": {
+          "description": "suffix_and_rarity only proposes; image_hash decides; manual is a hand review.",
+          "enum": ["manual", "image_hash", "suffix_and_rarity"]
+        },
+        "reviewed_by": {
+          "type": "string"
+        },
+        "reviewed_at": {
+          "$ref": "#/$defs/timestamp"
+        }
+      }
+    },
+    "set": {
+      "description": "data/sets.jsonl. A set in its global form, one row per code, across every language. A printing's set is read from its card number; this table only names the sets products are labelled with (CONTRACT.md, Sets).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "code"],
+      "properties": {
+        "key": {
+          "description": "Equal to code.",
+          "$ref": "#/$defs/set_key"
+        },
+        "code": {
+          "$ref": "#/$defs/set_code"
+        }
+      }
+    },
+    "product_set": {
+      "description": "data/product_sets.jsonl. Which sets a product carries. Many-to-many: a two-deck starter carries two sets, an en compound code (OP14-EB04) carries both its OP and its EB set.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "product_key", "set_key"],
+      "properties": {
+        "key": {
+          "description": "{product_key}@{set_key}.",
+          "type": "string",
+          "pattern": "^(en|jp|cn):([A-Za-z0-9-]+|src_[0-9a-f]{12})@[A-Z]+(-[0-9]{2})?$"
+        },
+        "product_key": {
+          "$ref": "#/$defs/product_key"
+        },
+        "set_key": {
+          "$ref": "#/$defs/set_key"
         }
       }
     },
@@ -1338,7 +1419,10 @@
                   "printing_product",
                   "distribution",
                   "printing_distribution",
-                  "printing_link",
+                  "design",
+                  "printing_design",
+                  "set",
+                  "product_set",
                   "retired_printing",
                   "don_set"
                 ]
