@@ -1,6 +1,6 @@
 {
  "schema_version": 1,
- "generated_at": "2026-10-11T04:55:15Z",
+ "generated_at": "2026-10-15T18:36:35Z",
  "files": {
   "data/card_observations/cn.jsonl": {
    "type": "card_observation",
@@ -27,6 +27,11 @@
    "rows": 3003,
    "sha256": "28f709abe929998da4898b5b68cecab289fb1105eca4a2e45ebefde3601a872a"
   },
+  "data/designs.jsonl": {
+   "type": "design",
+   "rows": 0,
+   "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
   "data/distributions.jsonl": {
    "type": "distribution",
    "rows": 463,
@@ -37,10 +42,15 @@
    "rows": 165,
    "sha256": "66a747021ee860a7cf684f86509cf6f3be4f261ee95f8b4760b1e37d06990b77"
   },
+  "data/printing_designs.jsonl": {
+   "type": "printing_design",
+   "rows": 0,
+   "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
   "data/printing_distributions.jsonl": {
    "type": "printing_distribution",
-   "rows": 4764,
-   "sha256": "4deab50b67243d52dda89cfeadb180393474da3ceb9ca637304c220b03ab1159"
+   "rows": 4765,
+   "sha256": "348cc746831002fece30181d00f6b89d8373e99cd0a7b459f928e2690417d8fd"
   },
   "data/printing_locators/cn.jsonl": {
    "type": "printing_locator",
@@ -64,18 +74,18 @@
   },
   "data/printing_products/cn.jsonl": {
    "type": "printing_product",
-   "rows": 4954,
-   "sha256": "1f1d276b418eb95371973147d788b814924c19e229a7d352d3f2d8f5223f0e12"
+   "rows": 5145,
+   "sha256": "012ea6128019d7512c92644163e6f6c9f734e72b9f0df9efdcb1e4df5985b7c7"
   },
   "data/printing_products/en.jsonl": {
    "type": "printing_product",
-   "rows": 4844,
-   "sha256": "5e496c8fd2e51621508519f96e17298eec224c5856fe1f20687d9445689ef415"
+   "rows": 5020,
+   "sha256": "d11c42a7aea4ec357af8f32775bc996aaecdd531d4d9b3a34c4e5a87e776f99e"
   },
   "data/printing_products/jp.jsonl": {
    "type": "printing_product",
-   "rows": 4997,
-   "sha256": "94c13f665189c1e7546a07f7f81915ad323f9586d9b6c9d3e240f3f032b5005b"
+   "rows": 5200,
+   "sha256": "d787f4d239a60de8e7d50e7f3356483d1bacc12f7dcfef405c705e9d7cd31af5"
   },
   "data/printings/cn.jsonl": {
    "type": "printing",
@@ -97,25 +107,35 @@
    "rows": 862,
    "sha256": "c9fe957dca0f373619f32c96d5388ad80b20bd562c7d91727fd73077b490f782"
   },
+  "data/product_sets.jsonl": {
+   "type": "product_set",
+   "rows": 170,
+   "sha256": "9d19c0d159f8aedcaf4941fe5e30f693ebf18fdf18742f1fe345a998df3f4090"
+  },
   "data/products/cn.jsonl": {
    "type": "product",
-   "rows": 47,
-   "sha256": "2c8546106d9b5d8d9777320823f55f1ddadd0819c1623381e5a15c5dea0acb28"
+   "rows": 72,
+   "sha256": "aac03cb3b391323027a2fd72ecde94bc911329bee7a02290d744dec9d69b0330"
   },
   "data/products/en.jsonl": {
    "type": "product",
-   "rows": 74,
-   "sha256": "c6ae42ab6b3710f5b9408cc35db6fd6c4aa8473d72fd27a1de09259ef435e171"
+   "rows": 99,
+   "sha256": "d1c745a9a189a4068b856563e5ebbf63aeaa26a11a5d8b2bd970819d20c15bf4"
   },
   "data/products/jp.jsonl": {
    "type": "product",
-   "rows": 62,
-   "sha256": "a6dcec33b6be897a2b73507393ce1f6e5a183bb90e2616d68b47776a612e4307"
+   "rows": 92,
+   "sha256": "4e0a2a2ae62e278e6cf4110ba90639c45c95887645ff6d0190bfa994fdd715ce"
   },
   "data/retired_printings.jsonl": {
    "type": "retired_printing",
    "rows": 9832,
    "sha256": "bfb8aa97a6e8ded48b090d50cb50658699c1022079e33f1764f05608a1bedfb7"
+  },
+  "data/sets.jsonl": {
+   "type": "set",
+   "rows": 60,
+   "sha256": "8c02fa484c81cbea9b57e52cb8ca2c1626fcb927646e69bbcb78c1e1e6527acb"
   }
  }
 }
