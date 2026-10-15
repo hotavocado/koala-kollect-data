@@ -5,8 +5,8 @@ from jsonschema import Draft202012Validator
 
 sys.path.insert(0, str(Path(__file__).parent))
 from image_id import parse_image_id
-from data_check import (check_data, don_set_errors, key_errors, origin_errors, retired_errors, run_errors,
-                        stamped_claim_errors, stamped_finish_errors)
+from data_check import (check_data, design_errors, don_set_errors, key_errors, origin_errors, retired_errors,
+                        run_errors, stamped_claim_errors, stamped_finish_errors)
 from tcgcsv_check import check as tcgcsv_check
 
 root = Path(__file__).resolve().parent.parent
@@ -55,9 +55,11 @@ for row in valid_rows:
 # syncs this file as its fixture, so it must model the contract: jp:550801 shipped
 # here without is_bucket while only the schema ran (alyssa, general 93018).
 ex = {t: [r["record"] for r in valid_rows if r["type"] == t]
-      for t in ("product", "printing", "printing_product", "printing_distribution", "set", "product_set", "printing_design")}
+      for t in ("product", "printing", "printing_product", "printing_distribution", "set", "product_set", "design",
+                "printing_design")}
 ex_errors = (origin_errors(ex["product"], ex["printing"], ex["printing_product"], ex["printing_distribution"])
-             + key_errors(ex["set"], ex["product_set"], ex["printing_design"]))
+             + key_errors(ex["set"], ex["product_set"], ex["printing_design"])
+             + design_errors(ex["design"], ex["printing"], ex["printing_design"]))
 for e in ex_errors:
     bad += 1
     print("FAIL valid", e)
@@ -183,6 +185,36 @@ if stamped_claim_errors(stamp, dists, [good, dict(good, key="ev_0000000000000003
     print("FAIL control: two claims on one stamp read red, but the count is open")
 else:
     print("ok   green two tcgcsv claims on one stamped printing (count open)")
+
+# Controls: every printing in a design is a printing of the design's card (CONTRACT.md, Designs).
+g_designs = [{"key": "dsn_000000000001", "card_key": "card_000000000001"}]
+g_prints = [{"key": "prt_000000000001", "card_key": "card_000000000001"}, {"key": "prt_000000000002", "card_key": "card_000000000002"}]
+g_member = {"key": "prt_000000000001", "printing_key": "prt_000000000001", "design_key": "dsn_000000000001"}
+if design_errors(g_designs, g_prints, [g_member]):
+    bad += 1
+    print("FAIL control: a membership on the design's own card is red")
+else:
+    print("ok   green a membership on the design's own card")
+if design_errors(g_designs, g_prints, [dict(g_member, key="prt_000000000002", printing_key="prt_000000000002")]):
+    print("ok   red   a membership whose printing is another card's")
+else:
+    bad += 1
+    print("FAIL control passed: a membership whose printing is another card's")
+
+# Green control: a minted product may carry a date with its source, whatever its kind
+# (CONTRACT.md, Release dates). Kept out of examples/valid.jsonl on purpose: the app
+# syncs that file as its fixture, and a dated minted row there would date its Limited
+# pool until the app stops grouping minted products into it (alyssa, general 93142).
+minted_dated = {"key": "en:src_9dbd9dee2d26", "site": "en", "name": "Official Playmat & Card Set -Whole Cake Island Arc-",
+                "kind": "limited", "release_date": "2025-12-12",
+                "release_date_source": "https://en.onepiece-cardgame.com/products/other/playmat009.php",
+                "first_seen_at": "2026-10-08T15:59:41Z"}
+errs = [e.message for e in validator("product").iter_errors(minted_dated)]
+if errs:
+    bad += 1
+    print("FAIL control: a dated minted product is red:", errs)
+else:
+    print("ok   green a minted product with a date and its source")
 
 # Controls: the don_set rules (CONTRACT.md, DON sets). Each red case is the
 # passing set with one thing changed, so a red here is that one thing.

@@ -385,6 +385,10 @@ all.
 - **Card pools carry no date.** `limited` (x801) and `promo_bucket` (x901)
   rows are card pools, not products: several premium collection pages with
   different dates link the same x801 series. The schema refuses a date on them.
+  A minted product (`{site}:src_`, Promo origin) keeps the pool's `kind` but is
+  an origin, not a pool: it may carry `release_date` with its
+  `release_date_source`, and is not required to. The undated-product re-read
+  stays keyed on kind, so an undated minted row does not trigger it.
 - **Sticky.** A run sets a date or moves it to the one the index now shows, and
   never clears one. A product that drops off the index keeps the date it had.
 - **What a run reads.** The index, two to four walks, on every run. A product page once, the first
@@ -546,7 +550,9 @@ origin, Stamp colour).
 
 - `designs` (`dsn_` + 12, minted once) and `printing_designs` (keyed by the
   printing: at most one design per printing; a printing with no row is
-  unreviewed) are both reviewed. `method` says how a membership was decided:
+  unreviewed) are both reviewed, so every row carries `reviewed_by` and
+  `reviewed_at` (the schema requires both). Every printing in a design is a
+  printing of the design's card. `method` says how a membership was decided:
   `suffix_and_rarity` only proposes, `image_hash` decides, `manual` is a hand
   review. `exclusive_override` is set at review only, for a design the derived
   language-exclusive test gets wrong.
@@ -576,6 +582,12 @@ A set in its global form, one row per code across every language: `OP-09`,
   a booster carries both its OP and its EB set. The hand-placed en:OP-14 and
   en:OP-15 rows (Release dates) carry only their OP set; EB-04 sits on the
   combined boosters en:569114 and en:569115.
+- **A set's title on a site** comes from a product on that site whose code
+  equals the set code, else the `name_en` fallback (Release dates). It never comes from a
+  product that holds the set only through `product_sets`: `product_sets`
+  decides which cards and products a set page shows, not what it is called
+  (alyssa, 2026-10-15). So EB-04 is titled from jp:550204, never from the en
+  OP14-EB04 or OP15-EB04 boosters.
 - Double packs (DP-NN) are products and carry no set. The promo bucket carries
   set `P`. The limited bucket and the minted products carry no set.
 
@@ -855,4 +867,5 @@ printing with a distribution has none, a minted product carries no
 `series_id` and its key is the mint of its printing's own `source_text`, and
 only the six buckets carry `is_bucket`. Keys that restate their fields are
 checked too: a set's key is its code, a product_set's is
-`{product_key}@{set_key}`, a printing_design's is its printing. Each has red controls in `check.py`. CI runs it on every push.
+`{product_key}@{set_key}`, a printing_design's is its printing, and every
+printing in a design is a printing of the design's card. Each has red controls in `check.py`. CI runs it on every push.

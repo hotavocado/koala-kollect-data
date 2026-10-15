@@ -711,7 +711,7 @@
       ]
     },
     "product": {
-      "description": "A series page on one site: a sealed product, or a listing bucket such as promos; or a product minted from a bucket printing's source_text (key {site}:src_..., no series_id; CONTRACT.md, Promo origin). release_date and release_date_source come together. limited and promo_bucket rows are card pools or the products named in them, and carry no date.",
+      "description": "A series page on one site: a sealed product, or a listing bucket such as promos; or a product minted from a bucket printing's source_text (key {site}:src_..., no series_id; CONTRACT.md, Promo origin). release_date and release_date_source come together. limited and promo_bucket rows are card pools and carry no date; a minted product is an origin, not a pool, so it may carry one (with its source) whatever its kind.",
       "type": "object",
       "additionalProperties": false,
       "dependentRequired": {
@@ -720,9 +720,13 @@
       },
       "allOf": [
         {
+          "$comment": "A card pool carries no date. A minted product (key {site}:src_) is an origin, not a pool: a date is allowed, not required, and dependentRequired still pairs it with its source.",
           "if": {
-            "required": ["kind"],
-            "properties": {"kind": {"enum": ["limited", "promo_bucket"]}}
+            "required": ["kind", "key"],
+            "properties": {
+              "kind": {"enum": ["limited", "promo_bucket"]},
+              "key": {"not": {"pattern": "^(en|jp|cn):src_"}}
+            }
           },
           "then": {
             "properties": {"release_date": false, "release_date_source": false}
@@ -1004,7 +1008,7 @@
       "description": "data/designs.jsonl. One art of one card, across every language it was printed in (CONTRACT.md, Designs). The app joins printings to it through printing_designs.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["key", "card_key"],
+      "required": ["key", "card_key", "reviewed_by", "reviewed_at"],
       "properties": {
         "key": {
           "$ref": "#/$defs/design_key"
@@ -1033,7 +1037,7 @@
       "description": "data/printing_designs.jsonl. Which design a printing is an instance of. At most one row per printing, so the key is the printing's key; a printing with no row is unreviewed.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["key", "printing_key", "design_key", "method"],
+      "required": ["key", "printing_key", "design_key", "method", "reviewed_by", "reviewed_at"],
       "properties": {
         "key": {
           "description": "Equal to printing_key.",
