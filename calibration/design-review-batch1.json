@@ -1,0 +1,548 @@
+{
+ "reviewed_by": "roberto",
+ "reviewed_at": "2026-10-15T21:26:41Z",
+ "designs": {
+  "dsn_1e6wksvraaa3": {
+   "printings": [
+    "prt_9k5j8ihohyw9"
+   ],
+   "calibration_ids": [
+    2
+   ],
+   "note": "en base, unstamped",
+   "dhash16_tc_vs_en": [
+    12
+   ],
+   "dhash16_tc_vs_base_en": [
+    2
+   ]
+  },
+  "dsn_20mhtytmdsy3": {
+   "printings": [
+    "prt_rugn8kfpothu"
+   ],
+   "calibration_ids": [
+    12
+   ],
+   "note": "en, unstamped",
+   "dhash16_tc_vs_en": [
+    14
+   ],
+   "dhash16_tc_vs_base_en": []
+  },
+  "dsn_2pv5eulyft2h": {
+   "printings": [
+    "prt_zgrew2mmh24f"
+   ],
+   "calibration_ids": [
+    6
+   ],
+   "note": "en base, unstamped",
+   "dhash16_tc_vs_en": [
+    22
+   ],
+   "dhash16_tc_vs_base_en": [
+    2
+   ]
+  },
+  "dsn_3cufu1fzzbjl": {
+   "printings": [
+    "prt_awrylsko1d26"
+   ],
+   "calibration_ids": [
+    13
+   ],
+   "note": "tc stamped",
+   "dhash16_tc_vs_en": [
+    13
+   ],
+   "dhash16_tc_vs_base_en": [
+    9
+   ]
+  },
+  "dsn_8d8ugmwd9sar": {
+   "printings": [
+    "prt_r6ujnvp5ld27"
+   ],
+   "calibration_ids": [
+    18
+   ],
+   "note": "tc stamped",
+   "dhash16_tc_vs_en": [
+    102
+   ],
+   "dhash16_tc_vs_base_en": [
+    4
+   ]
+  },
+  "dsn_93kvdhxgnete": {
+   "printings": [
+    "prt_wjc5gfyr7yiy"
+   ],
+   "calibration_ids": [
+    10
+   ],
+   "note": "en base, unstamped",
+   "dhash16_tc_vs_en": [
+    32
+   ],
+   "dhash16_tc_vs_base_en": [
+    3
+   ]
+  },
+  "dsn_9dhc75yabghb": {
+   "printings": [
+    "prt_55ip7lq1g1sv"
+   ],
+   "calibration_ids": [
+    8
+   ],
+   "note": "tc stamped",
+   "dhash16_tc_vs_en": [
+    26
+   ],
+   "dhash16_tc_vs_base_en": [
+    5
+   ]
+  },
+  "dsn_9la94unzafe2": {
+   "printings": [
+    "prt_nsabfgwpu4wa"
+   ],
+   "calibration_ids": [
+    18
+   ],
+   "note": "en _p1, unstamped; different art from base",
+   "dhash16_tc_vs_en": [
+    102
+   ],
+   "dhash16_tc_vs_base_en": [
+    4
+   ]
+  },
+  "dsn_ayu749jo1ojp": {
+   "printings": [
+    "prt_h5zl01ry100o"
+   ],
+   "calibration_ids": [
+    17
+   ],
+   "note": "en, unstamped",
+   "dhash16_tc_vs_en": [
+    3
+   ],
+   "dhash16_tc_vs_base_en": []
+  },
+  "dsn_cd29i0jumrsl": {
+   "printings": [
+    "prt_7qneeh8vz5s2"
+   ],
+   "calibration_ids": [
+    1
+   ],
+   "note": "en base, unstamped",
+   "dhash16_tc_vs_en": [
+    10
+   ],
+   "dhash16_tc_vs_base_en": [
+    4
+   ]
+  },
+  "dsn_e9ydyi47jlkp": {
+   "printings": [
+    "prt_lqors81bhb13"
+   ],
+   "calibration_ids": [
+    2
+   ],
+   "note": "en _p1 recolour, unstamped; different art from base",
+   "dhash16_tc_vs_en": [
+    12
+   ],
+   "dhash16_tc_vs_base_en": [
+    2
+   ]
+  },
+  "dsn_efbfq96nfff8": {
+   "printings": [
+    "prt_lmy5o6d422w4"
+   ],
+   "calibration_ids": [
+    14
+   ],
+   "note": "tc stamped",
+   "dhash16_tc_vs_en": [
+    13
+   ],
+   "dhash16_tc_vs_base_en": []
+  },
+  "dsn_ejbgfafmsdo7": {
+   "printings": [
+    "prt_5vhiz3tsfq8p"
+   ],
+   "calibration_ids": [
+    18
+   ],
+   "note": "en base, unstamped",
+   "dhash16_tc_vs_en": [
+    102
+   ],
+   "dhash16_tc_vs_base_en": [
+    4
+   ]
+  },
+  "dsn_fgpnplh8vwok": {
+   "printings": [
+    "prt_usj3r7f914i0"
+   ],
+   "calibration_ids": [
+    10
+   ],
+   "note": "tc stamped",
+   "dhash16_tc_vs_en": [
+    32
+   ],
+   "dhash16_tc_vs_base_en": [
+    3
+   ]
+  },
+  "dsn_foo17feekl5l": {
+   "printings": [
+    "prt_331xztqq9twe"
+   ],
+   "calibration_ids": [
+    19,
+    20
+   ],
+   "note": "en base, unstamped",
+   "dhash16_tc_vs_en": [
+    119,
+    120
+   ],
+   "dhash16_tc_vs_base_en": [
+    1,
+    1
+   ]
+  },
+  "dsn_j0ag3li46f53": {
+   "printings": [
+    "prt_5qlk338yjmg7"
+   ],
+   "calibration_ids": [
+    8
+   ],
+   "note": "en _p1 recolour, unstamped; different art from base",
+   "dhash16_tc_vs_en": [
+    26
+   ],
+   "dhash16_tc_vs_base_en": [
+    5
+   ]
+  },
+  "dsn_jweo84phsw9p": {
+   "printings": [
+    "prt_cfbvx1872t17"
+   ],
+   "calibration_ids": [
+    15
+   ],
+   "note": "en, unstamped",
+   "dhash16_tc_vs_en": [
+    3
+   ],
+   "dhash16_tc_vs_base_en": []
+  },
+  "dsn_lpqqqg4e4ezv": {
+   "printings": [
+    "prt_6whxel1qbc8y"
+   ],
+   "calibration_ids": [
+    6
+   ],
+   "note": "tc stamped",
+   "dhash16_tc_vs_en": [
+    22
+   ],
+   "dhash16_tc_vs_base_en": [
+    2
+   ]
+  },
+  "dsn_mtynmje0itbr": {
+   "printings": [
+    "prt_vfzxm0i2ninf"
+   ],
+   "calibration_ids": [
+    2
+   ],
+   "note": "tc stamped",
+   "dhash16_tc_vs_en": [
+    12
+   ],
+   "dhash16_tc_vs_base_en": [
+    2
+   ]
+  },
+  "dsn_mu32dejzwld4": {
+   "printings": [
+    "prt_gmmsxlm4jnjm"
+   ],
+   "calibration_ids": [
+    15
+   ],
+   "note": "tc stamped",
+   "dhash16_tc_vs_en": [
+    3
+   ],
+   "dhash16_tc_vs_base_en": []
+  },
+  "dsn_nr88c5r2f262": {
+   "printings": [
+    "prt_f3qwxhnn4x4z"
+   ],
+   "calibration_ids": [
+    6
+   ],
+   "note": "en _p1 recolour, unstamped; different art from base",
+   "dhash16_tc_vs_en": [
+    22
+   ],
+   "dhash16_tc_vs_base_en": [
+    2
+   ]
+  },
+  "dsn_pxc2zb48hs9j": {
+   "printings": [
+    "prt_rn486lgjs9dg"
+   ],
+   "calibration_ids": [
+    12
+   ],
+   "note": "tc stamped",
+   "dhash16_tc_vs_en": [
+    14
+   ],
+   "dhash16_tc_vs_base_en": []
+  },
+  "dsn_q292hcjs9du1": {
+   "printings": [
+    "prt_0bteqdqfhdw0"
+   ],
+   "calibration_ids": [
+    19,
+    20
+   ],
+   "note": "tc stamped",
+   "dhash16_tc_vs_en": [
+    119,
+    120
+   ],
+   "dhash16_tc_vs_base_en": [
+    1,
+    1
+   ]
+  },
+  "dsn_rm806gipdefp": {
+   "printings": [
+    "prt_42ylpb2di2ge"
+   ],
+   "calibration_ids": [
+    10
+   ],
+   "note": "en _p1 recolour, unstamped; different art from base",
+   "dhash16_tc_vs_en": [
+    32
+   ],
+   "dhash16_tc_vs_base_en": [
+    3
+   ]
+  },
+  "dsn_s5t9uk8lm29p": {
+   "printings": [
+    "prt_1nd39tcxke1h"
+   ],
+   "calibration_ids": [
+    14
+   ],
+   "note": "en, unstamped",
+   "dhash16_tc_vs_en": [
+    13
+   ],
+   "dhash16_tc_vs_base_en": []
+  },
+  "dsn_sjmlgnc2rylr": {
+   "printings": [
+    "prt_qee66l9g89zm"
+   ],
+   "calibration_ids": [
+    19
+   ],
+   "note": "en _p1 stamped; shares art with _p2 (1 bit dhash16, 2 bits phash)",
+   "dhash16_tc_vs_en": [
+    119
+   ],
+   "dhash16_tc_vs_base_en": [
+    1
+   ]
+  },
+  "dsn_slq9eiu0bh4e": {
+   "printings": [
+    "prt_p1xqu4bhyczd"
+   ],
+   "calibration_ids": [
+    5
+   ],
+   "note": "en _p1 recolour, unstamped; different art from base",
+   "dhash16_tc_vs_en": [
+    21
+   ],
+   "dhash16_tc_vs_base_en": [
+    3
+   ]
+  },
+  "dsn_thb332lqc7dh": {
+   "printings": [
+    "prt_9w634ab8kv50"
+   ],
+   "calibration_ids": [
+    17
+   ],
+   "note": "tc stamped",
+   "dhash16_tc_vs_en": [
+    3
+   ],
+   "dhash16_tc_vs_base_en": []
+  },
+  "dsn_tnbk2n3v81fc": {
+   "printings": [
+    "prt_t8so29qm8ykf"
+   ],
+   "calibration_ids": [
+    1
+   ],
+   "note": "en _p1 recolour, unstamped; different art from base",
+   "dhash16_tc_vs_en": [
+    10
+   ],
+   "dhash16_tc_vs_base_en": [
+    4
+   ]
+  },
+  "dsn_u40by8ayt8zk": {
+   "printings": [
+    "prt_6ucujmiuyhyl"
+   ],
+   "calibration_ids": [
+    20
+   ],
+   "note": "en _p2 stamped; shares art with _p1 (1 bit dhash16, 2 bits phash)",
+   "dhash16_tc_vs_en": [
+    120
+   ],
+   "dhash16_tc_vs_base_en": [
+    1
+   ]
+  },
+  "dsn_uqh9csgukih1": {
+   "printings": [
+    "prt_d6drdfow3w9m",
+    "prt_sb08wo7bpreg"
+   ],
+   "calibration_ids": [
+    13
+   ],
+   "note": "en base and en _r1 reprint, same art, unstamped",
+   "dhash16_tc_vs_en": [
+    13
+   ],
+   "dhash16_tc_vs_base_en": [
+    9
+   ]
+  },
+  "dsn_v6ma6be9l40i": {
+   "printings": [
+    "prt_hvw3251myqks"
+   ],
+   "calibration_ids": [
+    5
+   ],
+   "note": "tc stamped",
+   "dhash16_tc_vs_en": [
+    21
+   ],
+   "dhash16_tc_vs_base_en": [
+    3
+   ]
+  },
+  "dsn_wcsbh5j0y9ph": {
+   "printings": [
+    "prt_unjnx27ahmdy"
+   ],
+   "calibration_ids": [
+    5
+   ],
+   "note": "en base, unstamped",
+   "dhash16_tc_vs_en": [
+    21
+   ],
+   "dhash16_tc_vs_base_en": [
+    3
+   ]
+  },
+  "dsn_wfvpj07yytox": {
+   "printings": [
+    "prt_w86p1ihi92sr"
+   ],
+   "calibration_ids": [
+    16
+   ],
+   "note": "en, unstamped",
+   "dhash16_tc_vs_en": [
+    3
+   ],
+   "dhash16_tc_vs_base_en": []
+  },
+  "dsn_wzy7mfmf8ync": {
+   "printings": [
+    "prt_dr3xzppafoax"
+   ],
+   "calibration_ids": [
+    16
+   ],
+   "note": "tc stamped",
+   "dhash16_tc_vs_en": [
+    3
+   ],
+   "dhash16_tc_vs_base_en": []
+  },
+  "dsn_y4hdtrljbhms": {
+   "printings": [
+    "prt_fooy3mlnclds"
+   ],
+   "calibration_ids": [
+    1
+   ],
+   "note": "tc stamped",
+   "dhash16_tc_vs_en": [
+    10
+   ],
+   "dhash16_tc_vs_base_en": [
+    4
+   ]
+  },
+  "dsn_yowcwv2qk6ih": {
+   "printings": [
+    "prt_bdznzkan4ayn"
+   ],
+   "calibration_ids": [
+    8
+   ],
+   "note": "en base, unstamped",
+   "dhash16_tc_vs_en": [
+    26
+   ],
+   "dhash16_tc_vs_base_en": [
+    5
+   ]
+  }
+ }
+}
