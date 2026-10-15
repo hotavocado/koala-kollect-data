@@ -431,9 +431,10 @@ def origin_page(old, name, titles, counts):
     rewrites the row on every run and a hand-written field would be dropped:
     the one product page whose index title folds to the minted name
     (products.title_key). The old row's values are carried when the index gives
-    none: not read in this page set (cn has no index), no title, or two or more
+    none: not read in this page set (no run reads cn's), no title, or two or more
     pages under one title. The index wins over a carried value, and that is
-    counted. A page with no date, or a pre-release page, gives the url only.
+    counted. A page with no date, or a pre-release page, gives the url only: a
+    date is kept only while its source is the matched page.
     """
     old = old or {}
     carried = {k: old[k] for k in ORIGIN_PAGE_FIELDS if k in old}
@@ -454,8 +455,13 @@ def origin_page(old, name, titles, counts):
         out.update(release_date=it["date"], release_date_source=it["href"])
         if old.get("release_date", it["date"]) != it["date"]:
             counts["page_date_replaced"] += 1
-    else:
-        out.update({k: old[k] for k in ("release_date", "release_date_source") if k in old})
+    elif old.get("release_date_source") == it["href"]:
+        # The same page, now listed without a date: the date it gave is kept (Release dates, Sticky).
+        out.update(release_date=old["release_date"], release_date_source=it["href"])
+    elif "release_date" in old:
+        # Another page, undated or pre-release: a date sourced to the old page would sit beside
+        # a product_url naming this one. The index wins; the date goes, and is counted.
+        counts["page_date_dropped"] += 1
     if "release_date" in out:
         counts["page_dated"] += 1
     return out

@@ -509,9 +509,12 @@ printing with no distribution gets a real product minted from its `source_text`:
 - A printing with an empty `source_text` mints nothing.
 - **Product page, read on every run.** `product_url` is the site's own product
   page whose index title matches the minted `name` once both are folded (width,
-  the game's name, spaces, punctuation, case: `products.title_key`). When that
-  index item carries a date, `release_date` is that date and
-  `release_date_source` that page; a pre-release page dates nothing. A run
+  the game's name, case, and every punctuation, symbol and space character:
+  `products.title_key`). When that index item carries a date, `release_date` is
+  that date and `release_date_source` that page; a pre-release page dates
+  nothing. A date is kept only while its source is the matched page: when the
+  match moves to another page that gives no date, the date goes
+  (`page_date_dropped`). A run
   writes the row whole, so these are derived again every run, never written by
   hand. The row keeps the values it had when the index gives none: the site's
   index was not read (no run reads cn's), no title matches, or two or more pages fold

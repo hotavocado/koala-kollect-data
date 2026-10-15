@@ -296,11 +296,11 @@ def double_packs(items):
 # The game's name, which a product index title carries and a minted origin's
 # name (a printing's source_text) mostly does not, or the other way round.
 _GAME = re.compile(r"^ONE ?PIECE ?(?:CARD ?GAME|カードゲーム)\s*", re.I)
-_TITLE_PUNCT = re.compile(r"[\s\-‐–—_・:!?,、.。'’\"“”\[\]【】()〈〉「」]+")
 
 
 def title_key(title):
-    """A product title folded for matching: width (NFKC), the game's name, spaces and punctuation, case.
+    """A product title folded for matching: width (NFKC), the game's name, case, and every
+    character whose Unicode category is punctuation, symbol, separator or control.
 
     Measured 2026-10-15 over the live en (208 items) and jp (182) indexes: two
     jp pages fold together (both titled リミテッドカードスリーブ), no en pages
@@ -308,7 +308,7 @@ def title_key(title):
     under one key is read as no match (by_title), never as a pick.
     """
     s = _GAME.sub("", unicodedata.normalize("NFKC", title).strip())
-    return _TITLE_PUNCT.sub("", s).casefold()
+    return "".join(c for c in s if unicodedata.category(c)[0] not in "PSZC").casefold()
 
 
 def by_title(items):

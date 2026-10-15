@@ -169,6 +169,24 @@ class OriginPage(Origin):
         self.mint(items=[dict(VIVI, date=None)])
         self.assertEqual(self.row()["release_date"], "2024-05-25")
 
+    def test_red_a_date_does_not_outlive_its_page(self):
+        # codex r1 on #29: the match moves to another page with no date; a date sourced to the old page goes.
+        self.mint(items=[VIVI])
+        moved = dict(VIVI, href=JP + "playmat_vivi_v2.php", date=None)
+        counts = self.mint(items=[moved])
+        self.assertEqual(self.page(), {"product_url": moved["href"]})
+        self.assertEqual(counts["page_date_dropped"], 1)
+
+    def test_red_a_pre_release_match_keeps_no_date_from_another_page(self):
+        self.mint(items=[VIVI])
+        self.mint(items=[dict(VIVI, href=JP + "playmat_vivi_pre.php")])
+        self.assertEqual(self.page(), {"product_url": JP + "playmat_vivi_pre.php"})
+
+    def test_title_folds_punctuation_and_symbols_by_category(self):
+        item = dict(VIVI, title="オフィシャル&プレイマット / ネフェルタリ+ビビ ★")
+        self.mint(items=[item])
+        self.assertEqual(self.row()["product_url"], VIVI["href"])
+
     def test_index_wins_over_a_carried_value_and_is_counted(self):
         self.mint(items=[VIVI])
         moved = dict(VIVI, href=JP + "playmat_vivi_v2.php", date="2024-06-01")
