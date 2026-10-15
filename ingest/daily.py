@@ -119,6 +119,11 @@ def decide(fetch_failures, result):
         c = tcg_run["counts"]
         if c["added"] or c["changed"]:
             changed = True
+    # The minted origin rows (run.mint_origin) count into their own dict. Only its
+    # writes are a change: the page_* match tallies are nonzero on every run.
+    o = result.get("origin") or {}
+    if o.get("added") or o.get("changed") or o.get("removed"):
+        changed = True
     if any(result["cards"].values()):
         changed = True
     cn_diff = result.get("cn") or {}
@@ -285,6 +290,7 @@ def daily(pageset, repo, out, sites=SITES, dry_run=False, fake=None, fetcher=Non
         summary["origin"] = {s: {"distributions": r["distributions"], "events": r["origin"]}
                              for s, r in result["sites"].items()}
         summary["cards"] = result["cards"]
+        summary["minted"] = result.get("origin", {})
         summary["cn"] = result["cn"]
         if result.get("cn_run"):
             summary["cn_run"] = result["cn_run"]["run"]
@@ -333,6 +339,8 @@ def main(argv):
               f"no image yet {r['no_image']} {r['no_image_ids']}, "
               f"stamps on no card of ours (refused) {r['unmatched']} {r['unmatched_ids']}, "
               f"stamp rarity differs from the en base {r['rarity_disagreements']} {r['rarity_disagreement_ids']}")
+    if "minted" in s:
+        print(f"origin products: {s['minted']}")
     if "cn" in s:
         print(f"cards: {s['cards']}  cn: {s['cn']}")
     if s["notice_title"]:
