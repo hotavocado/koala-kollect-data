@@ -1,6 +1,6 @@
 {
  "reviewed_by": "roberto",
- "reviewed_at": "2026-10-15T21:54:41Z",
+ "reviewed_at": "2026-10-15T22:01:43Z",
  "method": {
   "hash": "imagehash dhash hash_size=16 (256 bits) on the site image composited on white; art crop = x 8-92%, y 12-60% of the card",
   "rule": "the hash proposes which illustration (art cluster); the printing's variant label plus the reviewer's read decides stamped versus unstamped. Nothing about stamps is inferred from a hash.",
@@ -16,6 +16,7 @@
    "card": "OP17-088",
    "sheet": "1a",
    "approved_in": 93501,
+   "reviewed_at": "2026-10-15T21:54:41Z",
    "printings": [
     [
      "prt_p3q3fofodkt1",
@@ -33,6 +34,7 @@
    "card": "OP12-085",
    "sheet": "2-recrop",
    "approved_in": 93532,
+   "reviewed_at": "2026-10-15T22:01:43Z",
    "printings": [
     [
      "prt_b7npfpa2j340",
@@ -51,6 +53,7 @@
    "card": "OP17-025",
    "sheet": "1a",
    "approved_in": 93501,
+   "reviewed_at": "2026-10-15T21:54:41Z",
    "printings": [
     [
      "prt_0dvdzy4yd4s5",
@@ -68,6 +71,7 @@
    "card": "OP17-070",
    "sheet": "1b",
    "approved_in": 93504,
+   "reviewed_at": "2026-10-15T21:54:41Z",
    "printings": [
     [
      "prt_bq06h1bn5rsx",
@@ -85,6 +89,7 @@
    "card": "EB04-014",
    "sheet": "2",
    "approved_in": 93532,
+   "reviewed_at": "2026-10-15T22:01:43Z",
    "printings": [
     [
      "prt_6ge3mojt966s",
@@ -102,6 +107,7 @@
    "card": "OP17-045",
    "sheet": "1a",
    "approved_in": 93501,
+   "reviewed_at": "2026-10-15T21:54:41Z",
    "printings": [
     [
      "prt_8j7k6h7h6rf6",
@@ -119,6 +125,7 @@
    "card": "OP10-028",
    "sheet": "2-recrop",
    "approved_in": 93532,
+   "reviewed_at": "2026-10-15T22:01:43Z",
    "printings": [
     [
      "prt_500dxexwipwb",
@@ -137,6 +144,7 @@
    "card": "OP10-033",
    "sheet": "2",
    "approved_in": 93532,
+   "reviewed_at": "2026-10-15T22:01:43Z",
    "printings": [
     [
      "prt_gs7vlzvtwzdu",
@@ -154,6 +162,7 @@
    "card": "EB04-004",
    "sheet": "2",
    "approved_in": 93532,
+   "reviewed_at": "2026-10-15T22:01:43Z",
    "printings": [
     [
      "prt_3xaoq1o9ss52",
@@ -171,6 +180,7 @@
    "card": "OP12-078",
    "sheet": "2",
    "approved_in": 93532,
+   "reviewed_at": "2026-10-15T22:01:43Z",
    "printings": [
     [
      "prt_d5zxutp4bkw5",
@@ -189,6 +199,7 @@
    "card": "OP12-098",
    "sheet": "1b",
    "approved_in": 93504,
+   "reviewed_at": "2026-10-15T21:54:41Z",
    "printings": [
     [
      "prt_3k4boy39r252",
@@ -212,6 +223,7 @@
    "card": "OP17-006",
    "sheet": "1a",
    "approved_in": 93501,
+   "reviewed_at": "2026-10-15T21:54:41Z",
    "printings": [
     [
      "prt_92l71ewnsv2s",
@@ -229,6 +241,7 @@
    "card": "EB04-006",
    "sheet": "2",
    "approved_in": 93532,
+   "reviewed_at": "2026-10-15T22:01:43Z",
    "printings": [
     [
      "prt_itldm99vmpio",
@@ -246,6 +259,7 @@
    "card": "OP17-107",
    "sheet": "1b",
    "approved_in": 93504,
+   "reviewed_at": "2026-10-15T21:54:41Z",
    "printings": [
     [
      "prt_9usq3tleziib",
