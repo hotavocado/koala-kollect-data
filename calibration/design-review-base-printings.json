@@ -1,0 +1,139 @@
+{
+ "reviewed_by": "roberto",
+ "reviewed_at": "2026-10-15T21:54:41Z",
+ "method": {
+  "hash": "imagehash dhash hash_size=16 (256 bits) on the site image composited on white; art crop = x 8-92%, y 12-60% of the card",
+  "rule": "the hash proposes which illustration (art cluster); the printing's variant label plus the reviewer's read decides stamped versus unstamped. Nothing about stamps is inferred from a hash.",
+  "whole_card_stamp_separation": "over the lane's 28 jp/cn base printings (14 jp + 14 cn, the jp _r1 reprint excluded), the nearest design on whole-card dhash16 was a STAMPED design in 4 of 28 (OP10-028 jp and cn, EB04-006 jp, OP12-078 cn); stamped-minus-unstamped margin -4 to +5 bits. Cause: each site prints its own SAMPLE watermark and card text over the art.",
+  "art_crop_recolour_separation": "OP17 cards (base vs sepia _p1 recolour, 6 cards): art-crop margin recolour-minus-base is 1 to 32 bits for cn base and 2 to 34 bits for jp base; at the low end the eye decides.",
+  "translated_in_art_text": "class ruling (upper, roberto-internal 93504): text drawn inside the illustration and translated per language does not make a new design. Worked case OP12-098: jp base / jp _r1 / cn base are 53 / 47 / 67 bits whole-card and 41 / 33 / 49 bits art-crop from the en base design.",
+  "sheets": "contact sheets of art crops, each read under a 150KB image cap"
+ },
+ "designs": {
+  "dsn_1e6wksvraaa3": {
+   "card": "OP17-088",
+   "sheet": "1a",
+   "approved_in": 93501,
+   "printings": [
+    [
+     "prt_p3q3fofodkt1",
+     "cn",
+     "base"
+    ],
+    [
+     "prt_r2gpk4qvbmio",
+     "jp",
+     "base"
+    ]
+   ]
+  },
+  "dsn_2pv5eulyft2h": {
+   "card": "OP17-025",
+   "sheet": "1a",
+   "approved_in": 93501,
+   "printings": [
+    [
+     "prt_0dvdzy4yd4s5",
+     "cn",
+     "base"
+    ],
+    [
+     "prt_8213h656h7v5",
+     "jp",
+     "base"
+    ]
+   ]
+  },
+  "dsn_93kvdhxgnete": {
+   "card": "OP17-070",
+   "sheet": "1b",
+   "approved_in": 93504,
+   "printings": [
+    [
+     "prt_bq06h1bn5rsx",
+     "jp",
+     "base"
+    ],
+    [
+     "prt_dr3x2ui4aegg",
+     "cn",
+     "base"
+    ]
+   ]
+  },
+  "dsn_cd29i0jumrsl": {
+   "card": "OP17-045",
+   "sheet": "1a",
+   "approved_in": 93501,
+   "printings": [
+    [
+     "prt_8j7k6h7h6rf6",
+     "jp",
+     "base"
+    ],
+    [
+     "prt_ozdtmhkii06t",
+     "cn",
+     "base"
+    ]
+   ]
+  },
+  "dsn_uqh9csgukih1": {
+   "card": "OP12-098",
+   "sheet": "1b",
+   "approved_in": 93504,
+   "printings": [
+    [
+     "prt_3k4boy39r252",
+     "jp",
+     "base"
+    ],
+    [
+     "prt_h7gzncavwgur",
+     "cn",
+     "base"
+    ],
+    [
+     "prt_p7lu77077s94",
+     "jp",
+     "reprint"
+    ]
+   ],
+   "note": "translated in-art sound-effect text (en HAIR RE-MOVAL FIST!!, jp/cn localized) is a language rendering of one drawing, not a new design (class ruling, upper 93504)"
+  },
+  "dsn_wcsbh5j0y9ph": {
+   "card": "OP17-006",
+   "sheet": "1a",
+   "approved_in": 93501,
+   "printings": [
+    [
+     "prt_92l71ewnsv2s",
+     "jp",
+     "base"
+    ],
+    [
+     "prt_wkguansdayvv",
+     "cn",
+     "base"
+    ]
+   ]
+  },
+  "dsn_yowcwv2qk6ih": {
+   "card": "OP17-107",
+   "sheet": "1b",
+   "approved_in": 93504,
+   "printings": [
+    [
+     "prt_9usq3tleziib",
+     "jp",
+     "base"
+    ],
+    [
+     "prt_essb8cdcfxn2",
+     "cn",
+     "base"
+    ]
+   ]
+  }
+ }
+}
