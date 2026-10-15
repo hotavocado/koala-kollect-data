@@ -42,6 +42,9 @@ CATEGORY_ALIASES = {"キャラクタークター": "character"}
 # (measured 2026-10-08: en 569117 booster, jp 550901 promos, tc 554801 limited).
 KIND_BY_DIGIT = {"0": "starter", "1": "booster", "2": "extra", "3": "premium",
                  "7": "family", "8": "limited", "9": "promo_bucket"}
+# A series of one of these kinds is a catch-all card pool, not a product
+# (products.is_bucket; CONTRACT.md, Promo origin).
+BUCKET_KINDS = {"limited", "promo_bucket"}
 VARIANT_BY_FAMILY = {None: "base", "p": "parallel", "r": "reprint"}
 
 _B36 = "0123456789abcdefghijklmnopqrstuvwxyz"
@@ -139,6 +142,8 @@ def product_fields(site, series_id, label):
     if kind is None:
         raise ValueError(f"{site}:{series_id}: no product kind for series digit {series_id[3:4]!r}")
     rec = {"series_id": series_id}
+    if kind in BUCKET_KINDS:
+        rec["is_bucket"] = True
     m = re.findall(r"[【\[]([A-Za-z0-9-]+)[】\]]", label)
     if m:
         rec["code"] = m[-1]

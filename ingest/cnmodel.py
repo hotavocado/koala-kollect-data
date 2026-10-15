@@ -21,7 +21,7 @@ printing_links. The tokens are kept verbatim on the printing.
 import json
 import re
 
-from model import _int
+from model import BUCKET_KINDS, _int
 
 SITE = "cn"
 DETAIL_URL = "https://webadmin.windoent.com/front/op-public/cardList/cardlist/webInfo/{}"
@@ -223,12 +223,36 @@ def product_kind(name):
 
 def product_fields(product):
     """A cn product record's fields, keyed on the API's numeric product id."""
+    kind = product_kind(product["name"])
     rec = {"series_id": str(product["id"])}
-    m = re.findall(r"【([A-Za-z0-9-]+)】", product["name"])
-    if m:
-        rec["code"] = m[-1]
-    rec.update(name=product["name"], kind=product_kind(product["name"]))
+    if kind in BUCKET_KINDS:
+        rec["is_bucket"] = True
+    code = product_code(product["name"])
+    if code:
+        rec["code"] = code
+    rec.update(name=product["name"], kind=kind)
     return rec
+
+
+def product_code(name):
+    """The code in a cn product name's last 【】. A two-deck starter names both
+    decks without a hyphen (【STC31&34】): its code is the first deck's, in the
+    hyphenated form the rest carry (STC-31), and product_sets carries both."""
+    m = re.findall(r"【([A-Za-z0-9&-]+)】", name)
+    if not m:
+        return None
+    c = m[-1]
+    pair = re.fullmatch(r"([A-Z]+)-?(\d+)&\d+", c)
+    return f"{pair[1]}-{pair[2]}" if pair else c
+
+
+def product_codes(name):
+    """Every deck code a cn product name carries: STC31&34 -> [STC-31, STC-34]."""
+    m = re.findall(r"【([A-Za-z0-9&-]+)】", name)
+    if not m:
+        return []
+    pair = re.fullmatch(r"([A-Z]+)-?(\d+)&(\d+)", m[-1])
+    return [f"{pair[1]}-{pair[2]}", f"{pair[1]}-{pair[3]}"] if pair else [m[-1]]
 
 
 def _split(raw, table, what):

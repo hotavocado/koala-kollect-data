@@ -5,7 +5,8 @@ from jsonschema import Draft202012Validator
 
 sys.path.insert(0, str(Path(__file__).parent))
 from image_id import parse_image_id
-from data_check import check_data, don_set_errors, retired_errors, run_errors, stamped_claim_errors, stamped_finish_errors
+from data_check import (check_data, don_set_errors, key_errors, origin_errors, retired_errors, run_errors,
+                        stamped_claim_errors, stamped_finish_errors)
 from tcgcsv_check import check as tcgcsv_check
 
 root = Path(__file__).resolve().parent.parent
@@ -49,6 +50,19 @@ for row in valid_rows:
         print("FAIL valid", row["type"], errs[0].message)
     else:
         print("ok   valid", row["type"])
+
+# The cross-row rules hold on the valid example too, not only the schema. The app
+# syncs this file as its fixture, so it must model the contract: jp:550801 shipped
+# here without is_bucket while only the schema ran (alyssa, general 93018).
+ex = {t: [r["record"] for r in valid_rows if r["type"] == t]
+      for t in ("product", "printing", "printing_product", "printing_distribution", "set", "product_set", "printing_design")}
+ex_errors = (origin_errors(ex["product"], ex["printing"], ex["printing_product"], ex["printing_distribution"])
+             + key_errors(ex["set"], ex["product_set"], ex["printing_design"]))
+for e in ex_errors:
+    bad += 1
+    print("FAIL valid", e)
+if not ex_errors:
+    print("ok   valid origin and key rules across the example")
 
 for line in (root / "examples/invalid.jsonl").read_text().splitlines():
     row = json.loads(line)

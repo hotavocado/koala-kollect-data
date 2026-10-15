@@ -455,7 +455,14 @@ class DataCheck(Harness, unittest.TestCase):
                 "manifest.json", lambda t: t.replace('"files": {', '"files": {"README.md": {"type": "card", "rows": 1, "sha256": "' + "0" * 64 + '"}, ', 1))),
             ("markup in types", lambda: edit("data/card_observations/en.jsonl",
                                              lambda t: t.replace('"types":["', '"types":["&lt;br&gt;', 1))),
-            ("printing_b prt_zzzzzzzzzzzz has no printing row", lambda: add_file(
+            ("design_key dsn_zzzzzzzzzzzz has no design row", lambda: add_file(
+                "data/printing_designs.jsonl", "printing_design",
+                {"key": a_printing(), "printing_key": a_printing(), "design_key": "dsn_zzzzzzzzzzzz",
+                 "method": "manual"})),
+            ("set_key OP-99 has no set row", lambda: add_file(
+                "data/product_sets.jsonl", "product_set",
+                {"key": "en:569117@OP-99", "product_key": "en:569117", "set_key": "OP-99"})),
+            ("'printing_link' is not one of", lambda: add_file(
                 "data/printing_links.jsonl", "printing_link",
                 {"key": f"{a_printing()}=prt_zzzzzzzzzzzz", "printing_a": a_printing(), "printing_b": "prt_zzzzzzzzzzzz",
                  "method": "manual", "confidence": "inferred"})),

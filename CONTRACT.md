@@ -16,7 +16,10 @@ data/products/{site}.jsonl            product
 data/printing_products/{site}.jsonl   printing_product
 data/distributions.jsonl              distribution
 data/printing_distributions.jsonl     printing_distribution
-data/printing_links.jsonl             printing_link
+data/designs.jsonl                    design (one art of one card across languages; see Designs)
+data/printing_designs.jsonl           printing_design (which design a printing is)
+data/sets.jsonl                       set (a set in global form, one row per code; see Sets)
+data/product_sets.jsonl               product_set (which sets a product carries)
 data/retired_printings.jsonl          retired_printing (printings removed by reviewed PR; the app deletes them)
 data/don_sets.jsonl                   don_set (which set page each DON card sits on)
 runs/{YYYY}/{MM}/{run_id}.json        ingest_run (audit only, not synced)
@@ -57,20 +60,23 @@ product site.
 | card | `card_` + 12 [0-9a-z], minted once | `number`; for DON cards, `don_design` (see DON) |
 | printing | `prt_` + 12 [0-9a-z], minted once | its locator, `{site}:{image_id}` |
 | distribution | `dist_` + 12 [0-9a-z], minted from the natural key | `{site}\|{source_text}`: the pack a site's card list names |
-| product | `{site}:{series_id}` | itself |
+| product | `{site}:{series_id}`, or `{site}:src_` + 12 hex of sha1(`{site}\|{source_text}`) when minted (see Promo origin). A product that is not minted always carries `series_id`; a minted one never does | itself |
 | card_observation | `{card_key}:{site}:{observation_hash}` | itself |
 | printing_locator | `{site}:{image_id}` | itself |
 | printing_product | `{printing_key}@{product_key}` | itself |
 | printing_distribution | `ev_` + sha256(printing\|distribution\|source\|source_url)[:16] | itself |
-| printing_link | `{printing_a}={printing_b}`, a sorts first | itself |
+| design | `dsn_` + 12 [0-9a-z], minted once | none: a design is made at review |
+| printing_design | the printing's key | itself (one design per printing) |
+| set | its global code (`OP-09`, `EB-04`, `ST-31`, `PRB-02`, `P`) | itself |
+| product_set | `{product_key}@{set_key}` | itself |
 | retired_printing | the retired printing's key | itself (`key` equals `printing_key`) |
 
 - Minted keys never change and are never reused. The ingest looks up the natural
   key first and mints only when nothing matches.
 - `image_id` is site-local. Bandai sites use the base number plus an optional `_pN`
   or `_rN` suffix; cn uses the API's numeric id. Suffixes do not line up across
-  sites, so the same art in two languages is a `printing_link`, never a shared
-  printing. tcgcsv uses `{productId}:{Normal|Foil}`. Per site, image ids were measured stable (55 EN and 48 JP weekly
+  sites, so the same art in two languages is two printings of one `design`, never a
+  shared printing. tcgcsv uses `{productId}:{Normal|Foil}`. Per site, image ids were measured stable (55 EN and 48 JP weekly
   snapshots, Wayback 2023-2026 on the EN promo page). **cn is an assumption, not
   yet measured:** nothing has covered the stability of the API's numeric id, and
   the cn list also carries its own suffixed `cardNumber` (`P-084_01`: two digits,
@@ -312,8 +318,8 @@ cards in 7 TCGplayer groups whose abbreviation ends ` RE` (OP10 24068, OP11
   (TCGplayer's for a DON printing) with no query string. Bandai's card images carry a site-wide deploy stamp
   (`?260929`) that changes on every redeploy; keeping it would turn each
   redeploy into a change to every printing.
-- `printing_links` are reviewed; the ingest may propose them only with
-  `confidence: inferred`. `distributions` are not reviewed: they mint from the
+- `designs` and `printing_designs` are reviewed; the ingest writes neither
+  today, and both files ship at 0 rows (see Designs). `distributions` are not reviewed: they mint from the
   card list (see Promo origin below).
 - **Block icon is a printing fact.** `printing.block_icon` is the block icon as
   printed on that printing on that site: an integer, `"X"`, or `null` where the
@@ -470,6 +476,47 @@ authority on which pack a printing came from.
   the rest. A failed list or event page fails the run, and event lists older
   than the data are refused, the same replay guard as the card pages.
 - **Claims are never removed.** A page that drops off a list keeps its claims.
+- **cn event claims are read by hand.** cn has no event walker. Its
+  competition pages are Windo topic pages
+  (`topicSport/topicsportinfo/webInfo/{id}?id={id}`), and the prize lines sit in
+  `sportInfoBean.titleModel` under headings such as 参加纪念品 (participant) and
+  优胜纪念品 (winner). A cn claim read there has `source: official_event`, that
+  URL, `quote` = the prize line verbatim and `tier` from its heading, and is
+  keyed like any other claim. Nothing re-reads the page, and claims are never
+  removed, so the row stays. First one: cn 5727 (OP09-033_03), participant, page
+  114 (ruled roberto-upper 92834). The page's date is not shipped (Known gaps).
+
+**The origin is always a product (ruled 2026-10-15).** A printing's origin is
+its distribution when it has one, otherwise a product. The six bucket products
+(`is_bucket: true`: en:569801, en:569901, jp:550801, jp:550901, cn:9, cn:76; kinds
+`limited` and `promo_bucket`) are listing pools, not origins, so a bucket
+printing with no distribution gets a real product minted from its `source_text`:
+
+- key `{site}:src_` + the first 12 hex of sha1(`{site}|{source_text}`); no
+  `series_id`; `kind` from the bucket it sits in; `name` = the `source_text`
+  with the card list's decoration removed (`events.core`, as for a
+  distribution's name).
+- One minted product per (site, `source_text`), and one minted
+  `printing_product` per printing, beside its bucket row. The bucket row stays:
+  it drives the Promo and Limited set pages.
+- A printing with a distribution mints nothing. A minted row is closed
+  (`removed_at`) when its printing gains a distribution or its bucket row
+  closes; nothing else closes it, and the cn removal pass skips `:src_` rows.
+- A printing with an empty `source_text` mints nothing.
+
+Measured on the first run (2026-10-15): 80 minted products (en 25, jp 30, cn 25)
+and 570 minted rows (en 176, jp 203, cn 191). 2,004 bucket rows cover 2,003
+printings, because prt_69xs80a3luz5 (en OP07-091_p1) sits in both en buckets;
+1,433 of those printings have a distribution, which leaves 570.
+
+**Stamp colour (ruled 2026-10-15).** A prize pack's cards carry a stamp, and its
+colour (gold, black, ...) is a fact of the pack, so it lives on the
+`distribution`, never on the design: `stamp_color` and `stamp_color_source`
+come together (the schema refuses one without the other). The source is the
+competition page's URL, or the literal `reviewed` when the colour was read from
+the card in hand; cn prize images carry a watermark over the stamp. Set at
+review only; both are empty until reviewed. `tier` stays on the claim, because
+pages disagree on who got a pack.
 
 **How much is dated (measured 2026-10-08, first full run).** A promo printing is
 dated when at least one of its claims carries `starts_on`. Not every promo has a
@@ -486,6 +533,53 @@ printings only when it names one (a magazine's on-sale date, a month, a period).
 
 The same run put 139 claims in review (en 103 from 17 distinct page/list name
 pairs, jp 36 from 4, asia-en and tc none) and found no card-block contradictions.
+
+## Designs
+
+A design is one art of one card, across every language it was printed in
+(ruled by Mike 2026-10-15: "let's use design"). A printing is one site's
+printing of it, so the en, jp and cn printings of the same art are three
+printings of one design. Stamped and unstamped are different designs, and a
+stamped design carries its stamp text verbatim in `stamp`. A stamp's colour is
+not on the design: it is read through the printings' distributions (Promo
+origin, Stamp colour).
+
+- `designs` (`dsn_` + 12, minted once) and `printing_designs` (keyed by the
+  printing: at most one design per printing; a printing with no row is
+  unreviewed) are both reviewed. `method` says how a membership was decided:
+  `suffix_and_rarity` only proposes, `image_hash` decides, `manual` is a hand
+  review. `exclusive_override` is set at review only, for a design the derived
+  language-exclusive test gets wrong.
+- Both files ship at 0 rows. The app syncs them from the first run, so an empty
+  file is a valid file (the sync's own check on 0 rows passes; 1 row with a
+  0-row manifest is refused).
+- `printing.image_hash`, `{algorithm}:{hex}`, is the input `image_hash`
+  membership will read.
+
+They replace `printing_links`, which pointed printing to printing and could not
+say which of three printings was the art.
+
+## Sets
+
+A set in its global form, one row per code across every language: `OP-09`,
+`EB-04`, `ST-31`, `PRB-02`, and `P` for promos. The key is the code.
+
+- **A printing's set is its card number.** OP09-033 is in OP-09 on every site.
+  `sets` and `product_sets` only label products, so the app can list a set's
+  products; they are never the join from a printing to its set.
+- **`product_sets` are derived on every run** from each product's code:
+  `OP-17` is OP-17. cn writes a language letter into the code (OPC-16, EBC-02,
+  STC-31, PRBC-01) and kr will (EBK-01); the letter is dropped, so cn STC-31 is
+  global ST-31 (verified by name on every cn starter). A cn two-deck starter,
+  coded STC31&34 in its name, carries both sets. en coded the OP-14 and OP-15
+  boosters OP14-EB04 and OP15-EB04 because they also carry EB-04's cards: such
+  a booster carries both its OP and its EB set. The hand-placed en:OP-14 and
+  en:OP-15 rows (Release dates) carry only their OP set; EB-04 sits on the
+  combined boosters en:569114 and en:569115.
+- Double packs (DP-NN) are products and carry no set. The promo bucket carries
+  set `P`. The limited bucket and the minted products carry no set.
+
+Measured 2026-10-15: 60 sets, 170 product_sets.
 
 ## cn
 
@@ -542,7 +636,7 @@ the printing a `parallel`; none makes it `base`:
 cn never emits `reprint`, and the schema refuses it there: `_NN` is a parallel
 on one card and a reprint on another (P-084_01 is jp P-084_p1, OP12-026_02 is
 jp OP12-026_r1), and nothing on cn tells them apart. jp stays the variant
-authority, through `printing_links`. A run counts the printings whose signals
+authority, through `printing_designs`. A run counts the printings whose signals
 did not all agree in `ingest_run.variant_disagreements`.
 
 The case that fixes the key: ids 2763 and 2764 are both OP06-050, with the same
@@ -666,7 +760,7 @@ printing's own first, then the one it duplicates).
 
 - The app sync applies the file as a delete: the printing, and every row that
   points at it (`printing_products`, `printing_distributions`,
-  `printing_locators`, `printing_links`), matched on the printing key and never
+  `printing_locators`, `printing_designs`), matched on the printing key and never
   on a locator string. The sync is otherwise insert or update only, so a row
   removed from the data without a retired row stays in the app.
 - The ingest refuses to write a retired printing again, and the check refuses a
@@ -719,6 +813,19 @@ green at every step:
    The ingest validates the committed data before it reads any fetch, so a
    row carrying an old field stops the run loudly; nothing drops it on read.
 
+## Known gaps
+
+What the data does not hold, and why it was left out rather than guessed.
+
+- jp sells products/other/playmat004.php (Official Playmat & Card Set -Whole
+  Cake Island Arc-) and does not publish its card. en (prt_lg26e2aw1umq,
+  OP11-041_p3) and cn (prt_m4jti0dlphy0) carry it. A hand-added jp printing
+  would be review, not ingest, so jp has none.
+- cn 5727's participant claim (Windo topic page 114) ships with no
+  `starts_on`: the page prints its date twice and they disagree, 举办时间
+  2024年10月 and "2025年10月份举办". A page that contradicts itself is not a
+  source for either value.
+
 ## Sync (app side)
 
 The app reads `manifest.json` and checks every file's `sha256` and row count.
@@ -742,4 +849,10 @@ above, and every DON card has exactly one `don_set` row whose `don_design`,
 `printing_keys` and `set_slug` agree with the card, its tcgcsv printings and
 the en product codes (`source` `promo` only on `promo`, `group` never on it),
 and every record under `runs/` is a valid `ingest_run`, none of a retired site
-started after its retirement. Each has red controls in `check.py`. CI runs it on every push.
+started after its retirement. The promo origin rule is checked both ways: a
+bucket printing with no distribution has exactly one live minted row, a
+printing with a distribution has none, a minted product carries no
+`series_id` and its key is the mint of its printing's own `source_text`, and
+only the six buckets carry `is_bucket`. Keys that restate their fields are
+checked too: a set's key is its code, a product_set's is
+`{product_key}@{set_key}`, a printing_design's is its printing. Each has red controls in `check.py`. CI runs it on every push.

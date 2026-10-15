@@ -35,6 +35,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import sys
 import time
 from collections import defaultdict
@@ -69,8 +70,12 @@ PER_SITE = {"card_observation": "card_observations", "printing": "printings",
             "printing_locator": "printing_locators", "product": "products",
             "printing_product": "printing_products"}
 SHARED = {"card": "cards", "distribution": "distributions",
-          "printing_distribution": "printing_distributions", "printing_link": "printing_links",
+          "printing_distribution": "printing_distributions", "design": "designs",
+          "printing_design": "printing_designs", "set": "sets", "product_set": "product_sets",
           "retired_printing": "retired_printings", "don_set": "don_sets"}
+# Written even with no rows: the app reads an empty file as an empty table, and
+# designs stay empty until the hash job and review fill them (CONTRACT.md, Designs).
+ALWAYS_WRITTEN = {"design", "printing_design", "set", "product_set"}
 TYPE_OF_DIR = {v: k for k, v in {**PER_SITE, **SHARED}.items()}
 
 
@@ -395,6 +400,91 @@ def link_site(store, site, counts):
     return by_name
 
 
+def origin_key(site, text):
+    """A product minted from a bucket printing's source_text (CONTRACT.md, Promo origin)."""
+    return f"{site}:src_" + hashlib.sha1(f"{site}|{text}".encode()).hexdigest()[:12]
+
+
+def refresh_products(store):
+    """Fields derived from a stored product alone, so a run with no fetch still carries them:
+    is_bucket on the catch-all series, and a cn two-deck starter's code from its name."""
+    for rec in store.recs["product"].values():
+        if "series_id" in rec and rec["kind"] in model.BUCKET_KINDS:
+            rec["is_bucket"] = True
+        if rec["site"] == "cn" and "series_id" in rec and "code" not in rec:
+            code = cnmodel.product_code(rec["name"])
+            if code:
+                rec["code"] = code
+        store.recs["product"][rec["key"]] = ordered("product", rec)
+
+
+def mint_origin(store, t, counts):
+    """Every bucket printing with no distribution gets a real product, minted from its source_text.
+
+    The bucket row stays: it drives the Promo and Limited set pages. The minted
+    row is a second printing_product beside it. A printing with a distribution
+    takes the distribution as its origin and gets no minted row, so a minted row
+    whose printing has since gained one, or whose bucket row closed, is closed
+    here; nothing else closes a minted row.
+    """
+    claimed = {c["printing_key"] for c in store.recs["printing_distribution"].values()}
+    prods = store.recs["product"]
+    want = set()
+    for pp in sorted(store.recs["printing_product"].values(), key=lambda r: r["key"]):
+        prod = prods.get(pp["product_key"])
+        if "removed_at" in pp or prod is None or not prod.get("is_bucket") or pp["printing_key"] in claimed:
+            continue
+        prt = store.recs["printing"].get(pp["printing_key"])
+        text = prt.get("source_text") if prt else None
+        if not text:
+            continue
+        key = origin_key(prod["site"], text)
+        store.upsert("product", {"key": key, "site": prod["site"], "name": events.core(text), "kind": prod["kind"]},
+                     pp["first_seen_at"], counts)
+        listing = f"{prt['key']}@{key}"
+        want.add(listing)
+        store.upsert("printing_product", {"key": listing, "printing_key": prt["key"], "product_key": key},
+                     pp["first_seen_at"], counts)
+    for key, rec in store.recs["printing_product"].items():
+        if ":src_" in rec["product_key"] and key not in want and "removed_at" not in rec:
+            rec["removed_at"] = t
+            counts["removed"] += 1
+
+
+def global_sets(code):
+    """The sets a product code names, in global form; [] when it names none.
+
+    cn writes a language letter into the code (OPC-16, EBC-02, STC-31, PRBC-01)
+    and kr will (EBK-01). en sold EB-04's cards inside the OP-14 and OP-15
+    boosters and coded those boosters OP14-EB04 and OP15-EB04: such a booster
+    carries both sets. Double Packs (DP-06) are products, not sets."""
+    m = re.fullmatch(r"(OP|EB|ST|PRB)[CK]?-(\d{2})", code)
+    if m:
+        return [f"{m[1]}-{m[2]}"]
+    m = re.fullmatch(r"OP(\d{2})-EB(\d{2})", code)
+    return [f"OP-{m[1]}", f"EB-{m[2]}"] if m else []
+
+
+def derive_sets(store):
+    """sets and product_sets, rebuilt from the products on every run.
+
+    A printing's set is read from its card number; these rows only label
+    products (CONTRACT.md, Sets). The promo bucket is set P."""
+    sets, links = {}, {}
+    for prod in store.recs["product"].values():
+        if prod["kind"] == "promo_bucket" and prod.get("is_bucket"):
+            codes = ["P"]
+        elif prod["site"] == "cn" and "series_id" in prod:
+            codes = [s for c in cnmodel.product_codes(prod["name"]) for s in global_sets(c)]
+        else:
+            codes = global_sets(prod["code"]) if prod.get("code") else []
+        for c in codes:
+            sets[c] = {"key": c, "code": c}
+            links[f"{prod['key']}@{c}"] = {"key": f"{prod['key']}@{c}", "product_key": prod["key"], "set_key": c}
+    store.recs["set"] = sets
+    store.recs["product_set"] = links
+
+
 def events_site(store, site, site_dir, estate, by_name, counts):
     """Claims from the event and topic pages this page set read. Returns the counts.
 
@@ -700,7 +790,9 @@ def run_cn(store, cn_dir, state):
         store.upsert("printing_product", {"key": listing, "printing_key": prt, "product_key": product_key}, t, counts)
     if not drop:
         for key, rec in store.recs["printing_product"].items():
-            if rec["product_key"].startswith("cn:") and key not in seen and "removed_at" not in rec:
+            # A minted origin row (cn:src_...) is no cn list listing; mint_origin owns it.
+            if (rec["product_key"].startswith("cn:") and ":src_" not in rec["product_key"]
+                    and key not in seen and "removed_at" not in rec):
                 rec["removed_at"] = t
                 counts["removed"] += 1
     # Every listed id that is a second locator on a lower id's printing, named
@@ -946,7 +1038,7 @@ def render(store, states, repo, product_states=None, event_states=None, cn_state
         for site, recs in by_site.items():
             out[repo / "data" / d / f"{site}.jsonl"] = "".join(line(rtype, r) + "\n" for r in sorted(recs, key=lambda r: r["key"]))
     for rtype, d in SHARED.items():
-        if store.recs[rtype]:
+        if store.recs[rtype] or rtype in ALWAYS_WRITTEN:
             out[repo / "data" / f"{d}.jsonl"] = "".join(
                 line(rtype, r) + "\n" for r in sorted(store.recs[rtype].values(), key=lambda r: r["key"]))
     for site, st in states.items():
@@ -1040,6 +1132,10 @@ def run(pageset, repo, sites=SITES, now=time.time):
         t0 = now()
         counts, refusals = run_tcgcsv(store, tcg_dir, tcg_state)
         tcg_result = {"counts": counts, "refusals": refusals, "page_refusals": {}, "t0": t0, "t1": now()}
+    refresh_products(store)
+    origin_counts = defaultdict(int)
+    mint_origin(store, utc(started), origin_counts)
+    derive_sets(store)
     card_counts = build_cards(store)
     validate(store)
     files = render(store, states, repo, product_states, event_states, cn_state, tcg_state)
@@ -1078,7 +1174,8 @@ def run(pageset, repo, sites=SITES, now=time.time):
             raise RunError(f"{rp.relative_to(repo)} already exists (a run started in the same second); nothing written")
         files[rp] = json.dumps(ordered("ingest_run", run_rec), ensure_ascii=False, indent=1) + "\n"
     write(files)
-    return {"sites": results, "cards": dict(card_counts), "cn": cn_diff, "cn_run": cn_result, "tcgcsv_run": tcg_result}
+    return {"sites": results, "cards": dict(card_counts), "cn": cn_diff, "cn_run": cn_result, "tcgcsv_run": tcg_result,
+            "origin": dict(origin_counts)}
 
 
 def date_line(d):
@@ -1149,6 +1246,7 @@ def main(argv):
         print(cn_line(res["cn_run"]))
     if res["tcgcsv_run"]:
         print(tcgcsv_line(res["tcgcsv_run"]))
+    print(f"origin products: {res['origin']}")
     print(f"cards: {res['cards']}")
     if res["cn"]:
         print(f"cn snapshot: {res['cn']}")

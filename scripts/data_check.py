@@ -13,6 +13,7 @@ with its card, printings and the en product codes; and every run record under
 runs/ is a valid ingest_run, none of a retired site started after its retirement.
 """
 import hashlib
+from collections import defaultdict
 import json
 import re
 from pathlib import Path
@@ -22,7 +23,8 @@ from jsonschema import Draft202012Validator
 TYPE_OF_DIR = {"cards": "card", "card_observations": "card_observation", "printings": "printing",
                "printing_locators": "printing_locator", "products": "product",
                "printing_products": "printing_product", "distributions": "distribution",
-               "printing_distributions": "printing_distribution", "printing_links": "printing_link",
+               "printing_distributions": "printing_distribution", "designs": "design",
+               "printing_designs": "printing_design", "sets": "set", "product_sets": "product_set",
                "retired_printings": "retired_printing", "don_sets": "don_set"}
 
 # The app sync's own path rule (koala-kollect, alyssa/2026-10-08-data-sync).
@@ -101,9 +103,80 @@ def check_data(root, schema):
     errors += stamped_claim_errors([rec for _, _, rtype, rec in records if rtype == "printing"],
                                    [rec for _, _, rtype, rec in records if rtype == "distribution"],
                                    [rec for _, _, rtype, rec in records if rtype == "printing_distribution"])
-    by_type = {t: [rec for _, _, rtype, rec in records if rtype == t] for t in ("card", "printing", "product", "don_set")}
+    by_type = {t: [rec for _, _, rtype, rec in records if rtype == t]
+               for t in ("card", "printing", "product", "don_set", "printing_product", "printing_distribution",
+                         "set", "product_set", "printing_design")}
     errors += don_set_errors(by_type["card"], by_type["printing"], by_type["product"], by_type["don_set"])
+    errors += origin_errors(by_type["product"], by_type["printing"], by_type["printing_product"],
+                            by_type["printing_distribution"])
+    errors += key_errors(by_type["set"], by_type["product_set"], by_type["printing_design"])
     return errors
+
+
+BUCKET_KINDS = {"limited", "promo_bucket"}
+
+
+def origin_key(site, text):
+    return f"{site}:src_" + hashlib.sha1(f"{site}|{text}".encode()).hexdigest()[:12]
+
+
+def origin_errors(products, printings, listings, claims):
+    """The promo origin rule (CONTRACT.md, Promo origin), both halves.
+
+    A bucket printing with no distribution has exactly one live minted product
+    row; a printing with a distribution has none. A minted product carries no
+    series_id, and its key is the mint of the printing's own source_text. Only
+    the catch-all series carry is_bucket, and all of them do."""
+    out = []
+    prods = {p["key"]: p for p in products}
+    prts = {p["key"]: p for p in printings}
+    claimed = {c["printing_key"] for c in claims}
+    for p in products:
+        minted = ":src_" in p["key"]
+        if minted and "series_id" in p:
+            out.append(f"product {p['key']}: minted from source_text but carries series_id")
+        bucket = "series_id" in p and p["kind"] in BUCKET_KINDS
+        if bucket and not p.get("is_bucket"):
+            out.append(f"product {p['key']}: a catch-all series without is_bucket")
+        if p.get("is_bucket") and not bucket:
+            out.append(f"product {p['key']}: is_bucket on a product that is no catch-all series")
+    live = [pp for pp in listings if "removed_at" not in pp]
+    minted_of = defaultdict(list)
+    on_bucket = set()
+    for pp in live:
+        prod = prods.get(pp["product_key"])
+        if prod is None:
+            continue
+        if ":src_" in pp["product_key"]:
+            minted_of[pp["printing_key"]].append(pp["product_key"])
+        elif prod.get("is_bucket"):
+            on_bucket.add(pp["printing_key"])
+    for prt, keys in sorted(minted_of.items()):
+        if prt in claimed:
+            out.append(f"printing {prt}: has a distribution and a minted product {keys[0]}; its origin is the distribution")
+        text = prts.get(prt, {}).get("source_text")
+        for k in keys:
+            if text is None or k != origin_key(k.split(":")[0], text):
+                out.append(f"printing {prt}: minted product {k} is not the mint of its source_text")
+    for prt in sorted(on_bucket - claimed):
+        if not prts.get(prt, {}).get("source_text"):
+            continue
+        n = len(minted_of.get(prt, []))
+        if n != 1:
+            out.append(f"printing {prt}: a bucket printing with no distribution has {n} minted product rows, not 1")
+    return out
+
+
+def key_errors(sets, product_sets, memberships):
+    """Keys that restate their fields: a set's key is its code, a product_set's is
+    {product_key}@{set_key}, a membership's is its printing (so one per printing)."""
+    out = []
+    out += [f"set {s['key']}: key is not its code {s['code']}" for s in sets if s["key"] != s["code"]]
+    out += [f"product_set {r['key']}: key is not {r['product_key']}@{r['set_key']}"
+            for r in product_sets if r["key"] != f"{r['product_key']}@{r['set_key']}"]
+    out += [f"printing_design {r['key']}: key is not its printing {r['printing_key']}"
+            for r in memberships if r["key"] != r["printing_key"]]
+    return out
 
 
 def retired_errors(printing_keys, retired):
