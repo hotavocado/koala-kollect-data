@@ -49,7 +49,8 @@ class CnIndex(unittest.TestCase):
             products.cn_index([dict(OP09, link="https://example.com/op09")])
 
     def test_red_sale_time_of_another_form_refuses(self):
-        for bad in ("2026-08-22", "2026/08/22 00:00:00", "2026-08-22T00:00:00"):
+        for bad in ("2026-08-22", "2026/08/22 00:00:00", "2026-08-22T00:00:00", "2026-08-22 abcdefgh",
+                    "2026-08-22 00:00:00\n"):
             with self.subTest(bad=bad), self.assertRaises(ValueError):
                 products.cn_index([dict(SLEEVE, saleTime=bad)])
 

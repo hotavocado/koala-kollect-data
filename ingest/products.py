@@ -316,6 +316,7 @@ def title_key(title):
 
 
 CN_SITE = "https://www.onepiece-cardgame.cn"
+_SALE_TIME = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}")  # fullmatch: $ admits a trailing newline
 
 
 def cn_index(rows):
@@ -348,7 +349,7 @@ def cn_index(rows):
         sale = r.get("saleTime") or ""
         date = None
         if sale:
-            if len(sale) != 19 or sale[10] != " " or not _DATE.match(sale[:10]):
+            if not _SALE_TIME.fullmatch(sale):
                 raise ValueError(f"cn: index item {r['id']} saleTime {sale!r} is not YYYY-MM-DD HH:MM:SS")
             date = sale[:10]
         items.append({"href": href, "title": re.sub(r"\s+", " ", r.get("name") or "").strip(), "date": date})
