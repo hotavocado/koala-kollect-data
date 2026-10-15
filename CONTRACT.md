@@ -507,6 +507,28 @@ printing with no distribution gets a real product minted from its `source_text`:
   (`removed_at`) when its printing gains a distribution or its bucket row
   closes; nothing else closes it, and the cn removal pass skips `:src_` rows.
 - A printing with an empty `source_text` mints nothing.
+- **Product page, read on every run.** `product_url` is the site's own product
+  page whose index title matches the minted `name` once both are folded (width,
+  the game's name, case, and every punctuation, symbol and space character:
+  `products.title_key`). When that index item carries a date, `release_date` is
+  that date and `release_date_source` that page; a pre-release page dates
+  nothing. A date is kept only while its source is the matched page: when the
+  match moves to another page that gives no date, the date goes
+  (`page_date_dropped`). A run
+  writes the row whole, so these are derived again every run, never written by
+  hand. The row keeps the values it had when the index gives none: the site's
+  index was not read (no run reads cn's), no title matches, or two or more pages fold
+  to one title. When the index differs from a kept value, the index wins, and
+  the run counts it (`page_url_replaced`, `page_date_replaced` in the origin
+  counts).
+
+Measured 2026-10-15 against the live en and jp indexes: 54 of the 80 have a page
+(en 25, all dated; jp 29, 5 dated). One jp row has no page (週刊少年ジャンプ
+応募者全員サービス, a mail-in), and cn's 25 have none because no run reads a
+cn product index. The cn site has one (`products/productsinfo/webList`, 120
+items, each with a `saleTime`; 18 of the 25 match once 航海王卡牌对战 is folded
+out too), but its pages are not on the hosts `release_date_source` admits, so
+reading it is a contract change of its own.
 
 Measured on the first run (2026-10-15): 80 minted products (en 25, jp 30, cn 25)
 and 570 minted rows (en 176, jp 203, cn 191). 2,004 bucket rows cover 2,003

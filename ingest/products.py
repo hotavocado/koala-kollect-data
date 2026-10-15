@@ -28,6 +28,7 @@ import html as htmllib
 import json
 import re
 import time
+import unicodedata
 import urllib.request
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -291,6 +292,31 @@ def double_packs(items):
             undated.add(code)
     return dated, sorted(undated)
 
+
+# The game's name, which a product index title carries and a minted origin's
+# name (a printing's source_text) mostly does not, or the other way round.
+_GAME = re.compile(r"^ONE ?PIECE ?(?:CARD ?GAME|カードゲーム)\s*", re.I)
+
+
+def title_key(title):
+    """A product title folded for matching: width (NFKC), the game's name, case, and every
+    character whose Unicode category is punctuation, symbol, separator or control.
+
+    Measured 2026-10-15 over the live en (208 items) and jp (182) indexes: two
+    jp pages fold together (both titled リミテッドカードスリーブ), no en pages
+    do, and no two of the 80 minted origins do. A fold that puts two pages
+    under one key is read as no match (by_title), never as a pick.
+    """
+    s = _GAME.sub("", unicodedata.normalize("NFKC", title).strip())
+    return "".join(c for c in s if unicodedata.category(c)[0] not in "PSZC").casefold()
+
+
+def by_title(items):
+    """{title_key: [index items]}. More than one product page under a key is ambiguous to the caller."""
+    out = {}
+    for it in items:
+        out.setdefault(title_key(it["title"]), []).append(it)
+    return out
 
 def retail_date(hits):
     """(date, source href) from one series' index hits, or None when no retail page dates it.
