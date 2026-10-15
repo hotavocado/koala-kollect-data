@@ -260,17 +260,20 @@ def run_site(store, site_dir, site, state):
     return counts, refusals, page_refusals
 
 
-def date_site(store, site, site_dir, pstate, counts):
+def date_site(store, site, site_dir, pstate, counts, indexes=None):
     """Set release_date on this site's products from its product index. Returns the date counts.
 
     pstate is state/product_pages/{site}.json: the series each product page
     links, so a daily run need not read every product page again. It is
-    updated in place with the pages this page set read.
+    updated in place with the pages this page set read. indexes, when given,
+    gets this site's index items, for mint_origin.
     """
     try:
         items, fetched, index_at = products.read(site_dir, site)
     except (OSError, ValueError) as ex:
         raise RunError(f"{site} product index: {ex}") from None
+    if indexes is not None:
+        indexes[site] = items
     last = pstate.get("index_fetched_at")
     if last and index_at < last:
         raise RunError(f"{site} product index fetched {index_at}, older than the data ({last}); nothing written")
@@ -418,17 +421,60 @@ def refresh_products(store):
         store.recs["product"][rec["key"]] = ordered("product", rec)
 
 
-def mint_origin(store, t, counts):
+ORIGIN_PAGE_FIELDS = ("product_url", "release_date", "release_date_source")
+
+
+def origin_page(old, name, titles, counts):
+    """product_url, release_date and release_date_source for one minted origin (CONTRACT.md, Promo origin).
+
+    Read from the site's own product index on every run, because mint_origin
+    rewrites the row on every run and a hand-written field would be dropped:
+    the one product page whose index title folds to the minted name
+    (products.title_key). The old row's values are carried when the index gives
+    none: not read in this page set (cn has no index), no title, or two or more
+    pages under one title. The index wins over a carried value, and that is
+    counted. A page with no date, or a pre-release page, gives the url only.
+    """
+    old = old or {}
+    carried = {k: old[k] for k in ORIGIN_PAGE_FIELDS if k in old}
+    if titles is None:
+        counts["page_no_index"] += 1
+        return carried
+    hits = titles.get(products.title_key(name), [])
+    pages = sorted({it["href"] for it in hits})
+    if len(pages) != 1:
+        counts["page_ambiguous" if pages else "page_unmatched"] += 1
+        return carried
+    it = hits[0]
+    counts["page_matched"] += 1
+    out = {"product_url": it["href"]}
+    if old.get("product_url", it["href"]) != it["href"]:
+        counts["page_url_replaced"] += 1
+    if it["date"] and not products.is_pre_release(it["href"], it["title"]):
+        out.update(release_date=it["date"], release_date_source=it["href"])
+        if old.get("release_date", it["date"]) != it["date"]:
+            counts["page_date_replaced"] += 1
+    else:
+        out.update({k: old[k] for k in ("release_date", "release_date_source") if k in old})
+    if "release_date" in out:
+        counts["page_dated"] += 1
+    return out
+
+
+def mint_origin(store, t, counts, indexes=None):
     """Every bucket printing with no distribution gets a real product, minted from its source_text.
 
     The bucket row stays: it drives the Promo and Limited set pages. The minted
     row is a second printing_product beside it. A printing with a distribution
     takes the distribution as its origin and gets no minted row, so a minted row
     whose printing has since gained one, or whose bucket row closed, is closed
-    here; nothing else closes a minted row.
+    here; nothing else closes a minted row. indexes is {site: product index
+    items} for the sites whose index this page set read (origin_page).
     """
     claimed = {c["printing_key"] for c in store.recs["printing_distribution"].values()}
     prods = store.recs["product"]
+    titles = {site: products.by_title(items) for site, items in (indexes or {}).items()}
+    page = {}
     want = set()
     for pp in sorted(store.recs["printing_product"].values(), key=lambda r: r["key"]):
         prod = prods.get(pp["product_key"])
@@ -439,7 +485,10 @@ def mint_origin(store, t, counts):
         if not text:
             continue
         key = origin_key(prod["site"], text)
-        store.upsert("product", {"key": key, "site": prod["site"], "name": events.core(text), "kind": prod["kind"]},
+        name = events.core(text)
+        if key not in page:
+            page[key] = origin_page(prods.get(key), name, titles.get(prod["site"]), counts)
+        store.upsert("product", {"key": key, "site": prod["site"], "name": name, "kind": prod["kind"], **page[key]},
                      pp["first_seen_at"], counts)
         listing = f"{prt['key']}@{key}"
         want.add(listing)
@@ -1095,7 +1144,7 @@ def run(pageset, repo, sites=SITES, now=time.time):
         validate(store)
     except RunError as ex:
         raise RunError(f"committed data: {ex}") from None
-    states, product_states, event_states, results = {}, {}, {}, {}
+    states, product_states, event_states, results, indexes = {}, {}, {}, {}, {}
     started = now()
     for site in sites:
         sp = repo / "state" / "pages" / f"{site}.json"
@@ -1106,7 +1155,7 @@ def run(pageset, repo, sites=SITES, now=time.time):
         if (pageset / site / "products" / "_log.json").exists():
             pp = repo / "state" / "product_pages" / f"{site}.json"
             product_states[site] = json.loads(pp.read_text("utf-8")) if pp.exists() else {}
-            dates = date_site(store, site, pageset / site, product_states[site], counts)
+            dates = date_site(store, site, pageset / site, product_states[site], counts, indexes)
         by_name = link_site(store, site, counts)
         origin = None
         if (pageset / site / "events" / "_log.json").exists():
@@ -1134,7 +1183,7 @@ def run(pageset, repo, sites=SITES, now=time.time):
         tcg_result = {"counts": counts, "refusals": refusals, "page_refusals": {}, "t0": t0, "t1": now()}
     refresh_products(store)
     origin_counts = defaultdict(int)
-    mint_origin(store, utc(started), origin_counts)
+    mint_origin(store, utc(started), origin_counts, indexes)
     derive_sets(store)
     card_counts = build_cards(store)
     validate(store)

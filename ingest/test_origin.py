@@ -92,6 +92,101 @@ class Origin(unittest.TestCase):
         self.assertEqual(counts["removed"], 1)
 
 
+
+JP = "https://www.onepiece-cardgame.com/products/other/"
+VIVI = {"href": JP + "playmat_vivi.php", "title": "ONE PIECE カードゲーム オフィシャルプレイマット ネフェルタリ・ビビ",
+        "date": "2024-05-25"}
+
+
+class OriginPage(Origin):
+    """product_url and release dates on a minted origin, read from the site's product index (CONTRACT.md, Promo origin)."""
+
+    def mint(self, t=T1, items=None):
+        counts = defaultdict(int)
+        run.refresh_products(self.store)
+        run.mint_origin(self.store, t, counts, None if items is None else {"jp": items})
+        return counts
+
+    def row(self):
+        return self.store.recs["product"][run.origin_key("jp", NAMI)]
+
+    def page(self):
+        return {k: self.row()[k] for k in run.ORIGIN_PAGE_FIELDS if k in self.row()}
+
+    def test_index_title_sets_url_and_date_sourced_to_the_page(self):
+        counts = self.mint(items=[VIVI])
+        self.assertEqual(self.page(), {"product_url": VIVI["href"], "release_date": "2024-05-25",
+                                       "release_date_source": VIVI["href"]})
+        self.assertEqual((counts["page_matched"], counts["page_dated"]), (1, 1))
+
+    def test_title_folds_width_spaces_and_the_game_name(self):
+        item = dict(VIVI, title="ONE PIECEカードゲーム\u3000ｵﾌｨｼｬﾙﾌﾟﾚｲﾏｯﾄ\u3000ネフェルタリ･ビビ")
+        self.mint(items=[item])
+        self.assertEqual(self.row()["product_url"], VIVI["href"])
+
+    def test_undated_page_sets_the_url_only(self):
+        self.mint(items=[dict(VIVI, date=None)])
+        self.assertEqual(self.page(), {"product_url": VIVI["href"]})
+
+    def test_control_pre_release_page_dates_nothing(self):
+        self.mint(items=[dict(VIVI, href=JP + "playmat_vivi_pre.php")])
+        self.assertEqual(self.page(), {"product_url": JP + "playmat_vivi_pre.php"})
+
+    def test_control_title_not_on_the_index_sets_nothing(self):
+        other = dict(VIVI, href=JP + "playmat_nami.php", title="オフィシャルプレイマット ナミ")
+        counts = self.mint(items=[other])
+        self.assertEqual(self.page(), {})
+        self.assertEqual(counts["page_unmatched"], 1)
+
+    def test_control_qualified_edition_is_another_title(self):
+        # jp lists English and China editions of a set beside its own; the qualifier keeps them apart.
+        en = dict(VIVI, href=JP + "playmat_vivi-en.php", title="ONE PIECE カードゲーム English オフィシャルプレイマット ネフェルタリ・ビビ")
+        self.mint(items=[en, VIVI])
+        self.assertEqual(self.row()["product_url"], VIVI["href"])
+
+    def test_red_two_pages_under_one_title_set_nothing_and_count(self):
+        twin = dict(VIVI, href=JP + "playmat_vivi2.php", date="2025-01-01")
+        counts = self.mint(items=[VIVI, twin])
+        self.assertEqual(self.page(), {})
+        self.assertEqual((counts["page_ambiguous"], counts["page_matched"]), (1, 0))
+
+    def test_carried_through_a_run_that_read_no_index(self):
+        self.mint(items=[VIVI])
+        before = self.page()
+        counts = self.mint()
+        self.assertEqual(self.page(), before)
+        self.assertEqual((counts["page_no_index"], counts["changed"]), (1, 0))
+
+    def test_carried_through_an_index_that_lost_the_title(self):
+        self.mint(items=[VIVI])
+        before = self.page()
+        counts = self.mint(items=[dict(VIVI, title="something else")])
+        self.assertEqual(self.page(), before)
+        self.assertEqual((counts["page_unmatched"], counts["changed"]), (1, 0))
+
+    def test_carried_date_survives_a_page_that_lost_its_date(self):
+        self.mint(items=[VIVI])
+        self.mint(items=[dict(VIVI, date=None)])
+        self.assertEqual(self.row()["release_date"], "2024-05-25")
+
+    def test_index_wins_over_a_carried_value_and_is_counted(self):
+        self.mint(items=[VIVI])
+        moved = dict(VIVI, href=JP + "playmat_vivi_v2.php", date="2024-06-01")
+        counts = self.mint(items=[moved])
+        self.assertEqual(self.page(), {"product_url": moved["href"], "release_date": "2024-06-01",
+                                       "release_date_source": moved["href"]})
+        self.assertEqual((counts["page_url_replaced"], counts["page_date_replaced"], counts["changed"]), (1, 1, 1))
+
+    def test_rerun_on_the_same_index_changes_nothing(self):
+        self.mint(items=[VIVI])
+        again = self.mint(items=[VIVI])
+        self.assertEqual((again["added"], again["changed"], again["page_url_replaced"]), (0, 0, 0))
+
+    def test_one_count_per_minted_product_not_per_printing(self):
+        # NAMI is the source_text of two printings; the page is read once for the one product.
+        counts = self.mint(items=[VIVI])
+        self.assertEqual(counts["page_matched"], 1)
+
 class Sets(unittest.TestCase):
     def test_global_form(self):
         for code, want in [("OP-17", ["OP-17"]), ("OPC-16", ["OP-16"]), ("EBC-02", ["EB-02"]), ("STC-31", ["ST-31"]),
