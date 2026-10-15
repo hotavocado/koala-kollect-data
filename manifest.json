@@ -120,12 +120,12 @@
   "data/products/en.jsonl": {
    "type": "product",
    "rows": 99,
-   "sha256": "d1c745a9a189a4068b856563e5ebbf63aeaa26a11a5d8b2bd970819d20c15bf4"
+   "sha256": "99c6985445dee20e0b9148b521730b7c522edcf8114a14d35f30952177d849ea"
   },
   "data/products/jp.jsonl": {
    "type": "product",
    "rows": 92,
-   "sha256": "4e0a2a2ae62e278e6cf4110ba90639c45c95887645ff6d0190bfa994fdd715ce"
+   "sha256": "0b4d292c0e50f722eb15b56a8855aa318ed0915ed997a438da17b3b2701ede78"
   },
   "data/retired_printings.jsonl": {
    "type": "retired_printing",
