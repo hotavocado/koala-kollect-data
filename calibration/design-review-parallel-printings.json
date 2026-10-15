@@ -1,0 +1,223 @@
+{
+ "reviewed_by": "roberto",
+ "reviewed_at": "2026-10-15T22:27:02Z",
+ "method": {
+  "hash": "imagehash dhash hash_size=16 (256 bits) on the site image composited on white; art crop = x 8-92%, y 12-60% of the card",
+  "rule": "the hash proposes which illustration (art cluster); the printing's variant label plus the reviewer's read decides stamped versus unstamped. Nothing about stamps is inferred from a hash.",
+  "whole_card_stamp_separation": "over the lane's 28 jp/cn base printings (14 jp + 14 cn, the jp _r1 reprint excluded), the nearest design on whole-card dhash16 was a STAMPED design in 4 of 28 (OP10-028 jp and cn, EB04-006 jp, OP12-078 cn); stamped-minus-unstamped margin -4 to +5 bits. Cause: each site prints its own SAMPLE watermark and card text over the art.",
+  "art_crop_recolour_separation": "OP17 cards (base vs sepia _p1 recolour, 6 cards): art-crop margin recolour-minus-base is 1 to 32 bits for cn base and 2 to 34 bits for jp base; at the low end the eye decides.",
+  "translated_in_art_text": "class ruling (upper, roberto-internal 93504): text drawn inside the illustration and translated per language does not make a new design. Worked case OP12-098: jp base / jp _r1 / cn base are 53 / 47 / 67 bits whole-card and 41 / 33 / 49 bits art-crop from the en base design. Second case OP12-078: jp base 42 bits whole-card / 32 art-crop, cn base 48 / 33.",
+  "sheets": "contact sheets of art crops, each read under a 150KB image cap; sheet-2 stamp re-crops 74,945 and 26,600 bytes",
+  "stamp_region_check": "where the first crop (art, y 12-60%) did not reach the stamp, the stamp's position was located by differencing the stamped tcgcsv image against the en base (both 600x838, 2px blur, 12x8 grid of mean abs diff): OP10-028 top cells y 50-66% x 62-100% (control, matches the visible stamp), OP12-085 top cells y 75-91% x 62-100%, below the art and under the text box. Each card was then re-cropped over that region and read.",
+  "stamp_region_rule": "a stamp is not always inside the art: on OP12-085 it prints under the text box (y 75-91%), outside the y 12-60% art crop, so a fixed art crop would have read that stamped card as clean. Every stamp read therefore starts by locating the stamp: difference a stamped sibling against the unstamped one, confirm the method on a case where the stamp is visible (here OP10-028), and only then crop that region at resolution and read it.",
+  "parallel_lane": {
+   "scope": "every jp/cn printing of the 14 designed cards with no printing_design row at the start of the lane (53b3616): 19 printings, all parallels. The 5 held OP10 finish items sit on cards with no design and are out of scope by construction. 18 of the 19 have rows and 1 is parked (OP12-098 cn _02). The lane also writes one en row outside this scope: OP12-098 en _p1, which founds the second-illustration design that the jp _p1 and cn _01 join.",
+   "hash_role": "the hash proposes only. It cannot carry a verdict across cards: 60 art bits was a join on OP10-028 cn _01, and 56/58 was a split on OP10-033 jp _p1.",
+   "image_diff": "mean abs diff on a 12x8 grid after a 2px blur, both images at 600x838; the MEDIAN cell separates same image from different image. Same art: 0-4 for jp vs en (OP10-028 jp _p1 vs en _p1 = 4), 2-13 for cn because cn is upscaled from 454x635. Different art: OP10-033 jp _p1 vs en _p1 = 18, vs cn _01 = 17. Hot cells at y41-58 are the per-site SAMPLE watermark.",
+   "stamp_regions": "located per card by diff before any crop. Release Event (OP10): y50-66 x62-100, control OP10-028. CHAMPIONSHIP 25-26 (OP10-033 en _p1 Top Player vs _p2 Finalist): y58-66 x50-100. 4th Anniversary (OP17): 006/070/088 y66-91 x75-100, 025/045 y41-66 x75-100, 107 y66-83 x75-100.",
+   "op10_033": "cn _01 is the championship illustration (median cell 2 to en _p1 and _p2) with no stamp, so it is its own unstamped design, and the first language-exclusive design in the data (upper 93594). jp _p1 is a third illustration (median 18 / 17 against the same-art control of 4) with no stamp; the eye and the diff median decided it, the hash only proposed.",
+   "op12_098_cn_02": "prt_eykqpay2423a (cn _02, starter deck STC35&33, product cn:129) is PARKED on the exception list (upper 93632, 93645): the label says parallel and the image says base (every grid cell within 2 of cn base prt_h7gzncavwgur). On cn the label is the only signal, and it is wrong in both directions: a cn reprint can land as a second base (106 cards carry two or more cn base printings) or, as here, as a parallel token on the base image.",
+   "op12_098_p1": "en _p1, jp _p1 and cn _01 are one second illustration with translated in-art text (diff median cell 6 / 6, cn vs jp 3; en _p1 vs en base 57; same-art reference on this card 8 / 11). No stamp in y50-58 x62-100 on any of the three, read against the stamped tcgcsv control on the same sheet."
+  }
+ },
+ "printings": {
+  "prt_1i2503fndsn1": {
+   "card": "OP10-028",
+   "site": "jp",
+   "image": "OP10-028_p1.png",
+   "design": "dsn_9la94unzafe2",
+   "joins_existing_design": true,
+   "sheet": "1",
+   "approved_in": 93594,
+   "reviewed_at": "2026-10-15T22:18:43Z"
+  },
+  "prt_55czqg1qe13h": {
+   "card": "OP10-033",
+   "site": "jp",
+   "image": "OP10-033_p1.png",
+   "design": "dsn_w6sdscm3hm3n",
+   "founds_new_design": true,
+   "sheet": "1",
+   "approved_in": 93594,
+   "reviewed_at": "2026-10-15T22:18:43Z",
+   "note": "jp _p1: a third illustration of the card, no stamp. Decided by the eye and the diff median (18 vs en _p1, 17 vs cn _01, against a same-art control of 4); the hash tie (art 56 / 58 to the two championship designs) only proposed"
+  },
+  "prt_6wy9t6se121u": {
+   "card": "OP17-107",
+   "site": "jp",
+   "image": "OP17-107_p1.png",
+   "design": "dsn_j0ag3li46f53",
+   "joins_existing_design": true,
+   "sheet": "2",
+   "approved_in": 93599,
+   "reviewed_at": "2026-10-15T22:18:43Z"
+  },
+  "prt_8dhtqz9h8qqr": {
+   "card": "OP17-025",
+   "site": "jp",
+   "image": "OP17-025_p1.png",
+   "design": "dsn_nr88c5r2f262",
+   "joins_existing_design": true,
+   "sheet": "2",
+   "approved_in": 93599,
+   "reviewed_at": "2026-10-15T22:18:43Z"
+  },
+  "prt_8n6ighvlm2oh": {
+   "card": "OP17-070",
+   "site": "jp",
+   "image": "OP17-070_p1.png",
+   "design": "dsn_rm806gipdefp",
+   "joins_existing_design": true,
+   "sheet": "2",
+   "approved_in": 93599,
+   "reviewed_at": "2026-10-15T22:18:43Z"
+  },
+  "prt_arzvllmhsrb8": {
+   "card": "OP12-098",
+   "site": "en",
+   "image": "OP12-098_p1.png",
+   "design": "dsn_wdzr0e93dz1a",
+   "founds_new_design": true,
+   "sheet": "3",
+   "approved_in": 93645,
+   "reviewed_at": "2026-10-15T22:27:02Z",
+   "note": "OP12-098 second illustration (en _p1, jp _p1, cn _01) with translated in-art text; diff median cell 6 / 6 to en _p1 against 57 for en _p1 vs en base. Founded on en _p1, which had no design: founding on jp would read falsely as language-exclusive (upper 93645)"
+  },
+  "prt_axdw0ygyuhld": {
+   "card": "OP17-025",
+   "site": "cn",
+   "image": "390a7921b3b045468c8fedbf8096ba06.png",
+   "design": "dsn_nr88c5r2f262",
+   "joins_existing_design": true,
+   "sheet": "2",
+   "approved_in": 93599,
+   "reviewed_at": "2026-10-15T22:18:43Z"
+  },
+  "prt_fc2a02650lj3": {
+   "card": "OP17-006",
+   "site": "cn",
+   "image": "558e14d3ec254a14b8eca45d0a07deb2.png",
+   "design": "dsn_slq9eiu0bh4e",
+   "joins_existing_design": true,
+   "sheet": "2",
+   "approved_in": 93599,
+   "reviewed_at": "2026-10-15T22:18:43Z"
+  },
+  "prt_jmtgxj7c7bdz": {
+   "card": "OP17-045",
+   "site": "jp",
+   "image": "OP17-045_p1.png",
+   "design": "dsn_tnbk2n3v81fc",
+   "joins_existing_design": true,
+   "sheet": "2",
+   "approved_in": 93599,
+   "reviewed_at": "2026-10-15T22:18:43Z"
+  },
+  "prt_kypj4ww7bic8": {
+   "card": "OP17-045",
+   "site": "cn",
+   "image": "e358da9e4a494685b0511351ec5cb621.png",
+   "design": "dsn_tnbk2n3v81fc",
+   "joins_existing_design": true,
+   "sheet": "2",
+   "approved_in": 93599,
+   "reviewed_at": "2026-10-15T22:18:43Z"
+  },
+  "prt_m4v6bw1gaygp": {
+   "card": "OP12-098",
+   "site": "jp",
+   "image": "OP12-098_p1.png",
+   "design": "dsn_wdzr0e93dz1a",
+   "joins_existing_design": true,
+   "sheet": "3",
+   "approved_in": 93645,
+   "reviewed_at": "2026-10-15T22:27:02Z",
+   "note": "OP12-098 second illustration (en _p1, jp _p1, cn _01) with translated in-art text; diff median cell 6 / 6 to en _p1 against 57 for en _p1 vs en base. Founded on en _p1, which had no design: founding on jp would read falsely as language-exclusive (upper 93645)"
+  },
+  "prt_mrizfqgpbc8g": {
+   "card": "OP12-098",
+   "site": "cn",
+   "image": "1758691514639OP12-098_01.png",
+   "design": "dsn_wdzr0e93dz1a",
+   "joins_existing_design": true,
+   "sheet": "3",
+   "approved_in": 93645,
+   "reviewed_at": "2026-10-15T22:27:02Z",
+   "note": "OP12-098 second illustration (en _p1, jp _p1, cn _01) with translated in-art text; diff median cell 6 / 6 to en _p1 against 57 for en _p1 vs en base. Founded on en _p1, which had no design: founding on jp would read falsely as language-exclusive (upper 93645)"
+  },
+  "prt_nk9x59t7axnu": {
+   "card": "OP17-107",
+   "site": "cn",
+   "image": "e7c21160afa64476896b37ff3b229d83.png",
+   "design": "dsn_j0ag3li46f53",
+   "joins_existing_design": true,
+   "sheet": "2",
+   "approved_in": 93599,
+   "reviewed_at": "2026-10-15T22:18:43Z"
+  },
+  "prt_r74gh3xbtxt1": {
+   "card": "OP17-006",
+   "site": "jp",
+   "image": "OP17-006_p1.png",
+   "design": "dsn_slq9eiu0bh4e",
+   "joins_existing_design": true,
+   "sheet": "2",
+   "approved_in": 93599,
+   "reviewed_at": "2026-10-15T22:18:43Z"
+  },
+  "prt_rngrch9s19h2": {
+   "card": "OP10-033",
+   "site": "cn",
+   "image": "1766390943025OP10-033_01.png",
+   "design": "dsn_y61j2oyp40ff",
+   "founds_new_design": true,
+   "sheet": "1",
+   "approved_in": 93594,
+   "reviewed_at": "2026-10-15T22:18:43Z",
+   "note": "cn _01: the CHAMPIONSHIP 25-26 illustration (diff median cell 2 to en _p1 and _p2) printed without the stamp; both en designs on that art are stamped, so this is its own unstamped design, cn only"
+  },
+  "prt_uatb8nmix9hu": {
+   "card": "OP17-088",
+   "site": "cn",
+   "image": "2fd328f46e6f4b27bd949c98ada325b6.png",
+   "design": "dsn_e9ydyi47jlkp",
+   "joins_existing_design": true,
+   "sheet": "2",
+   "approved_in": 93599,
+   "reviewed_at": "2026-10-15T22:18:43Z"
+  },
+  "prt_udpx0u4f8fne": {
+   "card": "OP17-070",
+   "site": "cn",
+   "image": "e27b79a30e6447bcaf8d74e2d32f9aa7.png",
+   "design": "dsn_rm806gipdefp",
+   "joins_existing_design": true,
+   "sheet": "2",
+   "approved_in": 93599,
+   "reviewed_at": "2026-10-15T22:18:43Z"
+  },
+  "prt_uj8p5h45n9tn": {
+   "card": "OP10-028",
+   "site": "cn",
+   "image": "1749199206781OP10-028_01.png",
+   "design": "dsn_9la94unzafe2",
+   "joins_existing_design": true,
+   "sheet": "1",
+   "approved_in": 93594,
+   "reviewed_at": "2026-10-15T22:18:43Z"
+  },
+  "prt_xm43w1a7w27u": {
+   "card": "OP17-088",
+   "site": "jp",
+   "image": "OP17-088_p1.png",
+   "design": "dsn_e9ydyi47jlkp",
+   "joins_existing_design": true,
+   "sheet": "2",
+   "approved_in": 93599,
+   "reviewed_at": "2026-10-15T22:18:43Z"
+  }
+ },
+ "parked": {
+  "prt_eykqpay2423a": "OP12-098 cn _02, starter deck STC35&33 (product cn:129): labelled parallel, but the image is the cn base image (every grid cell within 2 of prt_h7gzncavwgur). A second cn base by image, the same class as the cn cards with two base printings, where the pixels cannot show a stamp in hand (upper 93632, 93645)"
+ }
+}

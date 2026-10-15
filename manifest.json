@@ -29,8 +29,8 @@
   },
   "data/designs.jsonl": {
    "type": "design",
-   "rows": 37,
-   "sha256": "1194cdc1376aab4f234d5962c9fbc175c7b5ffdd4f56694ac5e145352a9c26b6"
+   "rows": 40,
+   "sha256": "92924dd1dcd8cb9daecc16a084610e043b72f9bfb4fbe8b68c29fab31b28ee68"
   },
   "data/distributions.jsonl": {
    "type": "distribution",
@@ -44,8 +44,8 @@
   },
   "data/printing_designs.jsonl": {
    "type": "printing_design",
-   "rows": 67,
-   "sha256": "332ad34d71d1c41e081ddc1c594affca8d135fcc34768d6fb9ff2ce2183acd4b"
+   "rows": 86,
+   "sha256": "9ff142e4ca7f72ffe3cbbe447e7bd4e6b73e83207dff1e4afe9c33e7dc7be3a6"
   },
   "data/printing_distributions.jsonl": {
    "type": "printing_distribution",
