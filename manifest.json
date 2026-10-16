@@ -115,7 +115,7 @@
   "data/products/cn.jsonl": {
    "type": "product",
    "rows": 72,
-   "sha256": "aac03cb3b391323027a2fd72ecde94bc911329bee7a02290d744dec9d69b0330"
+   "sha256": "041e70f3232cfd15b06338eca3b3243cdc88e41ddf60b11b965ef86e921ad48b"
   },
   "data/products/en.jsonl": {
    "type": "product",
