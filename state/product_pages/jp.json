@@ -1,5 +1,5 @@
 {
- "index_fetched_at": "2026-10-16T04:43:57Z",
+ "index_fetched_at": "2026-10-17T04:43:14Z",
  "pages": {
   "https://www.onepiece-cardgame.com/products/baseshop-binder001.html": {
    "fetched_at": "2026-10-08T19:02:16Z",
@@ -143,6 +143,10 @@
   },
   "https://www.onepiece-cardgame.com/products/cardcase005.html": {
    "fetched_at": "2026-10-08T19:02:42Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/collection-6assort-vol2.html": {
+   "fetched_at": "2026-10-17T04:44:41Z",
    "series": []
   },
   "https://www.onepiece-cardgame.com/products/collection-drama002.html": {
@@ -705,6 +709,10 @@
    "fetched_at": "2026-10-08T19:02:20Z",
    "series": []
   },
+  "https://www.onepiece-cardgame.com/products/playmat_liffy-bonney.html": {
+   "fetched_at": "2026-10-17T04:44:45Z",
+   "series": []
+  },
   "https://www.onepiece-cardgame.com/products/playmat_limited006.html": {
    "fetched_at": "2026-10-08T19:02:50Z",
    "series": []
@@ -731,6 +739,14 @@
   },
   "https://www.onepiece-cardgame.com/products/sleeve044.html": {
    "fetched_at": "2026-10-08T19:02:33Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/sleeve045.html": {
+   "fetched_at": "2026-10-17T04:44:49Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/sleeve046.html": {
+   "fetched_at": "2026-10-17T04:44:53Z",
    "series": []
   },
   "https://www.onepiece-cardgame.com/products/st30.html": {
@@ -774,6 +790,14 @@
    "series": [
     "550036"
    ]
+  },
+  "https://www.onepiece-cardgame.com/products/st37.html": {
+   "fetched_at": "2026-10-17T04:44:59Z",
+   "series": []
+  },
+  "https://www.onepiece-cardgame.com/products/st38.html": {
+   "fetched_at": "2026-10-17T04:44:56Z",
+   "series": []
   },
   "https://www.onepiece-cardgame.com/products/storage008.html": {
    "fetched_at": "2026-10-08T19:02:37Z",

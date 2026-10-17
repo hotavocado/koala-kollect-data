@@ -1,5 +1,5 @@
 {
- "index_fetched_at": "2026-10-16T04:37:17Z",
+ "index_fetched_at": "2026-10-17T04:35:57Z",
  "pages": {
   "https://en.onepiece-cardgame.com/products/3rd_anniversary_set_cn.html": {
    "fetched_at": "2026-10-08T19:02:17Z",
@@ -862,6 +862,14 @@
    "series": [
     "569036"
    ]
+  },
+  "https://en.onepiece-cardgame.com/products/st37.html": {
+   "fetched_at": "2026-10-17T04:38:23Z",
+   "series": []
+  },
+  "https://en.onepiece-cardgame.com/products/st38.html": {
+   "fetched_at": "2026-10-17T04:38:20Z",
+   "series": []
   },
   "https://en.onepiece-cardgame.com/products/storage008.html": {
    "fetched_at": "2026-10-08T19:03:26Z",
