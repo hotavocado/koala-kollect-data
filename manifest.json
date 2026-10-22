@@ -1,6 +1,6 @@
 {
  "schema_version": 1,
- "generated_at": "2026-10-17T04:46:17Z",
+ "generated_at": "2026-10-22T04:46:19Z",
  "files": {
   "data/card_observations/cn.jsonl": {
    "type": "card_observation",
@@ -14,8 +14,8 @@
   },
   "data/card_observations/jp.jsonl": {
    "type": "card_observation",
-   "rows": 2824,
-   "sha256": "4c0ce365d70f14e96fd88f0c058bc31e97123dc3a68ccae9f6be3dd1f3d5f591"
+   "rows": 2825,
+   "sha256": "0757ccc2a73f152cef4efda7caa3a3bb3d4c38435cd038a890aab3215184bd19"
   },
   "data/card_observations/tcgcsv.jsonl": {
    "type": "card_observation",
